@@ -11,12 +11,7 @@ def get_service() -> AuthService:
     return AuthService(JsonStorage())
 
 
-@router.get("/users", response_model=list[AuthUser])
-def users(service: AuthService = Depends(get_service)) -> list[AuthUser]:
-    return service.list_users()
-
-
-@router.post("/register", response_model=AuthUser)
+@router.post("/register", response_model=AuthUser, status_code=202)
 def register(
     payload: RegisterRequest,
     service: AuthService = Depends(get_service),

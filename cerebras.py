@@ -1,8 +1,13 @@
-from app.providers.base import BaseProvider, ProviderResult
+from app.core.config import Settings
+from app.providers.openai_compatible import OpenAICompatibleProvider
 
 
-class CerebrasProvider(BaseProvider):
-    name = "cerebras"
-
-    async def generate(self, message: str) -> ProviderResult:
-        return ProviderResult(provider=self.name, text=f"Cerebras processed: {message}")
+class CerebrasProvider(OpenAICompatibleProvider):
+    def __init__(self, settings: Settings):
+        super().__init__(
+            name="cerebras",
+            api_key=settings.cerebras_api_key,
+            base_url="https://api.cerebras.ai/v1",
+            model=settings.cerebras_model,
+            timeout=settings.request_timeout_seconds,
+        )

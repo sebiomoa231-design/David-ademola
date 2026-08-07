@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import shutil
 import tempfile
 
 
@@ -12,18 +13,7 @@ class PiperError(Exception):
 
 
 class PiperTTSClient:
-    """
-    Wrapper around the local Piper TTS binary (https://github.com/rhasspy/piper).
-    Piper runs entirely offline: text goes in via stdin, a WAV file comes out.
-    No network call is made and no API key is used -- this matches the
-    "offline architecture where possible" requirement in the original spec.
-
-    Requires:
-      - The `piper` executable installed and on PATH (or an explicit path
-        via settings.piper_executable).
-      - A downloaded voice model (.onnx) with its matching .onnx.json file
-        in the same directory, e.g. en_US-ryan-high.onnx.
-    """
+    """Async wrapper around the Piper command-line text-to-speech engine."""
 
     def __init__(self, executable: str, voice_model_path: str) -> None:
         self.executable = executable
@@ -31,25 +21,25 @@ class PiperTTSClient:
 
     @staticmethod
     def _resolve_path(path: str) -> str:
-        """Relative paths (e.g. 'voices/en_US-ryan-high.onnx') are resolved
-        against the backend package root, so the app works the same whether
-        it's launched from backend/ or from anywhere else."""
-        if not path or os.path.isabs(path):
+        if not path:
+            return ""
+        if os.path.isabs(path):
             return path
-        backend_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-        return os.path.join(backend_root, path)
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+        return os.path.join(project_root, path)
 
     def is_configured(self) -> bool:
-        return bool(self.voice_model_path)
+        executable_ok = bool(shutil.which(self.executable) or os.path.isfile(self.executable))
+        model_ok = bool(self.voice_model_path and os.path.isfile(self.voice_model_path))
+        return executable_ok and model_ok
 
     async def synthesize(self, text: str) -> bytes:
         if not self.voice_model_path:
-            raise PiperError("No Piper voice model configured (PIPER_VOICE_MODEL is empty).")
-
+            raise PiperError("No Piper voice model configured.")
         if not os.path.isfile(self.voice_model_path):
             raise PiperError(
                 f"Piper voice model not found at '{self.voice_model_path}'. "
-                "Check the PIPER_VOICE_MODEL path in your .env."
+                "Run scripts/download_piper_voice.py or configure PIPER_VOICE_MODEL."
             )
 
         with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
@@ -58,8 +48,10 @@ class PiperTTSClient:
         try:
             proc = await asyncio.create_subprocess_exec(
                 self.executable,
-                "--model", self.voice_model_path,
-                "--output_file", out_path,
+                "--model",
+                self.voice_model_path,
+                "--output_file",
+                out_path,
                 stdin=asyncio.subprocess.PIPE,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
@@ -73,15 +65,17 @@ class PiperTTSClient:
                 )
 
             if not os.path.isfile(out_path) or os.path.getsize(out_path) == 0:
-                raise PiperError("Piper produced no audio output.", stderr=stderr.decode("utf-8", errors="replace"))
+                raise PiperError(
+                    "Piper produced no audio output.",
+                    stderr=stderr.decode("utf-8", errors="replace"),
+                )
 
-            with open(out_path, "rb") as f:
-                return f.read()
+            with open(out_path, "rb") as handle:
+                return handle.read()
 
         except FileNotFoundError as exc:
             raise PiperError(
-                f"Piper executable '{self.executable}' not found. "
-                "Install it from https://github.com/rhasspy/piper and/or set PIPER_EXECUTABLE to its full path."
+                f"Piper executable '{self.executable}' was not found."
             ) from exc
         finally:
             if os.path.isfile(out_path):

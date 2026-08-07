@@ -1,49 +1,67 @@
 from __future__ import annotations
 
 from app.core.config import Settings
-from app.core.logging import log_provider_selection
-from app.providers.base import ProviderResult
+from app.core.logging import log_error, log_provider_selection
+from app.providers.base import ProviderError, ProviderResult
 from app.providers.cerebras import CerebrasProvider
 from app.providers.cloudflare import CloudflareProvider
 from app.providers.gemini import GeminiProvider
 from app.providers.groq import GroqProvider
 from app.providers.huggingface import HuggingFaceProvider
+from app.providers.openai_compatible import OpenAICompatibleProvider
 from app.providers.openrouter import OpenRouterProvider
 from app.providers.sambanova import SambaNovaProvider
 
 
 class AIRouter:
-    """Routes chat requests to the highest-priority provider with a configured key."""
+    """Routes requests through configured providers with automatic failover."""
 
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
         self.providers = {
+            "openai": OpenAICompatibleProvider(
+                name="openai",
+                api_key=settings.openai_api_key,
+                base_url="https://api.openai.com/v1",
+                model=settings.openai_model,
+                timeout=settings.request_timeout_seconds,
+            ),
             "gemini": GeminiProvider(settings),
-            "groq": GroqProvider(),
-            "openrouter": OpenRouterProvider(),
-            "cloudflare": CloudflareProvider(),
-            "cerebras": CerebrasProvider(),
-            "sambanova": SambaNovaProvider(),
-            "huggingface": HuggingFaceProvider(),
-        }
-        self.key_map = {
-            "gemini": settings.gemini_api_key,
-            "groq": settings.groq_api_key,
-            "openrouter": settings.openrouter_api_key,
-            "cloudflare": settings.cloudflare_api_key,
-            "cerebras": settings.cerebras_api_key,
-            "sambanova": settings.sambanova_api_key,
-            "huggingface": settings.huggingface_api_key,
+            "groq": GroqProvider(settings),
+            "openrouter": OpenRouterProvider(settings),
+            "cloudflare": CloudflareProvider(settings),
+            "cerebras": CerebrasProvider(settings),
+            "sambanova": SambaNovaProvider(settings),
+            "huggingface": HuggingFaceProvider(settings),
         }
 
     async def generate(self, message: str) -> ProviderResult:
+        failures: list[str] = []
+
         for provider_name in self.settings.provider_priority_list:
-            if self.key_map.get(provider_name):
-                log_provider_selection(provider_name)
-                return await self.providers[provider_name].generate(message)
+            provider = self.providers.get(provider_name)
+            if provider is None:
+                failures.append(f"{provider_name}: unsupported provider")
+                continue
+
+            try:
+                result = await provider.generate(message)
+                log_provider_selection(result.provider)
+                return result
+            except ProviderError as exc:
+                failures.append(f"{provider_name}: {exc}")
+                log_error(f"provider:{provider_name}", exc)
+            except Exception as exc:  # defensive isolation of upstream failures
+                failures.append(f"{provider_name}: {exc}")
+                log_error(f"provider:{provider_name}", exc)
 
         log_provider_selection("fallback")
+        detail = "; ".join(failures[-3:])
         return ProviderResult(
             provider="fallback",
-            text=f"David AI is ready. You said: {message}",
+            text=(
+                "David AI is online, but no configured AI provider completed "
+                "this request. "
+                + (f"Provider details: {detail}" if detail else "Add an API key in your environment.")
+            ),
         )

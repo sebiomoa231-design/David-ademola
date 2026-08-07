@@ -88,13 +88,14 @@ def build_default_registry(settings) -> ProviderRegistry:
     """Builds a registry reflecting which text providers currently have keys configured."""
     registry = ProviderRegistry()
     text_providers = [
-        ("gemini", settings.gemini_api_key, 1),
-        ("groq", settings.groq_api_key, 2),
-        ("openrouter", settings.openrouter_api_key, 3),
-        ("cloudflare", settings.cloudflare_api_key, 4),
-        ("cerebras", settings.cerebras_api_key, 5),
-        ("sambanova", settings.sambanova_api_key, 6),
-        ("huggingface", settings.huggingface_api_key, 7),
+        ("openai", settings.openai_api_key, 1),
+        ("gemini", settings.gemini_api_key, 2),
+        ("groq", settings.groq_api_key, 3),
+        ("openrouter", settings.openrouter_api_key, 4),
+        ("cloudflare", settings.cloudflare_api_key, 5),
+        ("cerebras", settings.cerebras_api_key, 6),
+        ("sambanova", settings.sambanova_api_key, 7),
+        ("huggingface", settings.huggingface_api_key, 8),
     ]
     for name, key, priority in text_providers:
         registry.register(

@@ -9,11 +9,12 @@ class ProviderResult:
     text: str
 
 
+class ProviderError(RuntimeError):
+    """Raised when an upstream provider cannot complete a request."""
+
+
 class BaseProvider:
     name: str = "base"
 
     async def generate(self, message: str) -> ProviderResult:
-        return ProviderResult(
-            provider=self.name,
-            text="Provider not configured. Using fallback response.",
-        )
+        raise ProviderError(f"{self.name} is not configured.")

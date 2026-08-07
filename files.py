@@ -1,4 +1,5 @@
 from pathlib import Path
+from uuid import uuid4
 
 from fastapi import APIRouter, Depends, File, UploadFile
 
@@ -7,8 +8,6 @@ from app.core.logging import log_upload
 from app.core.security import sanitize_filename, validate_upload_size
 
 router = APIRouter(prefix="/files", tags=["files"])
-UPLOAD_DIR = Path("data/uploads")
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 
 @router.post("/upload")
@@ -20,8 +19,12 @@ async def upload_file(
     content = await file.read()
     validate_upload_size(len(content))
 
-    target = UPLOAD_DIR / safe_name
+    upload_dir = Path(settings.data_dir) / "uploads"
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+    # Avoid overwriting another user's file once user scoping/auth is added.
+    target = upload_dir / f"{uuid4().hex}_{safe_name}"
     target.write_bytes(content)
     log_upload(safe_name, len(content))
 
-    return {"filename": safe_name, "status": "saved"}
+    return {"filename": safe_name, "stored_as": target.name, "status": "saved"}
