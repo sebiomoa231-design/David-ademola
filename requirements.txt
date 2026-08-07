@@ -5,9 +5,4 @@ pydantic-settings==2.6.1
 python-dotenv==1.0.1
 httpx==0.28.1
 python-multipart==0.0.17
-
-# Piper TTS (local voice synthesis). Unpinned because I can't verify the
-# latest working version without network access in this environment --
-# check https://pypi.org/project/piper-tts/ and pin a version once you've
-# confirmed it installs cleanly on your target platform.
-piper-tts
+piper-tts==1.6.0
