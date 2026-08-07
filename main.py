@@ -1,14 +1,38 @@
-from fastapi import FastAPI
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.router import api_router
 from app.core.config import get_settings
 from app.core.exceptions import register_exception_handlers
-from app.core.logging import log_shutdown, log_startup
+from app.core.logging import log_request, log_shutdown, log_startup
+from app.core.security import check_rate_limit
 
 settings = get_settings()
 
-app = FastAPI(title=settings.app_name, debug=settings.debug)
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    log_startup()
+    yield
+    log_shutdown()
+
+
+app = FastAPI(
+    title=settings.app_name,
+    version="1.5-final",
+    debug=settings.debug,
+    lifespan=lifespan,
+)
+
+
+@app.middleware("http")
+async def request_middleware(request: Request, call_next):
+    check_rate_limit(request)
+    log_request(request.method, request.url.path)
+    return await call_next(request)
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -22,19 +46,9 @@ register_exception_handlers(app)
 app.include_router(api_router)
 
 
-@app.on_event("startup")
-def on_startup() -> None:
-    log_startup()
-
-
-@app.on_event("shutdown")
-def on_shutdown() -> None:
-    log_shutdown()
-
-
 @app.get("/")
 def root() -> dict[str, str]:
-    return {"message": "David AI backend is running"}
+    return {"message": "David AI backend is running", "version": "1.5-final"}
 
 
 @app.get("/version")
