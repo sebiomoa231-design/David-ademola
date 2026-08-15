@@ -10,12 +10,33 @@ def test_fabric_capabilities_and_adapters_are_exposed():
     capabilities = client.get("/api/intelligence/capabilities")
     assert capabilities.status_code == 200
     ids = {item["id"] for item in capabilities.json()["capabilities"]}
-    assert {"david-core", "multi-agent", "playwright", "video", "automation"} <= ids
+    assert {
+        "david-core",
+        "multi-agent",
+        "playwright",
+        "video",
+        "automation",
+        "browser-use",
+        "coding",
+        "image",
+        "voice",
+        "stt",
+    } <= ids
 
     adapters = client.get("/api/intelligence/adapters")
     assert adapters.status_code == 200
     adapter_ids = {item["id"] for item in adapters.json()["adapters"]}
-    assert {"agent-framework", "playwright", "wan2gp", "n8n"} <= adapter_ids
+    assert {
+        "agent-framework",
+        "playwright",
+        "wan2gp",
+        "n8n",
+        "browser-use",
+        "openhands",
+        "comfyui",
+        "chatterbox",
+        "faster-whisper",
+    } <= adapter_ids
 
 
 def test_fabric_goal_plan_run_and_approval_flow():

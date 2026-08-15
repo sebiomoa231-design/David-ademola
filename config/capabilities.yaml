@@ -10,23 +10,23 @@ capabilities:
   - id: david-voice-backend
     name: David Voice Backend
     category: voice
-    source: uploaded:DavidAI-backend-with-voice.part-ab
+    source: uploaded:DavidAI-backend-with-voice.part-aa+part-ab
     mode: reference-or-adapter
-    status: partial-upload-missing-part-aa
+    status: partial-upload-missing-middle-chunks-and-license-record
     keywords: [voice, tts, speech, ryan]
 
   - id: creative-backend
     name: David Creative Backend
     category: creative
-    source: recovered:David-Sources-Pack-1-2/david-ai-backend
+    source: recovered:David-Sources-Pack-1/david-ai-backend.zip
     mode: service-or-adapter
-    status: adapter-ready
+    status: inspected-no-license-file
     keywords: [creative, image, video, artwork, music, enhancer, editor]
 
   - id: multi-agent
     name: Microsoft Agent Framework
     category: orchestration
-    source: recovered:David-Sources-Pack-1-2/agent-framework-main
+    source: recovered:David-Sources-Pack-1/agent-framework-main.zip
     mode: adapter-reference
     status: inspected-mit
     keywords: [agent, agents, delegation, handoff, multi-agent, orchestration]
@@ -34,15 +34,15 @@ capabilities:
   - id: playwright
     name: Playwright
     category: browser-automation
-    source: recovered:David-Sources-Pack-2*/playwright-main
+    source: recovered:David-Sources-Pack-2-1+2-2/playwright-main.zip
     mode: service-or-adapter
-    status: partial-upload
+    status: recovered-partial-apache-notice-preserved
     keywords: [browser, test, screenshot, automation, playwright]
 
   - id: video
     name: WanGP / Wan2GP
     category: video
-    source: recovered:David-Sources-Pack-3/Wan2GP-main
+    source: recovered:David-Sources-Pack-3+3-1+3-2/Wan2GP-main.zip
     mode: gpu-service-adapter
     status: partial-upload-license-preserved
     requires_approval: false
@@ -51,7 +51,7 @@ capabilities:
   - id: automation
     name: n8n
     category: automation
-    source: recovered:David-Sources-Pack-4/n8n-master
+    source: recovered:David-Sources-Pack-4/n8n-master.zip
     mode: service-adapter
     status: partial-upload-license-boundary-preserved
     requires_approval: true
@@ -60,42 +60,42 @@ capabilities:
   - id: browser-use
     name: Browser Use
     category: browser
-    source: configured-service-boundary
+    source: recovered:David-Sources-Pack-1/browser-use-main.zip
     mode: service-or-adapter
-    status: not-uploaded
+    status: recovered-mit-metadata-preserved
     keywords: [browse, browser, web, research, navigate, click, website]
 
   - id: coding
     name: OpenHands
     category: coding
-    source: configured-service-boundary
+    source: recovered:David-Sources-Pack-1/OpenHands-main.zip
     mode: service-or-adapter
-    status: not-uploaded
+    status: recovered-mit-metadata-preserved
     keywords: [code, coding, repository, software, developer, build, debug]
 
   - id: image
     name: ComfyUI
     category: image
-    source: configured-service-boundary
-    mode: service-or-adapter
-    status: not-uploaded
+    source: recovered:David-Sources-Pack-2-1+2-2/ComfyUI-master.zip
+    mode: gpu-service-adapter
+    status: recovered-gplv3-metadata-preserved
     keywords: [image, artwork, workflow, generation, edit, diffusion]
 
   - id: voice
     name: Chatterbox
     category: tts
-    source: configured-service-boundary
-    mode: service-or-adapter
-    status: not-uploaded
-    keywords: [voice, tts, text-to-speech, speech, cloning]
+    source: recovered:David-Sources-Pack-2-1+2-2/chatterbox-master.zip
+    mode: gpu-service-adapter
+    status: recovered-license-metadata-preserved
+    keywords: [voice, tts, text-to-speech, speech, cloning, multilingual]
 
   - id: stt
     name: faster-whisper
     category: speech-to-text
-    source: configured-service-boundary
-    mode: service-or-adapter
-    status: not-uploaded
-    keywords: [stt, transcription, speech-to-text, microphone, audio]
+    source: recovered:David-Sources-Pack-2-1+2-2/faster-whisper-master.zip
+    mode: gpu-or-cpu-service-adapter
+    status: recovered-source-metadata-test-fixture-corrupt
+    keywords: [stt, transcription, speech-to-text, microphone, audio, whisper]
 
   - id: observability
     name: Langfuse
