@@ -1,0 +1,37 @@
+services:
+  david-fabric:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./artifacts:/app/artifacts
+    restart: unless-stopped
+
+  # Optional external capabilities.
+  # These are intentionally profiles so the base David API does not
+  # pretend that heavy infrastructure is available.
+  temporal:
+    image: temporalio/auto-setup:latest
+    profiles: ["durable"]
+    ports:
+      - "7233:7233"
+      - "8233:8233"
+
+  n8n:
+    image: n8nio/n8n:latest
+    profiles: ["automation"]
+    ports:
+      - "5678:5678"
+
+  langfuse:
+    image: langfuse/langfuse:latest
+    profiles: ["observability"]
+    ports:
+      - "3001:3000"
+
+networks:
+  default:
+    name: david-ai-fabric

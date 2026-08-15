@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: david-ai-intelligence-fabric
+    runtime: python
+    plan: starter
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: uvicorn david_fabric.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: CORS_ORIGINS
+        sync: false
+      - key: DATABASE_PATH
+        value: data/david_fabric.sqlite3
+      - key: ALLOW_EXTERNAL_SIDE_EFFECTS
+        value: "false"
+      - key: REQUIRE_APPROVAL_FOR_DEPLOYMENT
+        value: "true"
+      - key: REQUIRE_APPROVAL_FOR_PUBLISH
+        value: "true"
+      - key: REQUIRE_APPROVAL_FOR_DELETE
+        value: "true"
+      - key: REQUIRE_APPROVAL_FOR_PURCHASE
+        value: "true"
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: CLOUDFLARE_API_KEY
+        sync: false
+      - key: CEREBRAS_API_KEY
+        sync: false
+      - key: SAMBANOVA_API_KEY
+        sync: false
+      - key: HUGGINGFACE_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
