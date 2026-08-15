@@ -1,4 +1,17 @@
 integrations:
+  - id: david-core
+    capability: david-core
+    mode: native
+    provider: david-native
+  - id: david-voice-backend
+    capability: david-voice-backend
+    env_url: VOICE_BACKEND_URL
+  - id: creative-backend
+    capability: creative-backend
+    env_url: CREATIVE_BACKEND_URL
+  - id: agent-framework
+    capability: multi-agent
+    mode: reference
   - id: browser-use
     capability: browser-use
     env_url: BROWSER_USE_URL
@@ -23,6 +36,9 @@ integrations:
   - id: langfuse
     capability: observability
     env_url: LANGFUSE_URL
+  - id: langgraph
+    capability: stateful-agents
+    env_url: LANGGRAPH_URL
   - id: n8n
     capability: automation
     env_url: N8N_URL
@@ -35,3 +51,36 @@ integrations:
   - id: dokploy
     capability: deployment-dokploy
     env_url: DOKPLOY_URL
+  - id: research-router
+    capability: research
+    mode: native
+  - id: website-router
+    capability: website-development
+    mode: native
+  - id: audio-router
+    capability: audio
+    mode: native
+  - id: marketing-router
+    capability: marketing
+    mode: native
+  - id: browser-router
+    capability: web-automation
+    mode: native
+  - id: mcp-router
+    capability: mcp-tools
+    mode: native
+  - id: run-queue
+    capability: background-jobs
+    mode: native
+  - id: verification-engine
+    capability: evaluation
+    mode: native
+  - id: artifact-store
+    capability: artifact-generation
+    mode: native
+  - id: qa-router
+    capability: qa
+    mode: native
+  - id: infrastructure-router
+    capability: infrastructure
+    env_url: INFRASTRUCTURE_URL

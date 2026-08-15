@@ -39,6 +39,9 @@ class Settings(BaseSettings):
     require_approval_for_delete: bool = True
     require_approval_for_purchase: bool = True
     adapter_timeout_seconds: float = 2.0
+    max_fallback_attempts: int = 3
+    verify_external_outputs: bool = True
+    allow_local_capability_execution: bool = True
 
     browser_use_url: str = ""
     playwright_url: str = ""
@@ -48,6 +51,7 @@ class Settings(BaseSettings):
     chatterbox_url: str = ""
     faster_whisper_url: str = ""
     langfuse_url: str = ""
+    langgraph_url: str = ""
     n8n_url: str = ""
     temporal_url: str = ""
     coolify_url: str = ""

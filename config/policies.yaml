@@ -10,6 +10,33 @@ policies:
     approval_required: true
   purchases:
     approval_required: true
+  automation:
+    approval_required: true
+  webhooks:
+    approval_required: true
+  background_jobs:
+    enabled: true
+    approval_required_for_external_side_effects: true
+    max_retries: 3
+  execution:
+    max_attempts: 3
+    fallback_enabled: true
+    never_fake_success: true
+    record_attempts: true
+  delegation:
+    allowed: true
+    record_handoffs: true
+    require_registered_capability: true
+  artifacts:
+    record_references: true
+    checksum_required_for_external_files: true
+  verification:
+    required_before_success: true
+    record_checks: true
+  monitoring:
+    readiness_probes: true
+    record_provider_events: true
+    record_tool_calls: true
   credentials:
     never_expose_to_model: true
   user_isolation:

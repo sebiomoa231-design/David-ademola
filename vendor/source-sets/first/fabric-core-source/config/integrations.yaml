@@ -1,0 +1,37 @@
+integrations:
+  - id: browser-use
+    capability: browser-use
+    env_url: BROWSER_USE_URL
+  - id: playwright
+    capability: playwright
+    env_url: PLAYWRIGHT_URL
+  - id: openhands
+    capability: coding
+    env_url: OPENHANDS_URL
+  - id: comfyui
+    capability: image
+    env_url: COMFYUI_URL
+  - id: wan2gp
+    capability: video
+    env_url: WAN2GP_URL
+  - id: chatterbox
+    capability: voice
+    env_url: CHATTERBOX_URL
+  - id: faster-whisper
+    capability: stt
+    env_url: FASTER_WHISPER_URL
+  - id: langfuse
+    capability: observability
+    env_url: LANGFUSE_URL
+  - id: n8n
+    capability: automation
+    env_url: N8N_URL
+  - id: temporal
+    capability: durable-execution
+    env_url: TEMPORAL_URL
+  - id: coolify
+    capability: deployment-coolify
+    env_url: COOLIFY_URL
+  - id: dokploy
+    capability: deployment-dokploy
+    env_url: DOKPLOY_URL

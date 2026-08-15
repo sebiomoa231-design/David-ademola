@@ -1,0 +1,227 @@
+DAVID AI — INTELLIGENCE FABRIC FULL-CAPABILITY DIRECTIVE
+
+Do not remove, discard, silently disable, or downgrade any useful capability from the repositories and archives I provided.
+
+The objective is to make David AI a genuinely advanced, multi-capability AI agent system.
+
+Preserve the existing David AI functionality AND preserve every useful capability discovered from the imported repositories.
+
+Do not treat the current adapter/reference implementation as the final state.
+
+For every capability currently represented as an adapter, reference, quarantined source, or inactive integration, determine the correct production architecture needed to make that capability genuinely usable by David.
+
+David must remain the single user-facing application and unified control plane, but internally it must be able to access all approved capabilities through the Intelligence Fabric.
+
+Build toward this architecture:
+
+USER
+↓
+DAVID AI
+↓
+INTELLIGENCE FABRIC
+↓
+CAPABILITY DISCOVERY
+↓
+AGENT / SKILL / TOOL SELECTION
+↓
+PROVIDER / SERVICE SELECTION
+↓
+EXECUTION
+↓
+VERIFICATION
+↓
+ARTIFACT
+↓
+RESULT
+
+David must be able to dynamically select the appropriate capability for a task instead of relying on one implementation for everything.
+
+Do not remove the existing:
+
+- chat
+- memory
+- projects
+- tasks
+- knowledge
+- voice
+- website
+- agents
+- authentication
+- file handling
+- legacy planning
+- provider routing
+- automation
+- existing APIs
+
+Preserve them and connect them to the Intelligence Fabric where appropriate.
+
+Also preserve and fully integrate the useful capabilities from the supplied repositories, including:
+
+- multi-agent orchestration
+- agent workflows
+- browser automation
+- Playwright
+- coding/software-engineering capability
+- website development
+- image generation
+- video generation
+- audio generation
+- TTS
+- STT
+- creative/media processing
+- marketing capabilities
+- research
+- web automation
+- workflow automation
+- MCP/tool integrations
+- durable workflows
+- background jobs
+- monitoring
+- evaluation
+- deployment capabilities
+- infrastructure capabilities
+- artifact generation
+- QA/testing
+- approval systems
+- retries
+- fallback
+- health monitoring
+
+Do not simply copy repositories blindly.
+
+Where a capability requires another runtime, GPU, worker, container, or service, integrate it as an internal David-managed service.
+
+Where a capability can safely run natively, integrate it natively.
+
+Where MCP/API integration is the correct architecture, expose it through David's controlled tool layer.
+
+The user must still experience everything as David AI.
+
+Create a unified capability registry so David knows:
+
+- what capability exists
+- what it does
+- which agent can use it
+- which tool it requires
+- which runtime it requires
+- which provider/service powers it
+- whether it is available
+- whether it is healthy
+- what permissions it requires
+- whether user approval is required
+- what inputs it accepts
+- what outputs it produces
+- how failures are handled
+
+Do not allow two competing systems to become separate brains.
+
+David's Intelligence Fabric must coordinate them.
+
+If multiple implementations can perform the same task, create capability selection and fallback logic rather than removing one.
+
+Example:
+
+If David needs browser automation:
+
+David → capability router → available browser capability → execute → verify → return result.
+
+If that implementation fails:
+
+David → health/failure detection → compatible fallback → execute → verify → return result.
+
+Apply the same principle to:
+
+voice
+research
+coding
+websites
+images
+videos
+marketing
+automation
+deployment
+and other capabilities.
+
+Do not claim a capability is complete merely because its adapter exists.
+
+For every capability, distinguish:
+
+IMPLEMENTED
+CONNECTED
+CONFIGURED
+HEALTHY
+READY
+UNAVAILABLE
+REQUIRES_EXTERNAL_SERVICE
+REQUIRES_CREDENTIAL
+REQUIRES_GPU
+REQUIRES_APPROVAL
+
+Never fake successful execution.
+
+Upgrade the current Intelligence Fabric so it becomes a real orchestration layer capable of coordinating these capabilities.
+
+Preserve all upstream attribution, licenses, Docker/YAML/configuration files, and required notices.
+
+Do not violate the license of any imported project.
+
+Do not delete upstream source simply to make the repository smaller.
+
+Instead, organize the repository cleanly using appropriate boundaries such as:
+
+native modules
+services
+workers
+adapters
+MCP tools
+vendor/source references
+configuration
+deployment infrastructure
+
+The final architecture must remain maintainable.
+
+Also improve the plan yourself whenever you discover a missing component required to make the system genuinely functional.
+
+Do not ask me to identify obvious missing architecture.
+
+Analyze the existing implementation, determine what is required, and add it.
+
+Most importantly:
+
+DO NOT REMOVE CAPABILITIES JUST BECAUSE THEY ARE DIFFICULT TO INTEGRATE.
+
+If something cannot currently be activated because an external dependency, API, GPU, credential, license, or service is required, preserve the capability and implement the correct integration boundary so it can be activated when the requirement is supplied.
+
+The final goal is:
+
+ONE DAVID AI
+ONE INTELLIGENCE FABRIC
+MANY SPECIALIZED CAPABILITIES
+ONE UNIFIED CONTROL PLANE
+NO FAKE CAPABILITIES
+NO LOST FUNCTIONALITY
+NO UNCONTROLLED SIDE EFFECTS
+
+After implementing the required upgrades:
+
+1. Run all existing tests.
+2. Add tests for the Intelligence Fabric.
+3. Test capability discovery.
+4. Test routing.
+5. Test agent delegation.
+6. Test fallback.
+7. Test approval enforcement.
+8. Test adapter health.
+9. Test failure recovery.
+10. Test artifact tracking.
+11. Test existing David functionality for regressions.
+12. Test the production build.
+13. Report anything that still requires an external service, credential, GPU, or manual configuration.
+
+Do not remove existing functionality.
+
+Do not create a separate David AI application.
+
+David AI remains the product.
+
+Upgrade David until the Intelligence Fabric can genuinely coordinate the full capability ecosystem I supplied.
