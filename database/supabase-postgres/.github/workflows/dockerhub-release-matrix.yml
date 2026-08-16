@@ -1,0 +1,250 @@
+name: Release all major versions on Dockerhub
+
+on:
+  push:
+    branches:
+      - develop
+      - release/*
+    paths:
+      - ".github/workflows/dockerhub-release-matrix.yml"
+      - "ansible/vars.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  prepare:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    outputs:
+      matrix_config: ${{ steps.set-matrix.outputs.matrix_config }}
+      base_matrix: ${{ steps.set-matrix.outputs.base_matrix }}
+      layered_matrix: ${{ steps.set-matrix.outputs.layered_matrix }}
+    steps:
+      - name: Checkout Repo
+        uses: supabase/postgres/.github/actions/shared-checkout@HEAD
+      - uses: ./.github/actions/nix-install-ephemeral
+      - name: Generate build matrix
+        id: set-matrix
+        run: |
+          nix run nixpkgs#nushell -- -c '
+          let releases = (open ansible/vars.yml | get postgres_release)
+          let base = (open ansible/vars.yml | get release_matrix_base
+            | each { |e| $e | insert tag ($releases | get $e.release_key) })
+          let layered = (open ansible/vars.yml | get release_matrix_layered
+            | each { |e|
+                let ver = ($releases | get $e.release_key)
+                $e | insert tag $"($ver)($e.tag_suffix)" | insert base_tag $ver
+              })
+          let combined = ($base | append $layered)
+          $"base_matrix=({include: $base} | to json -r)(char eol)" | save --append $env.GITHUB_OUTPUT
+          $"layered_matrix=({include: $layered} | to json -r)(char eol)" | save --append $env.GITHUB_OUTPUT
+          $"matrix_config=({include: $combined} | to json -r)(char eol)" | save --append $env.GITHUB_OUTPUT
+          '
+  build:
+    needs: prepare
+    strategy:
+      matrix: ${{ fromJson(needs.prepare.outputs.matrix_config) }}
+    runs-on: large-linux-x86
+    outputs:
+      build_args: ${{ steps.args.outputs.result }}
+    steps:
+      - name: Checkout Repo
+        uses: supabase/postgres/.github/actions/shared-checkout@HEAD
+      - uses: ./.github/actions/nix-install-ephemeral
+      - name: Set PostgreSQL version environment variable
+        run: echo "POSTGRES_MAJOR_VERSION=${{ matrix.version }}" >> $GITHUB_ENV
+      
+      - id: args
+        run: |
+          nix run nixpkgs#nushell -- -c '
+            open ansible/vars.yml 
+            | items { |key value| {name: $key, item: $value} } 
+            | where { |it| ($it.item | describe) == "string" } 
+            | each { |it| $"($it.name)=($it.item)" } 
+            | str join "\n" 
+            | save --append $env.GITHUB_OUTPUT
+          '    
+  build_base_images:
+    needs: [prepare, build]
+    strategy:
+      matrix:
+        postgres: ${{ fromJson(needs.prepare.outputs.base_matrix).include }}
+        arch: [amd64, arm64]
+    runs-on: ${{ matrix.arch == 'amd64' && 'large-linux-x86' || 'large-linux-arm' }}
+    timeout-minutes: 180
+    steps:
+      - name: Checkout Repo
+        uses: supabase/postgres/.github/actions/shared-checkout@HEAD
+      - uses: ./.github/actions/nix-install-ephemeral
+      - run: docker context create builders
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+        with:
+          endpoint: builders
+      - uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # v2.2.0
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - id: build
+        uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25 # v5.4.0
+        with:
+          push: true
+          build-args: |
+            ${{ needs.build.outputs.build_args }}
+            PG_VERSION=${{ matrix.postgres.pg_version }}
+          target: ${{ matrix.postgres.target }}
+          tags: supabase/postgres:${{ matrix.postgres.tag }}_${{ matrix.arch }}
+          platforms: linux/${{ matrix.arch }}
+          cache-from: type=gha,scope=${{ github.ref_name }}-latest-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=${{ github.ref_name }}-latest-${{ matrix.arch }}
+          file: ${{ matrix.postgres.dockerfile }}
+
+  build_layered_images:
+    needs: [prepare, build, build_base_images]
+    strategy:
+      matrix:
+        postgres: ${{ fromJson(needs.prepare.outputs.layered_matrix).include }}
+        arch: [amd64, arm64]
+    runs-on: ${{ matrix.arch == 'amd64' && 'large-linux-x86' || 'large-linux-arm' }}
+    timeout-minutes: 180
+    steps:
+      - name: Checkout Repo
+        uses: supabase/postgres/.github/actions/shared-checkout@HEAD
+      - uses: ./.github/actions/nix-install-ephemeral
+      - run: docker context create builders
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+        with:
+          endpoint: builders
+      - uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # v2.2.0
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - id: build
+        uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25 # v5.4.0
+        with:
+          push: true
+          build-args: |
+            ${{ needs.build.outputs.build_args }}
+            PG_VERSION=${{ matrix.postgres.pg_version }}
+            SUPABASE_IMAGE=supabase/postgres:${{ matrix.postgres.base_tag }}_${{ matrix.arch }}
+          target: ${{ matrix.postgres.target }}
+          tags: supabase/postgres:${{ matrix.postgres.tag }}_${{ matrix.arch }}
+          platforms: linux/${{ matrix.arch }}
+          cache-from: type=gha,scope=${{ github.ref_name }}-latest-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=${{ github.ref_name }}-latest-${{ matrix.arch }}
+          file: ${{ matrix.postgres.dockerfile }}
+  merge_manifest:
+    needs: [prepare, build, build_base_images, build_layered_images]
+    strategy:
+      matrix:
+        include: ${{ fromJson(needs.prepare.outputs.matrix_config).include }}
+    runs-on: large-linux-x86
+    steps:
+      - name: Checkout Repo
+        uses: supabase/postgres/.github/actions/shared-checkout@HEAD
+      - uses: ./.github/actions/nix-install-ephemeral
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+      - uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # v2.2.0
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Get image tag
+        id: get_version
+        run: echo "pg_version=supabase/postgres:${{ matrix.tag }}" >> $GITHUB_OUTPUT
+      - name: Output version
+        id: output_version
+        run: |
+          echo "result=${{ steps.get_version.outputs.pg_version }}" >> $GITHUB_OUTPUT
+      - name: Collect versions
+        id: collect_versions
+        run: |
+          echo "${{ steps.output_version.outputs.result }}" >> results.txt  # Append results
+      - name: Upload Results Artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: merge_results-${{ matrix.tag }}
+          path: results.txt
+          if-no-files-found: warn
+      - name: Merge multi-arch manifests
+        run: |
+          docker buildx imagetools create -t ${{ steps.get_version.outputs.pg_version }} \
+          ${{ steps.get_version.outputs.pg_version }}_amd64 \
+          ${{ steps.get_version.outputs.pg_version }}_arm64
+  combine_results:
+    needs: [prepare, merge_manifest]
+    runs-on: large-linux-x86
+    steps:
+      - name: Checkout Repo
+        uses: supabase/postgres/.github/actions/shared-checkout@HEAD
+      - uses: ./.github/actions/nix-install-ephemeral
+
+      - name: Debug Input from Prepare
+        run: |
+          echo "Raw matrix_config output:"
+          echo "${{ needs.prepare.outputs.matrix_config }}"
+      - name: Get Versions from Matrix Config
+        id: get_versions
+        run: |
+          nix run nixpkgs#nushell -- -c '
+            # Parse the matrix configuration directly
+            let matrix_config = (${{ toJson(needs.prepare.outputs.matrix_config) }} | from json)
+
+            # Get tags directly from include array
+            let tags = ($matrix_config.include | get tag)
+
+            echo "Tags: $tags"
+
+            # Convert the tags to a comma-separated string
+            let versions_str = ($tags | str join ",")
+            $"versions=$versions_str" | save --append $env.GITHUB_ENV
+          '
+      - name: Download Results Artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: merge_results-*
+      - name: Combine Results
+        id: combine
+        run: |
+          nix run nixpkgs#nushell -- -c '
+            # Get all results files and process them in one go
+            let files = (ls **/results.txt | get name)
+            echo $"Found files: ($files)"
+            
+            let matrix = {
+              include: (
+                $files
+                | each { |file| open $file }          # Open each file
+                | each { |content| $content | lines }  # Split into lines
+                | flatten                             # Flatten the nested lists
+                | where { |line| $line != "" }        # Filter empty lines
+                | each { |line| 
+                    # Extract just the version part after the last colon
+                    let version = ($line | parse "supabase/postgres:{version}" | get version.0)
+                    {version: $version}
+                }
+              )
+            }
+            
+            let json_output = ($matrix | to json -r)  # -r for raw output
+            echo $"Debug output: ($json_output)"
+            
+            $"matrix=($json_output)" | save --append $env.GITHUB_OUTPUT
+          '
+      - name: Debug Combined Results
+        run: |
+          echo "Combined Results: '${{ steps.combine.outputs.matrix }}'"
+    outputs:
+      matrix: ${{ steps.combine.outputs.matrix }}
+  publish:
+      needs: combine_results
+      permissions:
+        contents: read
+        packages: write
+        id-token: write
+      strategy:
+        matrix: ${{ fromJson(needs.combine_results.outputs.matrix) }}
+      uses: ./.github/workflows/mirror.yml
+      with:
+        version: ${{ matrix.version }}
+      secrets: inherit

@@ -1,0 +1,27 @@
+.*
+!.env
+!.gitignore
+!.gitkeep
+!/.claude/
+!/.coderabbit.yaml
+!/.envrc.recommended
+!/.github/
+!/.yamllint
+/.claude/settings.local.json
+
+# ansible related
+ansible/image-manifest*.json
+
+# packer related
+packer-work-*/
+
+# python related
+*$py.class
+*.py[cod]
+__pycache__/
+venv/
+
+#nix related
+common-nix.vars.pkr.hcl
+db/schema.sql
+result*
