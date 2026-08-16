@@ -33,6 +33,16 @@ describe("Command Center API contracts", () => {
     expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/api/voice/synthesize", expect.objectContaining({ method: "POST", body: JSON.stringify({ text: "David, report status", language_mode: "AUTO" }) }));
   });
 
+  it("links a Website Builder request to the selected shared project without fabricating a preview", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ title: "Blueprint", sections: [], notes: [], generation_id: "generation-1" }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await api.websiteGenerate("Build a client portal", "project-7");
+
+    expect(response.generation_id).toBe("generation-1");
+    expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/api/website/generate", expect.objectContaining({ method: "POST", body: JSON.stringify({ prompt: "Build a client portal", project_id: "project-7" }) }));
+  });
+
   it("loads Automation workspace records only from the registered backend workflow contract", async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ workflows: [{ id: "briefing", name: "Daily briefing" }] }), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
