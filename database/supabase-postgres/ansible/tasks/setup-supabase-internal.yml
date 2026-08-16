@@ -1,0 +1,111 @@
+- name: Install AWS CLI
+  ansible.builtin.import_tasks:
+    file: internal/install-aws-cli.yml
+
+- name: download Vector package
+  ansible.builtin.get_url:
+    url: "{{ vector_artifacts[platform]['url'] }}"
+    checksum: "{{ vector_artifacts[platform]['checksum'] }}"
+    dest: /tmp/vector.deb
+    timeout: 120
+  become: true
+  retries: 3
+  delay: 2
+  register: vector_download
+  until: vector_download is success
+
+- name: install Vector for logging
+  apt:
+    deb: /tmp/vector.deb
+  become: true
+
+- name: add Vector to postgres group
+  ansible.builtin.user:
+    append: true
+    groups: 'postgres'
+    name: 'vector'
+  become: true
+
+- name: create service files for Vector
+  ansible.builtin.template:
+    src: 'files/vector.service.j2'
+    dest: '/etc/systemd/system/vector.service'
+
+- name: configure tmpfiles for postgres - overwrites upstream package
+  ansible.builtin.template:
+    src: 'files/postgresql_config/tmpfiles.postgresql.conf'
+    dest: '/etc/tmpfiles.d/postgresql-common.conf'
+
+- name: fix permissions for vector config to be managed
+  ansible.builtin.file:
+    group: 'vector'
+    mode: '0775'
+    owner: 'vector'
+    path: '/etc/vector'
+    recurse: true
+    state: 'directory'
+
+- name: vector - reload systemd
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+
+- name: Create checkpoints dir
+  ansible.builtin.file:
+    owner: 'vector'
+    path: '/var/lib/vector'
+    state: 'directory'
+  become: true
+
+- name: Include file for generated optimizations in postgresql.conf
+  ansible.builtin.replace:
+    path: '/etc/postgresql/postgresql.conf'
+    regexp: "#include = '/etc/postgresql-custom/generated-optimizations.conf'"
+    replace: "include = '/etc/postgresql-custom/generated-optimizations.conf'"
+  become: true
+
+- name: Include file for custom overrides in postgresql.conf
+  ansible.builtin.replace:
+    path: '/etc/postgresql/postgresql.conf'
+    regexp: "#include = '/etc/postgresql-custom/custom-overrides.conf'"
+    replace: "include = '/etc/postgresql-custom/custom-overrides.conf'"
+  become: true
+
+- name: Install Postgres exporter
+  ansible.builtin.import_tasks:
+    file: internal/postgres-exporter.yml
+
+- name: Install admin-mgr
+  ansible.builtin.import_tasks:
+    file: internal/admin-mgr.yml
+
+- name: Install adminapi
+  ansible.builtin.import_tasks:
+    file: internal/admin-api.yml
+
+- name: Init nftabless
+  ansible.builtin.import_tasks:
+    file: internal/setup-nftables.yml
+
+- name: Install pg_egress_collect
+  ansible.builtin.import_tasks:
+    file: internal/pg_egress_collect.yml
+
+- name: Install PostgreSQL prestart script
+  ansible.builtin.import_tasks:
+    file: internal/postgresql-prestart.yml
+
+- name: Install salt minion
+  ansible.builtin.import_tasks:
+    file: internal/install-salt.yml
+  tags:
+    - aws-only
+
+- name: Install supabase-admin-agent
+  ansible.builtin.import_tasks:
+    file: internal/supabase-admin-agent.yml
+  tags:
+    - aws-only
+
+- name: Envoy - use lds.supabase.yaml for /etc/envoy/lds.yaml
+  ansible.builtin.command:
+    cmd: mv /etc/envoy/lds.supabase.yaml /etc/envoy/lds.yaml
