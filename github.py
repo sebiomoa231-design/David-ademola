@@ -38,7 +38,7 @@ from app.services.github_service import (
     GitHubNotConfigured,
     GitHubService,
 )
-from app.services.supabase_service import SupabasePersistence
+from app.services.supabase_service import SupabaseNotConfigured, SupabasePersistence
 
 logger = logging.getLogger(__name__)
 
@@ -84,8 +84,13 @@ def _github_service(settings: Settings) -> GitHubService:
     return GitHubService.from_settings(settings)
 
 
-def _persistence(settings: Settings) -> GitHubPersistence:
-    return GitHubPersistence(SupabasePersistence(settings))
+def _persistence(settings: Settings) -> GitHubPersistence | None:
+    """Build the persistence layer; returns ``None`` when the database is
+    not configured so routes can respond with a 503 instead of a 500."""
+    try:
+        return GitHubPersistence(SupabasePersistence(settings))
+    except SupabaseNotConfigured:
+        return None
 
 
 def _github_error(exc: GitHubError, default_status: int = 502) -> HTTPException:
@@ -193,7 +198,7 @@ def github_connect_callback(payload: dict[str, Any], settings: Settings = Depend
     try:
         user = service.get_authenticated_user()
         persistence = _persistence(settings)
-        if persistence.is_available:
+        if persistence is not None and persistence.is_available:
             audit_connected(persistence, user["login"])
         return {"connected": True, "github": user}
     except GitHubError as exc:
@@ -207,7 +212,7 @@ def github_disconnect(settings: Settings = Depends(_get_settings)) -> dict[str, 
     service._token_expires_at = 0
     try:
         persistence = _persistence(settings)
-        if persistence.is_available:
+        if persistence is not None and persistence.is_available:
             audit_disconnected(persistence)
     except Exception:  # noqa: BLE001 - audit failure must never break disconnect
         pass
@@ -220,7 +225,7 @@ def list_tracked_repositories(
     settings: Settings = Depends(_get_settings),
 ) -> list[dict[str, Any]]:
     persistence = _persistence(settings)
-    if not persistence.is_available:
+    if persistence is None or not persistence.is_available:
         raise HTTPException(status_code=503, detail="Database persistence is not available")
     return persistence.list_repositories(project_id=project_id)
 
@@ -243,7 +248,7 @@ def create_repository(payload: RepoCreateRequest, settings: Settings = Depends(_
     persistence = _persistence(settings)
     try:
         created = service.create_repository(topic, description=payload.description, private=payload.private)
-        if persistence.is_available:
+        if persistence is not None and persistence.is_available:
             audit_repository_created(persistence, created, payload.project_id)
             record = persistence.create_repository_record(
                 {
@@ -275,7 +280,7 @@ def initialize_repository(repository_id: str, settings: Settings = Depends(_get_
     service = _github_service(settings)
     try:
         result = service.initialize_repository(record["repository_full_name"], default_branch=record.get("default_branch", "main"))
-        if persistence.is_available:
+        if persistence is not None and persistence.is_available:
             persistence.update_repository(
                 repository_id,
                 {
@@ -306,7 +311,7 @@ def push_files(repository_id: str, payload: RepoPushRequest, settings: Settings 
     service = _github_service(settings)
     try:
         result = service.push_files(full_name, payload.files, branch=branch, message=message)
-        if persistence.is_available:
+        if persistence is not None and persistence.is_available:
             persistence.update_repository(
                 repository_id,
                 {
@@ -350,7 +355,7 @@ def update_repository(repository_id: str, payload: RepoUpdateRequest, settings: 
     updated = persistence.update_repository(repository_id, patch)
     if updated is None:
         raise HTTPException(status_code=500, detail="Failed to update repository record")
-    if persistence.is_available:
+    if persistence is not None and persistence.is_available:
         audit_repository_updated(persistence, record["repository_full_name"], "metadata update")
     return updated
 
@@ -358,7 +363,7 @@ def update_repository(repository_id: str, payload: RepoUpdateRequest, settings: 
 @router.get("/audit")
 def list_audit_events(limit: int = Query(50, ge=1, le=200), settings: Settings = Depends(_get_settings)) -> list[dict[str, Any]]:
     persistence = _persistence(settings)
-    if not persistence.is_available:
+    if persistence is None or not persistence.is_available:
         raise HTTPException(status_code=503, detail="Database persistence is not available")
     events = persistence.list_audit_events(limit=limit)
     return [{"id": e.get("id"), "event": e.get("event"), "details": _safe_details(e.get("details")), "created_at": e.get("created_at")} for e in events]
