@@ -20,7 +20,9 @@ class Settings(BaseSettings):
     app_port: int = 8000
     debug: bool = False
 
-    cors_origins: str = "http://localhost:3000"
+    # Local Command Center development runs on 3001. Production must override
+    # this with its exact deployed frontend origin through CORS_ORIGINS.
+    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001"
     request_timeout_seconds: int = 45
     max_upload_mb: int = 25
     data_dir: str = str(PROJECT_ROOT / "data")

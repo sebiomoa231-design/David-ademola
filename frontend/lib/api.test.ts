@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { api, toAudioUrl } from "./api";
 
+const canonicalBase = "https://david-ademola.onrender.com";
+
 describe("Command Center API contracts", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -19,8 +21,8 @@ describe("Command Center API contracts", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(api.health()).resolves.toEqual({ status: "ok", service: "David AI backend" });
-    expect(fetchMock).toHaveBeenNthCalledWith(1, "http://localhost:8000/api/health", expect.objectContaining({ cache: "no-store" }));
-    expect(fetchMock).toHaveBeenNthCalledWith(2, "http://localhost:8000/health", expect.objectContaining({ cache: "no-store" }));
+    expect(fetchMock).toHaveBeenNthCalledWith(1, `${canonicalBase}/api/health`, expect.objectContaining({ cache: "no-store" }));
+    expect(fetchMock).toHaveBeenNthCalledWith(2, `${canonicalBase}/health`, expect.objectContaining({ cache: "no-store" }));
   });
 
   it("sends Voice workspace requests to the existing synthesis endpoint", async () => {
@@ -30,7 +32,7 @@ describe("Command Center API contracts", () => {
     const response = await api.synthesize("David, report status");
 
     expect(response.audio_available).toBe(false);
-    expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/api/voice/synthesize", expect.objectContaining({ method: "POST", body: JSON.stringify({ text: "David, report status", language_mode: "AUTO" }) }));
+    expect(fetchMock).toHaveBeenCalledWith(`${canonicalBase}/api/voice/synthesize`, expect.objectContaining({ method: "POST", body: JSON.stringify({ text: "David, report status", language_mode: "AUTO" }) }));
   });
 
   it("links a Website Builder request to the selected shared project without fabricating a preview", async () => {
@@ -40,7 +42,7 @@ describe("Command Center API contracts", () => {
     const response = await api.websiteGenerate("Build a client portal", "project-7");
 
     expect(response.generation_id).toBe("generation-1");
-    expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/api/website/generate", expect.objectContaining({ method: "POST", body: JSON.stringify({ prompt: "Build a client portal", project_id: "project-7" }) }));
+    expect(fetchMock).toHaveBeenCalledWith(`${canonicalBase}/api/website/generate`, expect.objectContaining({ method: "POST", body: JSON.stringify({ prompt: "Build a client portal", project_id: "project-7" }) }));
   });
 
   it("loads Automation workspace records only from the registered backend workflow contract", async () => {
@@ -50,7 +52,29 @@ describe("Command Center API contracts", () => {
     const response = await api.intelligence.workflows();
 
     expect(response).toEqual({ workflows: [{ id: "briefing", name: "Daily briefing" }] });
-    expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/api/intelligence/workflows", expect.objectContaining({ cache: "no-store" }));
+    expect(fetchMock).toHaveBeenCalledWith(`${canonicalBase}/api/intelligence/workflows`, expect.objectContaining({ cache: "no-store" }));
+  });
+
+  it("uses the canonical goal, plan, run, authorization, and execution endpoints in explicit order", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ id: "goal-1", objective: "Prepare a governed research brief" }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ id: "plan-1", goal_id: "goal-1" }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ id: "run-1", goal_id: "goal-1", status: "planned" }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ run_id: "run-1", authorized: true }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ run_id: "run-1", status: "running" }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const goal = await api.intelligence.createGoal("Prepare a governed research brief", { interface: "command-center" });
+    await api.intelligence.planGoal(goal.id);
+    const run = await api.intelligence.createRun(goal.id, goal.objective, "research");
+    await api.intelligence.authorizeRun(run.id, "research");
+    await api.intelligence.executeRun(run.id, { approved: true, objective: goal.objective, requested_capability: "research", input: { authorization: "explicit-user-action" } });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, `${canonicalBase}/api/intelligence/goals`, expect.objectContaining({ method: "POST", body: JSON.stringify({ objective: "Prepare a governed research brief", context: { interface: "command-center" } }) }));
+    expect(fetchMock).toHaveBeenNthCalledWith(2, `${canonicalBase}/api/intelligence/goals/goal-1/plan`, expect.objectContaining({ method: "POST" }));
+    expect(fetchMock).toHaveBeenNthCalledWith(3, `${canonicalBase}/api/intelligence/runs`, expect.objectContaining({ method: "POST", body: JSON.stringify({ goal_id: "goal-1", objective: "Prepare a governed research brief", requested_capability: "research" }) }));
+    expect(fetchMock).toHaveBeenNthCalledWith(4, `${canonicalBase}/api/intelligence/runs/run-1/authorize?capability=research`, expect.objectContaining({ method: "POST" }));
+    expect(fetchMock).toHaveBeenNthCalledWith(5, `${canonicalBase}/api/intelligence/runs/run-1/execute`, expect.objectContaining({ method: "POST", body: JSON.stringify({ approved: true, objective: "Prepare a governed research brief", requested_capability: "research", input: { authorization: "explicit-user-action" } }) }));
   });
 
   it("surfaces backend failures instead of inventing a content planning result", async () => {

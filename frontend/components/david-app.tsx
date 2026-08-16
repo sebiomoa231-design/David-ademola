@@ -425,7 +425,20 @@ function AgentCommandPanel({ capabilities, notify }: { capabilities: Capability[
   const [runDetails, setRunDetails] = useState<RunDetails | null>(null);
   const [working, setWorking] = useState(false);
 
-  const run = async () => {
+  const refreshRun = async (id = runId) => {
+    if (!id) return;
+    const details = await api.intelligence.runDetails(id);
+    setRunDetails(details);
+  };
+
+  useEffect(() => {
+    const status = runDetails?.run?.status;
+    if (!runId || status !== "running") return;
+    const timer = window.setInterval(() => { void refreshRun(runId).catch(() => undefined); }, 2_500);
+    return () => window.clearInterval(timer);
+  }, [runId, runDetails?.run?.status]);
+
+  const createRun = async () => {
     if (!objective.trim()) return notify("info", "Add an objective before starting a run.");
     setWorking(true);
     try {
@@ -434,20 +447,52 @@ function AgentCommandPanel({ capabilities, notify }: { capabilities: Capability[
       const goal = await api.intelligence.createGoal(objective, { tone: "focused", source: "command-center" });
       const nextPlan = await api.intelligence.planGoal(goal.id);
       setPlan(nextPlan);
-      const createdRun = await api.intelligence.createRun(goal.id, objective, routed.selected?.capability_id || selectedCapability || undefined);
+      const capability = routed.selected?.capability_id || selectedCapability || undefined;
+      const createdRun = await api.intelligence.createRun(goal.id, objective, capability);
       setRunId(createdRun.id);
-      const result = await api.intelligence.executeRun(createdRun.id, { objective, requested_capability: routed.selected?.capability_id || selectedCapability || undefined, input: { source: "command-center" } });
-      const details = await api.intelligence.runDetails(createdRun.id);
-      setRunDetails(details);
-      notify("success", String(result.status || "Agent run recorded."));
+      await refreshRun(createdRun.id);
+      if (!routed.selected?.available) {
+        notify("info", routed.selected?.reason || "The routed capability is unavailable. The goal and plan were saved; no worker was called.");
+      } else {
+        notify("success", "Run planned and recorded. Review the route, then explicitly approve execution.");
+      }
     } catch (error) {
-      notify("error", error instanceof Error ? error.message : "Agent run failed");
+      notify("error", error instanceof Error ? error.message : "Agent run could not be planned");
     } finally {
       setWorking(false);
     }
   };
 
-  return <Card red><SectionHeading eyebrow="Agent orchestration" title="Delegate a real objective" detail="David routes through the live capability registry and records the run envelope." action={<span className="micro-label">human approval aware</span>} /><div className="grid gap-3 md:grid-cols-[1fr_220px_auto]"><textarea value={objective} onChange={(event) => setObjective(event.target.value)} className="min-h-12 resize-none rounded-xl border border-white/10 bg-black/20 px-3 py-3 text-sm text-white outline-none placeholder:text-smoke focus:border-crimson/60" placeholder="Describe an objective for David to route and verify..." aria-label="Agent objective" /><select value={selectedCapability} onChange={(event) => setSelectedCapability(event.target.value)} className="rounded-xl border border-white/10 bg-black/20 px-3 py-3 text-sm text-smoke outline-none"><option value="">Auto route</option>{capabilities.slice(0, 28).map((item) => <option key={item.id} value={item.id}>{item.name || item.id}</option>)}</select><Button variant="primary" onClick={() => void run()} disabled={working}>{working ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}{working ? "Running" : "Start run"}</Button></div>{(route || plan || runId) && <div className="mt-5 grid gap-3 md:grid-cols-3"><div className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="micro-label">Selected</p><p className="mt-2 text-sm font-semibold text-white">{route?.selected?.capability_id || "planning"}</p><p className="mt-1 text-xs text-smoke">{route?.selected?.state || "route recorded"}</p></div><div className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="micro-label">Plan steps</p><p className="mt-2 text-sm font-semibold text-white">{plan?.steps?.length ?? "—"}</p><p className="mt-1 text-xs text-smoke">primary and fallback metadata</p></div><div className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="micro-label">Run</p><p className="mt-2 truncate text-sm font-semibold text-white">{runId || "not created"}</p><p className={`mt-1 text-xs ${stateClass(runDetails?.run?.status)}`}>{runDetails?.run?.status || "recorded"}</p></div></div>}</Card>;
+  const approveAndExecute = async () => {
+    const capability = route?.selected?.capability_id || selectedCapability;
+    if (!runId || !capability) return notify("info", "Create a routed run before granting approval.");
+    if (!route?.selected?.available) return notify("info", route?.selected?.reason || "This capability is unavailable, so no execution was attempted.");
+    setWorking(true);
+    try {
+      await api.intelligence.authorizeRun(runId, capability);
+      const result = await api.intelligence.executeRun(runId, {
+        approved: true,
+        objective,
+        requested_capability: capability,
+        input: { source: "command-center", authorization: "explicit-user-action" },
+      });
+      await refreshRun(runId);
+      notify("success", `Run ${String(result.status || "updated")}.`);
+    } catch (error) {
+      await refreshRun(runId).catch(() => undefined);
+      notify("error", error instanceof Error ? error.message : "Approved agent execution failed");
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  const attempts = Array.isArray(runDetails?.attempts) ? runDetails.attempts : [];
+  const artifacts = Array.isArray(runDetails?.artifacts) ? runDetails.artifacts : [];
+  const events = Array.isArray(runDetails?.events) ? runDetails.events : [];
+  const status = runDetails?.run?.status || "planned";
+  const canExecute = Boolean(runId && route?.selected?.available && (status === "created" || status === "planned" || status === "blocked" || !runDetails?.run?.status));
+
+  return <Card red><SectionHeading eyebrow="Agent orchestration" title="Delegate a governed objective" detail="David creates a durable goal and plan first. Execution occurs only after your explicit approval." action={<span className="micro-label">approval gate enforced</span>} /><div className="grid gap-3 md:grid-cols-[1fr_220px_auto]"><textarea value={objective} onChange={(event) => setObjective(event.target.value)} className="min-h-12 resize-none rounded-xl border border-white/10 bg-black/20 px-3 py-3 text-sm text-white outline-none placeholder:text-smoke focus:border-crimson/60" placeholder="Describe an objective for David to route and verify..." aria-label="Agent objective" /><select value={selectedCapability} onChange={(event) => setSelectedCapability(event.target.value)} className="rounded-xl border border-white/10 bg-black/20 px-3 py-3 text-sm text-smoke outline-none"><option value="">Auto route</option>{capabilities.slice(0, 28).map((item) => <option key={item.id} value={item.id}>{item.name || item.id}</option>)}</select><Button variant="primary" onClick={() => void createRun()} disabled={working}>{working ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}{working ? "Working" : "Plan run"}</Button></div>{(route || plan || runId) && <div className="mt-5 space-y-3"><div className="grid gap-3 md:grid-cols-3"><div className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="micro-label">Selected</p><p className="mt-2 text-sm font-semibold text-white">{route?.selected?.capability_id || "planning"}</p><p className="mt-1 text-xs text-smoke">{route?.selected?.available ? "available — ready for approval" : route?.selected?.reason || route?.selected?.state || "route recorded"}</p></div><div className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="micro-label">Plan steps</p><p className="mt-2 text-sm font-semibold text-white">{plan?.steps?.length ?? "—"}</p><p className="mt-1 text-xs text-smoke">primary and fallback metadata</p></div><div className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="micro-label">Run</p><p className="mt-2 truncate text-sm font-semibold text-white">{runId || "not created"}</p><p className={`mt-1 text-xs ${stateClass(status)}`}>{status}</p></div></div>{canExecute && <div className="flex flex-wrap items-center gap-3 rounded-xl border border-amber/25 bg-amber/5 px-4 py-3"><LockKeyhole className="h-4 w-4 text-amber" /><p className="flex-1 text-sm text-white/85">This action may call a configured capability. Approve only if you want David to execute this saved plan.</p><Button variant="primary" onClick={() => void approveAndExecute()} disabled={working}><ShieldCheck className="h-4 w-4" />Approve & execute</Button></div>}<div className="grid gap-3 md:grid-cols-3"><div className="rounded-xl border border-white/8 bg-black/15 p-3"><p className="micro-label">Attempts</p><p className="mt-2 text-sm font-semibold text-white">{attempts.length}</p><p className="mt-1 text-xs text-smoke">{attempts.length ? String((attempts[attempts.length - 1] as Record<string, unknown>).status || "recorded") : "No worker invoked yet"}</p></div><div className="rounded-xl border border-white/8 bg-black/15 p-3"><p className="micro-label">Artifacts</p><p className="mt-2 text-sm font-semibold text-white">{artifacts.length}</p><p className="mt-1 text-xs text-smoke">persisted execution outputs</p></div><div className="rounded-xl border border-white/8 bg-black/15 p-3"><div className="flex items-center justify-between gap-2"><p className="micro-label">Event log</p><Button variant="ghost" className="h-6 px-1" onClick={() => void refreshRun().catch((error) => notify("error", error instanceof Error ? error.message : "Could not refresh run"))}><RefreshCw className="h-3.5 w-3.5" /></Button></div><p className="mt-2 text-sm font-semibold text-white">{events.length}</p><p className="mt-1 text-xs text-smoke">live persisted lifecycle events</p></div></div></div>}</Card>;
 }
 
 function ChatWorkspace({ voice, tone, conversations, notify }: { voice: VoiceStatus | null; tone: string; conversations: ConversationItem[]; notify: WorkspaceProps["notify"] }) {

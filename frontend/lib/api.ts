@@ -19,7 +19,11 @@ import type {
   VoiceStatus,
 } from "./types";
 
-const primaryBase = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/$/, "");
+// The public canonical service is deliberately the development fallback. A
+// configured NEXT_PUBLIC_API_URL always wins, while an unset local frontend
+// no longer points Agent Nexus controls at an unrelated, unconfigured port.
+const CANONICAL_DAVID_API_URL = "https://david-ademola.onrender.com";
+const primaryBase = (process.env.NEXT_PUBLIC_API_URL || CANONICAL_DAVID_API_URL).replace(/\/$/, "");
 const fallbackBase = (process.env.NEXT_PUBLIC_API_FALLBACK_URL || "").replace(/\/$/, "");
 const bases = [primaryBase, fallbackBase].filter((base, index, all) => Boolean(base) && all.indexOf(base) === index);
 

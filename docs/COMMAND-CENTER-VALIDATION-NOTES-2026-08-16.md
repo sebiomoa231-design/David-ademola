@@ -17,3 +17,9 @@ A 390 × 844 viewport capture of `/music-studio` showed the mobile header menu, 
 ## Scope Boundary
 
 This validation does not claim that an unavailable creative worker can generate media. No client-side mock result, simulated completion state, or fabricated asset was introduced.
+
+## Governed Agent Workspace Verification
+
+The local `/agents` workspace renders the implemented governed-objective form, capability selector, explicit **Plan run** action, approval-gate label, lifecycle stages, and the visible Creative Suite navigation. During this local preview, the workspace remained in its honest **Checking backend** and **Waiting for registry** states because the development browser was not receiving canonical API records. The browser console contained no client-side runtime error. This is a configuration or connectivity condition to resolve before claiming a browser-level live run, not a simulated lifecycle success.
+
+After replacing the unset local fallback with the existing canonical Render URL and passing the associated contract tests, the local browser still displayed the backend-pending state. The browser console remained free of application errors. Further browser-level network diagnosis is required; no fake readiness or run information was substituted.

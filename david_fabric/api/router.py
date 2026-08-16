@@ -202,6 +202,7 @@ async def create_governed_request(payload: GovernedRequest) -> GovernedRequestRe
     goal = Goal(
         title=payload.title or payload.objective[:160],
         objective=payload.objective,
+        project_id=str(payload.context["project_id"]) if payload.context.get("project_id") else None,
         context={
             **payload.context,
             "requested_capability": selected.capability_id,

@@ -192,6 +192,38 @@ def test_governed_request_links_real_run_artifacts_when_native_execution_is_allo
     assert payload["result"]["verification"]["status"] == "passed"
 
 
+def test_governed_website_run_executes_the_existing_native_generator_and_records_output():
+    goal = client.post(
+        "/api/intelligence/goals",
+        json={
+            "title": "Build a secure portal website",
+            "objective": "Build a modern website for a secure client portal.",
+            "project_id": "project-website-acceptance",
+            "context": {"requested_capability": "website-development"},
+        },
+    ).json()
+    plan = client.post(f"/api/intelligence/goals/{goal['id']}/plan")
+    assert plan.status_code == 200
+    run = client.post(
+        "/api/intelligence/runs",
+        json={"goal_id": goal["id"], "requested_capability": "website-development"},
+    ).json()
+
+    result = client.post(
+        f"/api/intelligence/runs/{run['id']}/execute",
+        json={"input": {"project_id": "project-website-acceptance"}},
+    )
+
+    assert result.status_code == 200
+    payload = result.json()
+    assert payload["run"]["status"] == "completed"
+    assert payload["run"]["selected_capability"] == "website-development"
+    assert payload["attempt"]["output"]["blueprint"]["sections"]
+    assert payload["artifacts"]
+    assert payload["verification"]["status"] == "passed"
+    assert "preview_url" not in payload["attempt"]["output"]
+
+
 def test_governed_request_refuses_unavailable_side_effects_before_creating_a_run():
     response = client.post(
         "/api/intelligence/requests",

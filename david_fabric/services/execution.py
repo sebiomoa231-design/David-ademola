@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 from typing import Any
 
@@ -41,15 +42,68 @@ NATIVE_TARGETS = {
 }
 
 
-def _dispatch_native(capability: dict[str, Any], goal: Goal) -> dict[str, Any]:
-    """Record a truthful handoff to an existing David-native surface.
+async def _execute_native(
+    capability: dict[str, Any],
+    goal: Goal,
+    input_data: dict[str, Any],
+) -> dict[str, Any]:
+    """Invoke supported David-native services without creating a parallel executor.
 
-    This is deliberately a dispatch envelope, not a fabricated task result. The
-    existing David APIs remain the product-specific executors and can consume
-    this handoff without the Fabric pretending to have generated an artifact.
+    The Fabric is only the governed lifecycle. A native capability must call an
+    established David service, return its real response, and retain that result
+    as provenance. Native surfaces without an executable service remain an
+    explicit handoff rather than a fabricated completion.
     """
 
     capability_id = str(capability.get("id"))
+    if capability_id == "david-core":
+        from ai_router import AIRouter
+        from app.core.config import get_settings
+
+        result = await AIRouter(get_settings()).generate(goal.objective)
+        if result.provider == "fallback":
+            raise RuntimeError(result.text)
+        return {
+            "status": "completed",
+            "control_plane": "david-ai",
+            "capability": capability_id,
+            "provider": result.provider,
+            "reply": result.text,
+        }
+
+    if capability_id == "website-development":
+        from app.core.config import get_settings
+        from app.services.supabase_service import SupabasePersistence
+        from app.services.website_engine import WebsiteEngine
+
+        blueprint = WebsiteEngine().generate(goal.objective)
+        persistence = SupabasePersistence(get_settings())
+        generation_id: str | None = None
+        if persistence.database_enabled:
+            stored = persistence.create_generation(
+                {
+                    "project_id": input_data.get("project_id") or goal.project_id,
+                    "kind": "website",
+                    "prompt": goal.objective,
+                    "provider": "website-engine",
+                    "status": "completed",
+                    "output": json.dumps(blueprint),
+                    "metadata": {
+                        "section_count": len(blueprint.get("sections", [])),
+                        "source": "intelligence-fabric",
+                    },
+                }
+            )
+            generation_id = str(stored.get("id"))
+        return {
+            "status": "completed",
+            "control_plane": "david-ai",
+            "capability": capability_id,
+            "generation_id": generation_id,
+            "blueprint": blueprint,
+            "note": "Generated a structured website blueprint. No preview URL or external deployment was fabricated.",
+        }
+
     return {
         "status": "delegated",
         "control_plane": "david-ai",
@@ -200,11 +254,12 @@ async def execute_goal(
                 run.status = "completed"
                 verification_message = "External service returned a valid execution envelope."
             elif str(capability.get("mode", "")).lower() == "native":
-                output = _dispatch_native(capability, goal)
-                kind = "dispatch"
-                attempt.status = "delegated"
-                run.status = "delegated"
-                verification_message = "Native David handoff was recorded; no task-specific artifact was fabricated."
+                output = await _execute_native(capability, goal, input_data or {})
+                delegated = output.get("status") == "delegated"
+                kind = "dispatch" if delegated else "service-result"
+                attempt.status = "delegated" if delegated else "completed"
+                run.status = "delegated" if delegated else "completed"
+                verification_message = "Native David handoff was recorded; no task-specific artifact was fabricated." if delegated else "Established David-native service returned a real execution result."
             else:
                 raise RuntimeError(capability.get("reason") or "Capability requires an unavailable external service.")
 
