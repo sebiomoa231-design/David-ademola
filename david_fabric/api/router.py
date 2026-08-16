@@ -12,6 +12,8 @@ from david_fabric.core.models import (
     Goal,
     GoalCreate,
     GoalPlan,
+    GovernedRequest,
+    GovernedRequestResponse,
     Run,
     RunCreate,
     RunResult,
@@ -26,6 +28,7 @@ from david_fabric.services.registry import (
     list_enriched_capabilities,
     load_capabilities,
     match_capabilities,
+    registry_discovery_report,
 )
 from david_fabric.storage import db
 from david_fabric.core.config import PROJECT_ROOT
@@ -53,6 +56,55 @@ def _directory(kind: str) -> list[dict[str, Any]]:
     return items
 
 
+async def _select_capability(payload: CapabilitySelectionRequest) -> CapabilitySelectionResponse:
+    health = await service_health()
+    candidates = match_capabilities(
+        payload.objective,
+        requested_capability=payload.requested_capability,
+        health=health,
+    )
+    typed = []
+    for candidate in candidates:
+        typed.append(
+            {
+                "capability_id": candidate["id"],
+                "name": candidate.get("name", candidate["id"]),
+                "category": candidate.get("category"),
+                "score": sum(
+                    1
+                    for keyword in candidate.get("keywords", [])
+                    if str(keyword).casefold() in payload.objective.casefold()
+                ),
+                "agent": candidate.get("agent"),
+                "skill": candidate.get("skill"),
+                "tool": candidate.get("tool"),
+                "provider": candidate.get("provider"),
+                "adapter": candidate.get("adapter"),
+                "mode": candidate.get("mode"),
+                "readiness": candidate.get("readiness", []),
+                "state": candidate.get("state", "UNAVAILABLE"),
+                "available": bool(candidate.get("available")),
+                "reason": candidate.get("reason"),
+                "fallback_capabilities": candidate.get("fallback_capabilities", []),
+            }
+        )
+    selected = next((item for item in typed if item["available"]), typed[0] if typed else None)
+    fallback_chain = []
+    if selected:
+        fallback_chain = list(selected.get("fallback_capabilities", []))
+        fallback_chain.extend(
+            item["capability_id"]
+            for item in typed
+            if item["capability_id"] != selected["capability_id"] and item["capability_id"] not in fallback_chain
+        )
+    return CapabilitySelectionResponse(
+        objective=payload.objective,
+        candidates=typed,
+        selected=selected,
+        fallback_chain=fallback_chain,
+    )
+
+
 @fabric_router.get("/health")
 async def intelligence_health() -> dict[str, object]:
     return {
@@ -70,6 +122,13 @@ async def readiness() -> dict[str, Any]:
 @fabric_router.get("/capabilities")
 def capabilities() -> dict[str, object]:
     return {"capabilities": list_enriched_capabilities()}
+
+
+@fabric_router.get("/capabilities/discovery")
+def capability_discovery() -> dict[str, object]:
+    """Return safe manifest-discovery provenance; discovery never executes repo code."""
+
+    return registry_discovery_report()
 
 
 @fabric_router.get("/capabilities/{capability_id}")
@@ -118,51 +177,68 @@ def policies() -> dict[str, Any]:
 
 @fabric_router.post("/route", response_model=CapabilitySelectionResponse)
 async def route_capability(payload: CapabilitySelectionRequest) -> CapabilitySelectionResponse:
-    health = await service_health()
-    candidates = match_capabilities(
-        payload.objective,
-        requested_capability=payload.requested_capability,
-        health=health,
+    return await _select_capability(payload)
+
+
+@fabric_router.post("/requests", response_model=GovernedRequestResponse)
+async def create_governed_request(payload: GovernedRequest) -> GovernedRequestResponse:
+    """Route every natural-language request through a saved goal and plan first.
+
+    `execute` is deliberately false by default. The execution layer remains the
+    only path that can invoke adapters and it enforces capability approvals.
+    """
+
+    route = await _select_capability(
+        CapabilitySelectionRequest(
+            objective=payload.objective,
+            requested_capability=payload.requested_capability,
+            context=payload.context,
+        )
     )
-    typed = []
-    for candidate in candidates:
-        typed.append(
-            {
-                "capability_id": candidate["id"],
-                "name": candidate.get("name", candidate["id"]),
-                "category": candidate.get("category"),
-                "score": sum(
-                    1
-                    for keyword in candidate.get("keywords", [])
-                    if str(keyword).casefold() in payload.objective.casefold()
-                ),
-                "agent": candidate.get("agent"),
-                "skill": candidate.get("skill"),
-                "tool": candidate.get("tool"),
-                "provider": candidate.get("provider"),
-                "adapter": candidate.get("adapter"),
-                "mode": candidate.get("mode"),
-                "readiness": candidate.get("readiness", []),
-                "state": candidate.get("state", "UNAVAILABLE"),
-                "available": bool(candidate.get("available")),
-                "reason": candidate.get("reason"),
-                "fallback_capabilities": candidate.get("fallback_capabilities", []),
-            }
-        )
-    selected = next((item for item in typed if item["available"]), typed[0] if typed else None)
-    fallback_chain = []
-    if selected:
-        fallback_chain = list(selected.get("fallback_capabilities", []))
-        fallback_chain.extend(
-            item["capability_id"]
-            for item in typed
-            if item["capability_id"] != selected["capability_id"] and item["capability_id"] not in fallback_chain
-        )
-    return CapabilitySelectionResponse(
+    selected = route.selected
+    if not selected:
+        return GovernedRequestResponse(status="unmatched", route=route)
+
+    goal = Goal(
+        title=payload.title or payload.objective[:160],
         objective=payload.objective,
-        candidates=typed,
-        selected=selected,
-        fallback_chain=fallback_chain,
+        context={
+            **payload.context,
+            "requested_capability": selected.capability_id,
+            "selection_source": "governed-request",
+        },
+    )
+    db.save_goal(goal)
+    db.add_event(
+        goal.id,
+        "goal_created_from_request",
+        {"selected_capability": selected.capability_id, "available": selected.available},
+    )
+    plan = create_plan(goal)
+    db.save_plan(plan)
+    db.add_event(goal.id, "plan_created", {"steps": [step.capability for step in plan.steps]})
+
+    if not payload.execute:
+        return GovernedRequestResponse(status="planned", route=route, goal=goal, plan=plan)
+    if not selected.available:
+        return GovernedRequestResponse(status="unavailable", route=route, goal=goal, plan=plan)
+
+    run = Run(
+        goal_id=goal.id,
+        approved=payload.approved,
+        objective=goal.objective,
+        requested_capability=selected.capability_id,
+    )
+    db.save_run(run)
+    db.add_event(run.id, "run_created_from_request", {"goal_id": goal.id})
+    result = await execute_goal(goal, run, plan, input_data=payload.input)
+    return GovernedRequestResponse(
+        status=result.run.status,
+        route=route,
+        goal=goal,
+        plan=plan,
+        run=result.run,
+        result=result,
     )
 
 

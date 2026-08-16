@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
+from typing import Any
 
 MemoryType = Literal[
     "preference",
@@ -33,6 +34,7 @@ class ChatResponse(BaseModel):
     reply: str
     conversation_id: Optional[str] = None
     provider: str = "fallback"
+    capability_routing: dict[str, Any] | None = None
 
 
 class MemoryCreate(BaseModel):

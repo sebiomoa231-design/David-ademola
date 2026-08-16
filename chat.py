@@ -6,6 +6,8 @@ from app.models import ChatRequest, ChatResponse
 from app.providers.ai_router import AIRouter
 from app.services.conversation_engine import ConversationEngine
 from app.services.memory_engine import MemoryEngine
+from david_fabric.core.models import CapabilitySelectionRequest
+from david_fabric.api.router import route_capability
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -36,9 +38,16 @@ async def chat(
     conversations.add_message(conversation_id, "user", payload.message)
     conversations.add_message(conversation_id, "assistant", result.text)
     memory.learn_from_text(payload.message, source="chat")
+    routing = await route_capability(CapabilitySelectionRequest(objective=payload.message))
 
     return ChatResponse(
         reply=result.text,
         provider=result.provider,
         conversation_id=conversation_id,
+        capability_routing={
+            "selected": routing.selected.model_dump() if routing.selected else None,
+            "fallback_chain": routing.fallback_chain,
+            "execution_started": False,
+            "next_step": "create a governed request to plan or execute this capability",
+        },
     )

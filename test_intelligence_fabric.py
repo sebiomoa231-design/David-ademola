@@ -139,6 +139,76 @@ def test_dynamic_routing_returns_primary_and_fallback_chain():
     assert payload["fallback_chain"]
 
 
+def test_registered_manifest_capability_is_discoverable_but_not_executable_without_adapter():
+    discovery = client.get("/api/intelligence/capabilities/discovery")
+    assert discovery.status_code == 200
+    report = discovery.json()
+    assert report["mode"] == "allowlisted-manifest-scan"
+    assert report["executed_repository_code"] is False
+    assert any(item["id"] == "presentation-generation" for item in report["capabilities"])
+
+    listed = client.get("/api/intelligence/capabilities")
+    assert listed.status_code == 200
+    presentation = next(item for item in listed.json()["capabilities"] if item["id"] == "presentation-generation")
+    assert presentation["registration"] == "explicit-manifest"
+    assert presentation["available"] is False
+
+    routed = client.post(
+        "/api/intelligence/route",
+        json={"objective": "Create a pitch deck presentation"},
+    )
+    assert routed.status_code == 200
+    assert any(item["capability_id"] == "presentation-generation" for item in routed.json()["candidates"])
+
+
+def test_governed_request_plans_before_it_can_execute_an_adapter():
+    planned = client.post(
+        "/api/intelligence/requests",
+        json={"objective": "Build a website for my business"},
+    )
+    assert planned.status_code == 200
+    payload = planned.json()
+    assert payload["status"] == "planned"
+    assert payload["goal"]
+    assert payload["plan"]["steps"]
+    assert payload["run"] is None
+    assert payload["result"] is None
+
+
+def test_governed_request_links_real_run_artifacts_when_native_execution_is_allowed():
+    response = client.post(
+        "/api/intelligence/requests",
+        json={
+            "objective": "Evaluate this completed agent run",
+            "requested_capability": "evaluation",
+            "execute": True,
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["run"]
+    assert payload["result"]
+    assert payload["result"]["artifacts"]
+    assert payload["result"]["verification"]["status"] == "passed"
+
+
+def test_governed_request_refuses_unavailable_side_effects_before_creating_a_run():
+    response = client.post(
+        "/api/intelligence/requests",
+        json={
+            "objective": "Run an automation workflow",
+            "requested_capability": "automation",
+            "execute": True,
+            "approved": False,
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["status"] == "unavailable"
+    assert payload["run"] is None
+    assert payload["result"] is None
+
+
 def test_native_delegation_tracks_artifact_and_verification():
     goal = client.post(
         "/api/intelligence/goals",

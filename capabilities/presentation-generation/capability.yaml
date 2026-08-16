@@ -1,0 +1,16 @@
+id: presentation-generation
+name: David Presentation Generation
+category: documents
+description: Registers presentation-generation requests for planning while a verified renderer is connected.
+version: "1.0"
+agent: creative-agent
+skill: presentation-generation
+tool: presentation-router
+provider: david-native
+runtime: registered-manifest
+inputs: [brief, outline, theme]
+outputs: [presentation, artifact]
+permissions: [write-artifact]
+fallbacks: [content-generation]
+entrypoint: registry:presentation-generation
+keywords: [presentation, slides, deck, powerpoint, pitch deck]

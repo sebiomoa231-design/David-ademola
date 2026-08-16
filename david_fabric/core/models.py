@@ -123,6 +123,27 @@ class CapabilitySelectionResponse(BaseModel):
     fallback_chain: list[str] = Field(default_factory=list)
 
 
+class GovernedRequest(BaseModel):
+    """A natural-language request that is planned before any action can run."""
+
+    objective: str = Field(min_length=1, max_length=4000)
+    title: str | None = Field(default=None, max_length=160)
+    requested_capability: str | None = None
+    context: dict[str, Any] = Field(default_factory=dict)
+    execute: bool = False
+    approved: bool = False
+    input: dict[str, Any] = Field(default_factory=dict)
+
+
+class GovernedRequestResponse(BaseModel):
+    status: str
+    route: CapabilitySelectionResponse
+    goal: Goal | None = None
+    plan: GoalPlan | None = None
+    run: Run | None = None
+    result: "RunResult | None" = None
+
+
 class ExecutionRequest(BaseModel):
     objective: str | None = None
     requested_capability: str | None = None

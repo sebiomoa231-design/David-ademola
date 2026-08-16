@@ -7,6 +7,8 @@ from typing import Any
 
 import yaml
 
+from david_fabric.services.manifest_discovery import discovery_report as manifest_discovery_report
+from david_fabric.services.manifest_discovery import discover_manifest_capabilities
 from david_fabric.services.adapters import adapter_for_capability, readiness_for_adapter
 
 
@@ -18,12 +20,25 @@ CONFIG = PROJECT_ROOT / "config" / "capabilities.yaml"
 def load_capabilities() -> list[dict[str, Any]]:
     with CONFIG.open("r", encoding="utf-8") as handle:
         data = yaml.safe_load(handle) or {}
-    capabilities = data.get("capabilities", [])
-    return [item for item in capabilities if isinstance(item, dict) and item.get("id")]
+    configured = [item for item in data.get("capabilities", []) if isinstance(item, dict) and item.get("id")]
+    discovered, _ = discover_manifest_capabilities({str(item["id"]) for item in configured})
+    return [*configured, *discovered]
 
 
 def clear_registry_cache() -> None:
     load_capabilities.cache_clear()
+
+
+def registry_discovery_report() -> dict[str, Any]:
+    """Expose discovery provenance without executing or exposing repository code."""
+
+    with CONFIG.open("r", encoding="utf-8") as handle:
+        data = yaml.safe_load(handle) or {}
+    configured = [item for item in data.get("capabilities", []) if isinstance(item, dict) and item.get("id")]
+    report = manifest_discovery_report({str(item["id"]) for item in configured})
+    report["configured_capability_count"] = len(configured)
+    report["registered_manifest_count"] = len(report["capabilities"])
+    return report
 
 
 def get_capability(capability_id: str) -> dict[str, Any] | None:
@@ -52,6 +67,9 @@ def enrich_capability(
     if str(enriched.get("mode", "")).lower() == "native":
         readiness = ["IMPLEMENTED", "CONNECTED", "HEALTHY", "READY"]
         state, available, reason = "READY", True, "native David implementation"
+    elif enriched.get("status") == "registered-not-executable-until-adapter-is-connected":
+        readiness = ["REGISTERED", "REQUIRES_CONNECTED_ADAPTER"]
+        state, available, reason = "UNAVAILABLE", False, "registered manifest has no connected executable adapter"
     elif not adapter and enriched.get("status", "").startswith("not-uploaded"):
         readiness = ["REQUIRES_EXTERNAL_SERVICE"]
         state, available, reason = "UNAVAILABLE", False, "service boundary is not configured"

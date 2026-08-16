@@ -1,5 +1,21 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+export type CapabilityRoute = {
+  objective: string;
+  selected: null | {
+    capability_id: string;
+    name: string;
+    available: boolean;
+    state: string;
+    reason?: string | null;
+    agent?: string | null;
+    skill?: string | null;
+    tool?: string | null;
+    provider?: string | null;
+  };
+  fallback_chain: string[];
+};
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     ...init,
@@ -20,7 +36,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export const api = {
   health: () => request<{ status: string; service: string }>("/api/health"),
   chat: (message: string) =>
-    request<{ reply: string; provider: string }>("/api/chat", {
+    request<{ reply: string; provider: string; capability_routing?: CapabilityRoute }>("/api/chat", {
       method: "POST",
       body: JSON.stringify({ message }),
     }),
@@ -73,5 +89,25 @@ export const api = {
     request("/api/auth/register", {
       method: "POST",
       body: JSON.stringify({ name, email, password }),
+    }),
+  capabilities: () => request<{ capabilities: unknown[] }>("/api/intelligence/capabilities"),
+  capabilityDiscovery: () => request("/api/intelligence/capabilities/discovery"),
+  routeCapability: (objective: string, requestedCapability?: string) =>
+    request<CapabilityRoute>("/api/intelligence/route", {
+      method: "POST",
+      body: JSON.stringify({ objective, requested_capability: requestedCapability }),
+    }),
+  createGovernedRequest: (payload: {
+    objective: string;
+    title?: string;
+    requested_capability?: string;
+    context?: Record<string, unknown>;
+    execute?: boolean;
+    approved?: boolean;
+    input?: Record<string, unknown>;
+  }) =>
+    request("/api/intelligence/requests", {
+      method: "POST",
+      body: JSON.stringify(payload),
     }),
 };
