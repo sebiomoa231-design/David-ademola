@@ -93,6 +93,8 @@ const navItems: Array<{ id: string; label: string; icon: IconType; group?: strin
   { id: "dashboard", label: "Command center", icon: LayoutDashboard, group: "Workspace" },
   { id: "chat", label: "David chat", icon: Command, group: "Workspace" },
   { id: "agents", label: "Agent runs", icon: BrainCircuit, group: "Workspace" },
+  { id: "voice", label: "Voice", icon: Headphones, group: "Workspace" },
+  { id: "content", label: "Content", icon: FileText, group: "Workspace" },
   { id: "memory", label: "Memory", icon: Database, group: "Workspace" },
   { id: "tasks", label: "Tasks", icon: ClipboardList, group: "Workspace" },
   { id: "projects", label: "Projects", icon: FolderKanban, group: "Workspace" },
@@ -100,6 +102,7 @@ const navItems: Array<{ id: string; label: string; icon: IconType; group?: strin
   { id: "providers", label: "Providers", icon: Network, group: "Observe" },
   { id: "devices", label: "Devices", icon: Monitor, group: "Observe" },
   { id: "connectors", label: "Connectors", icon: Layers3, group: "Operate" },
+  { id: "automation", label: "Automation", icon: TerminalSquare, group: "Operate" },
   { id: "website-builder", label: "Website builder", icon: Globe2, group: "Studios" },
   { id: "video-studio", label: "Video studio", icon: Video, group: "Studios" },
   { id: "image-studio", label: "Image studio", icon: ImageIcon, group: "Studios" },
@@ -111,6 +114,8 @@ const routeLabels: Record<string, string> = {
   dashboard: "Command center",
   chat: "David chat",
   agents: "Agent runs",
+  voice: "Voice",
+  content: "Content",
   memory: "Memory",
   tasks: "Tasks",
   projects: "Projects",
@@ -118,11 +123,20 @@ const routeLabels: Record<string, string> = {
   providers: "Providers",
   devices: "Devices",
   connectors: "Connectors",
+  automation: "Automation",
   "website-builder": "Website builder",
   "video-studio": "Video studio",
   "image-studio": "Image studio",
   settings: "Settings",
   owner: "Owner console",
+};
+
+const routeAliases: Record<string, string> = {
+  "agent-runs": "agents",
+  runs: "agents",
+  website: "website-builder",
+  video: "video-studio",
+  image: "image-studio",
 };
 
 const toneOptions = ["calm", "focused", "analytical", "creative", "direct"] as const;
@@ -247,7 +261,8 @@ function DavidApp({ route }: { route: string }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const currentRoute = pathname?.split("/").filter(Boolean).slice(-1)[0] || route || "dashboard";
-  const activeRoute = currentRoute === "auth" ? "auth" : routeLabels[currentRoute] ? currentRoute : "dashboard";
+  const normalizedRoute = routeAliases[currentRoute] || currentRoute;
+  const activeRoute = normalizedRoute === "auth" ? "auth" : routeLabels[normalizedRoute] ? normalizedRoute : "dashboard";
 
   const notify = (kind: Toast["kind"], text: string) => {
     setToast({ kind, text });
@@ -336,14 +351,17 @@ type WorkspaceProps = {
 
 function renderWorkspace(route: string, props: WorkspaceProps) {
   switch (route) {
-    case "chat": return <ChatWorkspace voice={props.voice} tone={props.tone} notify={props.notify} />;
+    case "chat": return <ChatWorkspace voice={props.voice} tone={props.tone} conversations={props.conversations} notify={props.notify} />;
     case "agents": return <AgentWorkspace capabilities={props.capabilities} notify={props.notify} />;
+    case "voice": return <VoiceWorkspace voice={props.voice} notify={props.notify} />;
+    case "content": return <ContentWorkspace notify={props.notify} />;
     case "memory": return <MemoryWorkspace memories={props.memories} notify={props.notify} refresh={props.refresh} />;
     case "tasks": return <TasksWorkspace tasks={props.tasks} projects={props.projects} notify={props.notify} refresh={props.refresh} />;
     case "projects": return <ProjectsWorkspace projects={props.projects} notify={props.notify} refresh={props.refresh} />;
     case "providers": return <ProvidersWorkspace providers={props.providers} adapters={props.adapters} capabilities={props.capabilities} fabricReady={props.fabricReady} />;
     case "devices": return <DevicesWorkspace voice={props.voice} />;
     case "connectors": return <ConnectorsWorkspace adapters={props.adapters} />;
+    case "automation": return <AutomationWorkspace capabilities={props.capabilities} notify={props.notify} />;
     case "website-builder": return <WebsiteBuilderWorkspace notify={props.notify} />;
     case "video-studio": return <StudioWorkspace kind="video" capabilities={props.capabilities} />;
     case "image-studio": return <StudioWorkspace kind="image" capabilities={props.capabilities} />;
@@ -394,7 +412,7 @@ function AgentCommandPanel({ capabilities, notify }: { capabilities: Capability[
   return <Card red><SectionHeading eyebrow="Agent orchestration" title="Delegate a real objective" detail="David routes through the live capability registry and records the run envelope." action={<span className="micro-label">human approval aware</span>} /><div className="grid gap-3 md:grid-cols-[1fr_220px_auto]"><textarea value={objective} onChange={(event) => setObjective(event.target.value)} className="min-h-12 resize-none rounded-xl border border-white/10 bg-black/20 px-3 py-3 text-sm text-white outline-none placeholder:text-smoke focus:border-crimson/60" placeholder="Describe an objective for David to route and verify..." aria-label="Agent objective" /><select value={selectedCapability} onChange={(event) => setSelectedCapability(event.target.value)} className="rounded-xl border border-white/10 bg-black/20 px-3 py-3 text-sm text-smoke outline-none"><option value="">Auto route</option>{capabilities.slice(0, 28).map((item) => <option key={item.id} value={item.id}>{item.name || item.id}</option>)}</select><Button variant="primary" onClick={() => void run()} disabled={working}>{working ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}{working ? "Running" : "Start run"}</Button></div>{(route || plan || runId) && <div className="mt-5 grid gap-3 md:grid-cols-3"><div className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="micro-label">Selected</p><p className="mt-2 text-sm font-semibold text-white">{route?.selected?.capability_id || "planning"}</p><p className="mt-1 text-xs text-smoke">{route?.selected?.state || "route recorded"}</p></div><div className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="micro-label">Plan steps</p><p className="mt-2 text-sm font-semibold text-white">{plan?.steps?.length ?? "—"}</p><p className="mt-1 text-xs text-smoke">primary and fallback metadata</p></div><div className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="micro-label">Run</p><p className="mt-2 truncate text-sm font-semibold text-white">{runId || "not created"}</p><p className={`mt-1 text-xs ${stateClass(runDetails?.run?.status)}`}>{runDetails?.run?.status || "recorded"}</p></div></div>}</Card>;
 }
 
-function ChatWorkspace({ voice, tone, notify }: { voice: VoiceStatus | null; tone: string; notify: WorkspaceProps["notify"] }) {
+function ChatWorkspace({ voice, tone, conversations, notify }: { voice: VoiceStatus | null; tone: string; conversations: ConversationItem[]; notify: WorkspaceProps["notify"] }) {
   const [messages, setMessages] = useState<Message[]>([{ id: "intro", role: "assistant", content: "I’m David. Give me an objective, a question, or a creative direction. I’ll keep you informed when an action needs approval.", createdAt: new Date().toISOString() }]);
   const [draft, setDraft] = useState("");
   const [loading, setLoading] = useState(false);
@@ -467,7 +485,7 @@ function ChatWorkspace({ voice, tone, notify }: { voice: VoiceStatus | null; ton
     }
   };
 
-  return <div className="grid gap-6 xl:grid-cols-[1fr_320px]"><Card className="flex min-h-[680px] flex-col"><div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4"><div><p className="micro-label">Communication console</p><h2 className="mt-1 text-xl font-semibold text-white">Conversation channel</h2></div><div className="flex items-center gap-2"><span className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] uppercase tracking-wider text-smoke">tone: {tone}</span><span className="rounded-full border border-signal/20 bg-signal/5 px-2.5 py-1 text-[10px] uppercase tracking-wider text-signal">{voicePhase}</span></div></div><div className="flex-1 space-y-4 overflow-y-auto py-5" aria-live="polite">{messages.map((message) => <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}><div className={`max-w-[88%] rounded-2xl border px-4 py-3 ${message.role === "user" ? "border-crimson/30 bg-crimson/10" : message.role === "system" ? "border-amber/30 bg-amber/5" : "border-white/10 bg-white/[0.035]"}`}><div className="mb-2 flex items-center justify-between gap-6"><span className={`text-[10px] font-bold uppercase tracking-[0.16em] ${message.role === "user" ? "text-ember" : message.role === "system" ? "text-amber" : "text-signal"}`}>{message.role === "user" ? "YOU" : message.role === "system" ? "SYSTEM" : "DAVID"}</span><span className="text-[10px] text-smoke">{formatDate(message.createdAt)}</span></div><p className="whitespace-pre-wrap text-sm leading-6 text-white/90">{message.content}</p>{message.provider && <p className="mt-3 text-[10px] uppercase tracking-wider text-smoke">provider: {message.provider}</p>}{message.role === "assistant" && <div className="mt-3 flex gap-2"><button className="rounded-lg p-1.5 text-smoke hover:bg-white/5 hover:text-white" onClick={() => void navigator.clipboard?.writeText(message.content)} aria-label="Copy assistant response"><FileText className="h-3.5 w-3.5" /></button><button className="rounded-lg p-1.5 text-smoke hover:bg-white/5 hover:text-white" onClick={() => void speak(message.content)} aria-label="Read assistant response aloud"><Headphones className="h-3.5 w-3.5" /></button></div>}</div></div>)}{loading && <div className="flex items-center gap-2 text-xs text-smoke"><Loader2 className="h-4 w-4 animate-spin text-ember" />David is thinking through the request...</div>}</div><form onSubmit={send} className="border-t border-white/10 pt-4"><div className="flex items-end gap-2 rounded-2xl border border-white/10 bg-black/25 p-2"><button type="button" className={`rounded-xl p-3 ${voicePhase === "listening" ? "bg-crimson/20 text-ember" : "text-smoke hover:bg-white/5 hover:text-white"}`} onClick={() => void toggleMic()} aria-label={voicePhase === "listening" ? "Stop recording" : "Start recording"}>{voicePhase === "listening" ? <Square className="h-4 w-4" /> : voicePhase === "error" ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}</button><textarea value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void send(); } }} className="max-h-36 min-h-12 flex-1 resize-none bg-transparent px-2 py-3 text-sm text-white outline-none placeholder:text-smoke" placeholder="Ask David to reason, plan, create, or explain..." aria-label="Message David" /><button type="submit" className="rounded-xl bg-crimson p-3 text-white shadow-glow transition hover:bg-ember disabled:opacity-50" disabled={!draft.trim() || loading} aria-label="Send message"><Send className="h-4 w-4" /></button></div><div className="mt-2 flex items-center justify-between px-2 text-[10px] uppercase tracking-wider text-smoke"><span>Enter to send · Shift + Enter for newline</span><span>{voice?.tts_configured ? "TTS ready" : "TTS not configured"}</span></div></form></Card><div className="space-y-6"><Card red><CoreVisual phase={voicePhase} small /><div className="mt-2 text-center"><p className="micro-label">Voice-aware state</p><p className="mt-2 text-sm font-semibold text-white">{voicePhase === "listening" ? "Listening for your direction" : voicePhase === "thinking" ? "Processing with David" : voicePhase === "speaking" ? "Speaking response" : voicePhase === "error" ? "Needs attention" : "Ready when you are"}</p><p className="mt-2 text-xs leading-5 text-smoke">The interface reflects real browser permission and backend voice availability.</p></div></Card><Card><SectionHeading eyebrow="Channel notes" title="Response envelope" /><div className="space-y-3 text-sm text-smoke"><p className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-signal" />Provider name is shown when returned by the backend.</p><p className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-signal" />Errors remain visible and retryable.</p><p className="flex items-start gap-2"><Check className="mt-5? h-4 w-4 shrink-0 text-amber" />Audio is played only when synthesis returns an audio payload.</p></div></Card></div></div>;
+  return <div className="grid gap-6 xl:grid-cols-[1fr_320px]"><Card className="flex min-h-[680px] flex-col"><div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4"><div><p className="micro-label">Communication console</p><h2 className="mt-1 text-xl font-semibold text-white">Conversation channel</h2></div><div className="flex items-center gap-2"><span className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] uppercase tracking-wider text-smoke">tone: {tone}</span><span className="rounded-full border border-signal/20 bg-signal/5 px-2.5 py-1 text-[10px] uppercase tracking-wider text-signal">{voicePhase}</span></div></div><div className="flex-1 space-y-4 overflow-y-auto py-5" aria-live="polite">{messages.map((message) => <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}><div className={`max-w-[88%] rounded-2xl border px-4 py-3 ${message.role === "user" ? "border-crimson/30 bg-crimson/10" : message.role === "system" ? "border-amber/30 bg-amber/5" : "border-white/10 bg-white/[0.035]"}`}><div className="mb-2 flex items-center justify-between gap-6"><span className={`text-[10px] font-bold uppercase tracking-[0.16em] ${message.role === "user" ? "text-ember" : message.role === "system" ? "text-amber" : "text-signal"}`}>{message.role === "user" ? "YOU" : message.role === "system" ? "SYSTEM" : "DAVID"}</span><span className="text-[10px] text-smoke">{formatDate(message.createdAt)}</span></div><p className="whitespace-pre-wrap text-sm leading-6 text-white/90">{message.content}</p>{message.provider && <p className="mt-3 text-[10px] uppercase tracking-wider text-smoke">provider: {message.provider}</p>}{message.role === "assistant" && <div className="mt-3 flex gap-2"><button className="rounded-lg p-1.5 text-smoke hover:bg-white/5 hover:text-white" onClick={() => void navigator.clipboard?.writeText(message.content)} aria-label="Copy assistant response"><FileText className="h-3.5 w-3.5" /></button><button className="rounded-lg p-1.5 text-smoke hover:bg-white/5 hover:text-white" onClick={() => void speak(message.content)} aria-label="Read assistant response aloud"><Headphones className="h-3.5 w-3.5" /></button></div>}</div></div>)}{loading && <div className="flex items-center gap-2 text-xs text-smoke"><Loader2 className="h-4 w-4 animate-spin text-ember" />David is thinking through the request...</div>}</div><form onSubmit={send} className="border-t border-white/10 pt-4"><div className="flex items-end gap-2 rounded-2xl border border-white/10 bg-black/25 p-2"><button type="button" className={`rounded-xl p-3 ${voicePhase === "listening" ? "bg-crimson/20 text-ember" : "text-smoke hover:bg-white/5 hover:text-white"}`} onClick={() => void toggleMic()} aria-label={voicePhase === "listening" ? "Stop recording" : "Start recording"}>{voicePhase === "listening" ? <Square className="h-4 w-4" /> : voicePhase === "error" ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}</button><textarea value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void send(); } }} className="max-h-36 min-h-12 flex-1 resize-none bg-transparent px-2 py-3 text-sm text-white outline-none placeholder:text-smoke" placeholder="Ask David to reason, plan, create, or explain..." aria-label="Message David" /><button type="submit" className="rounded-xl bg-crimson p-3 text-white shadow-glow transition hover:bg-ember disabled:opacity-50" disabled={!draft.trim() || loading} aria-label="Send message"><Send className="h-4 w-4" /></button></div><div className="mt-2 flex items-center justify-between px-2 text-[10px] uppercase tracking-wider text-smoke"><span>Enter to send · Shift + Enter for newline</span><span>{voice?.tts_configured ? "TTS ready" : "TTS not configured"}</span></div></form></Card><div className="space-y-6"><Card red><CoreVisual phase={voicePhase} small /><div className="mt-2 text-center"><p className="micro-label">Voice-aware state</p><p className="mt-2 text-sm font-semibold text-white">{voicePhase === "listening" ? "Listening for your direction" : voicePhase === "thinking" ? "Processing with David" : voicePhase === "speaking" ? "Speaking response" : voicePhase === "error" ? "Needs attention" : "Ready when you are"}</p><p className="mt-2 text-xs leading-5 text-smoke">The interface reflects real browser permission and backend voice availability.</p></div></Card><Card><SectionHeading eyebrow="Conversation history" title="Recent backend records" detail="The API currently returns conversation metadata only; selecting and replaying historical messages requires a dedicated backend detail endpoint." />{conversations.length ? <div className="mt-4 space-y-2">{conversations.slice(0, 6).map((conversation, index) => <div key={conversation.id || index} className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="truncate text-sm font-semibold text-white">{conversation.title || conversation.id || "Conversation"}</p><p className="mt-1 text-[11px] text-smoke">{formatDate(conversation.updated_at || conversation.created_at)}</p></div>)}</div> : <p className="mt-4 text-sm text-smoke">No backend conversation records are available yet.</p>}</Card><Card><SectionHeading eyebrow="Channel notes" title="Response envelope" /><div className="space-y-3 text-sm text-smoke"><p className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-signal" />Provider name is shown when returned by the backend.</p><p className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-signal" />Errors remain visible and retryable.</p><p className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-amber" />Audio is played only when synthesis returns an audio payload.</p></div></Card></div></div>;
 }
 
 function AgentWorkspace({ capabilities, notify }: { capabilities: Capability[]; notify: WorkspaceProps["notify"] }) {
@@ -510,6 +528,84 @@ function DevicesWorkspace({ voice }: { voice: VoiceStatus | null }) {
 }
 
 function PermissionCard({ icon: Icon, label, value, action }: { icon: IconType; label: string; value: string; action: React.ReactNode }) { return <div className="rounded-xl border border-white/10 bg-black/20 p-4"><div className="flex items-center justify-between"><Icon className="h-5 w-5 text-ember" /><StateDot state={value} /></div><p className="mt-4 font-semibold text-white">{label}</p><p className="mt-1 text-sm text-smoke">{value}</p><div className="mt-4">{action}</div></div>; }
+
+function VoiceWorkspace({ voice, notify }: { voice: VoiceStatus | null; notify: WorkspaceProps["notify"] }) {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [text, setText] = useState("");
+  const [phase, setPhase] = useState<"idle" | "generating" | "speaking" | "blocked" | "error">("idle");
+  const [detail, setDetail] = useState("Enter text to request the configured backend voice.");
+
+  const stop = () => {
+    audioRef.current?.pause();
+    if (audioRef.current) audioRef.current.currentTime = 0;
+    setPhase("idle");
+    setDetail("Playback stopped.");
+  };
+
+  const speak = async () => {
+    if (!text.trim()) return;
+    setPhase("generating");
+    setDetail("Requesting audio from the configured voice backend…");
+    try {
+      const response = await api.synthesize(text);
+      if (!response.audio_available || !response.audio_base64) {
+        setPhase("blocked");
+        setDetail(response.reason || response.text_fallback || "The backend did not return playable audio.");
+        return;
+      }
+      const audio = new Audio(toAudioUrl(response.audio_base64, response.audio_format || "wav"));
+      audioRef.current = audio;
+      audio.onplay = () => { setPhase("speaking"); setDetail("Audio is playing from the configured backend voice."); };
+      audio.onended = () => { setPhase("idle"); setDetail("Playback finished."); };
+      audio.onerror = () => { setPhase("error"); setDetail("The returned audio could not be played by this browser."); };
+      await audio.play();
+    } catch (error) {
+      setPhase("error");
+      const message = error instanceof Error ? error.message : "Voice synthesis failed";
+      setDetail(message);
+      notify("error", message);
+    }
+  };
+
+  useEffect(() => () => { audioRef.current?.pause(); }, []);
+
+  return <div className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]"><Card red><SectionHeading eyebrow="Voice control" title="Voice workspace" detail="Uses the existing server-side voice endpoint. Browser speech synthesis is not substituted." /><div className="mt-5 space-y-4"><textarea value={text} onChange={(event) => setText(event.target.value)} className="min-h-40 w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white outline-none placeholder:text-smoke" placeholder="Text for David to say…" aria-label="Text for voice synthesis" /><div className="flex flex-wrap gap-2"><Button variant="primary" onClick={() => void speak()} disabled={phase === "generating" || !text.trim()}>{phase === "generating" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}{phase === "generating" ? "Generating" : "Request voice"}</Button><Button onClick={stop} disabled={phase !== "speaking" && phase !== "generating"}><Square className="h-4 w-4" />Stop</Button></div></div></Card><div className="space-y-6"><Card><SectionHeading eyebrow="Playback status" title={phase === "speaking" ? "Speaking" : phase === "generating" ? "Generating" : "Voice status"} detail={detail} /><div className="mt-5 grid gap-3 sm:grid-cols-2"><StateRow label="TTS backend" value={voice?.tts_configured ? (voice.tts_engine || "Configured") : "Not configured"} /><StateRow label="Speech input" value={voice?.stt_configured ? "Backend configured" : "Not exposed by backend"} /><StateRow label="Output state" value={phase.toUpperCase()} /><StateRow label="Fallback voice" value="Not substituted" /></div></Card><Card><SectionHeading eyebrow="Boundary" title="Truthful voice behavior" detail="Voice capture and transcription controls are shown only when the backend exposes them. This workspace never invents microphone transcription or a browser-default output voice." /></Card></div></div>;
+}
+
+function ContentWorkspace({ notify }: { notify: WorkspaceProps["notify"] }) {
+  const [brief, setBrief] = useState("");
+  const [working, setWorking] = useState(false);
+  const [result, setResult] = useState<Record<string, unknown> | null>(null);
+  const createPlan = async () => {
+    if (!brief.trim()) return;
+    setWorking(true);
+    try {
+      const response = await api.planCreate(brief);
+      setResult(response);
+      notify("success", "Content plan returned by the backend.");
+    } catch (error) {
+      notify("error", error instanceof Error ? error.message : "Content planning failed");
+    } finally { setWorking(false); }
+  };
+  return <div className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]"><Card red><SectionHeading eyebrow="Content studio" title="Plan content" detail="Creates a real backend plan; it does not claim publication, delivery, or a completed campaign." /><textarea value={brief} onChange={(event) => setBrief(event.target.value)} className="mt-5 min-h-44 w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white outline-none placeholder:text-smoke" placeholder="Describe the content objective, audience, and constraints…" aria-label="Content objective" /><Button variant="primary" className="mt-3 w-full" onClick={() => void createPlan()} disabled={!brief.trim() || working}>{working ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}{working ? "Planning" : "Create content plan"}</Button></Card><Card><SectionHeading eyebrow="Plan result" title="Backend response" detail="Any external delivery remains approval- and adapter-gated." />{result ? <pre className="mt-5 max-h-[420px] overflow-auto rounded-xl border border-white/10 bg-black/30 p-4 text-xs leading-5 text-signal">{JSON.stringify(result, null, 2)}</pre> : <EmptyState icon={FileText} title="No content plan yet" detail="Submit a brief to inspect the actual planning response." />}</Card></div>;
+}
+
+function AutomationWorkspace({ capabilities, notify }: { capabilities: Capability[]; notify: WorkspaceProps["notify"] }) {
+  const [workflows, setWorkflows] = useState<Array<Record<string, unknown>>>([]);
+  const [loading, setLoading] = useState(true);
+  const load = async () => {
+    setLoading(true);
+    try {
+      const response = await api.intelligence.workflows() as { workflows?: unknown[] };
+      setWorkflows(safeArray<Record<string, unknown>>(response.workflows));
+    } catch (error) {
+      notify("error", error instanceof Error ? error.message : "Automation registry could not be loaded");
+    } finally { setLoading(false); }
+  };
+  useEffect(() => { void load(); }, []);
+  const automationCapabilities = capabilities.filter((item) => /automation|workflow|schedule/i.test(`${item.id} ${item.category || ""}`));
+  return <div className="space-y-6"><Card red><SectionHeading eyebrow="Automation plane" title="Automation workspace" detail="Shows workflow records returned by the backend. No schedule, webhook, or external action can be created from the UI until the backend exposes that contract." action={<Button onClick={() => void load()} disabled={loading}>{loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}Refresh</Button>} /><div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">{workflows.length ? workflows.map((workflow, index) => <div key={String(workflow.id || index)} className="rounded-xl border border-white/10 bg-black/20 p-4"><div className="flex items-start justify-between gap-3"><TerminalSquare className="h-5 w-5 text-ember" /><StateDot state={String(workflow.state || workflow.status || "registered")} /></div><h3 className="mt-4 font-semibold text-white">{String(workflow.name || workflow.id || "Workflow")}</h3><p className="mt-1 text-xs leading-5 text-smoke">{String(workflow.description || "Backend-registered workflow.")}</p></div>) : <EmptyState icon={TerminalSquare} title={loading ? "Loading workflows" : "No workflow records"} detail={loading ? "Reading the backend registry…" : "The backend has not registered an automation workflow for this account."} />}</div></Card><Card><SectionHeading eyebrow="Capability boundary" title="Automation readiness" detail="Registered capabilities remain visible even when they are not executable for this user." /><div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">{automationCapabilities.length ? automationCapabilities.map((item) => <CapabilityRow key={item.id} item={item} />) : <EmptyState icon={TerminalSquare} title="No automation capability registered" detail="No automation worker has been declared as ready by the backend." />}</div></Card></div>;
+}
 
 function ConnectorsWorkspace({ adapters }: { adapters: Adapter[] }) { return <div className="space-y-6"><Card red><SectionHeading eyebrow="Integration plane" title="Connectors" detail="Imported repositories become bounded capabilities; credentials and external activation stay server-side." /><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{adapters.length ? adapters.map((adapter) => <div key={adapter.id} className="rounded-xl border border-white/10 bg-black/20 p-4"><div className="flex items-start justify-between gap-3"><div className="grid h-9 w-9 place-items-center rounded-lg bg-white/[0.05] text-ember"><Cloud className="h-4 w-4" /></div><StateDot state={adapter.state || (adapter.available ? "available" : "unavailable")} /></div><h3 className="mt-4 font-semibold text-white">{adapter.name || adapter.id}</h3><p className="mt-1 text-xs text-smoke">{adapter.kind || "service adapter"}</p><p className="mt-3 text-xs leading-5 text-smoke">{adapter.reason || adapter.readiness?.join(" · ") || "Readiness is reported by the backend."}</p></div>) : <EmptyState icon={Cloud} title="No connectors loaded" detail="Connect David’s backend to view adapter boundaries." />}</div></Card></div>; }
 
