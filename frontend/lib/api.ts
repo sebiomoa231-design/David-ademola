@@ -17,6 +17,10 @@ import type {
   RunDetails,
   TaskItem,
   VoiceStatus,
+  GitHubHealth,
+  GitHubConnection,
+  GitHubRepositoryItem,
+  GitHubAuditItem,
 } from "./types";
 
 // The public canonical service is deliberately the development fallback. A
@@ -140,6 +144,32 @@ export const api = {
     executeRun: (runId: string, payload: { approved?: boolean; objective?: string; requested_capability?: string; input?: Record<string, unknown> } = {}) =>
       request<Record<string, unknown>>(`/api/intelligence/runs/${runId}/execute`, json(payload)),
     runDetails: (runId: string) => request<RunDetails>(`/api/intelligence/runs/${runId}`),
+  },
+
+  github: {
+    health: () => request<GitHubHealth>("/api/github/health"),
+    connection: () => request<GitHubConnection>("/api/github/connection"),
+    connect: () => request<{ authorize_url: string; state: string }>("/api/github/connect", { method: "POST" }),
+    connectCallback: (code: string, state: string) =>
+      request<Record<string, unknown>>("/api/github/connect/callback", json({ code, state })),
+    disconnect: () => request<Record<string, unknown>>("/api/github/disconnect", { method: "POST" }),
+    repositories: (projectId?: string) =>
+      request<GitHubRepositoryItem[]>(`/api/github/repositories${projectId ? `?project_id=${encodeURIComponent(projectId)}` : ""}`),
+    createRepository: (topic: string, projectId?: string, options?: { private?: boolean }) =>
+      request<GitHubRepositoryItem>(
+        "/api/github/repositories",
+        json({ topic, project_id: projectId || null, private: options?.private ?? true }),
+      ),
+    initializeRepository: (repositoryId: string, files: Record<string, string>) =>
+      request<Record<string, unknown>>(`/api/github/repositories/${encodeURIComponent(repositoryId)}/initialize`, json({ files })),
+    pushFiles: (repositoryId: string, files: Record<string, string>, commitMessage?: string) =>
+      request<Record<string, unknown>>(
+        `/api/github/repositories/${encodeURIComponent(repositoryId)}/push`,
+        json({ files, commit_message: commitMessage || null }),
+      ),
+    updateRepository: (repositoryId: string, payload: Record<string, unknown>) =>
+      request<GitHubRepositoryItem>(`/api/github/repositories/${encodeURIComponent(repositoryId)}/update`, json(payload)),
+    audit: () => request<GitHubAuditItem[]>("/api/github/audit"),
   },
 };
 

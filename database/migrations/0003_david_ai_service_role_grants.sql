@@ -12,5 +12,7 @@ grant select, insert, update, delete on table
   public.david_messages,
   public.david_assets,
   public.david_generations,
-  public.david_favorites
+  public.david_favorites,
+  public.david_github_repositories,
+  public.david_github_audit_log
 to service_role;

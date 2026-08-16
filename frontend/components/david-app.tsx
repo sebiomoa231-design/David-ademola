@@ -69,6 +69,10 @@ import type {
   ConversationItem,
   GoalPlan,
   GenerationItem,
+  GitHubAuditItem,
+  GitHubConnection,
+  GitHubHealth,
+  GitHubRepositoryItem,
   MemoryItem,
   ProjectItem,
   ReadinessResponse,
@@ -105,6 +109,7 @@ const navItems: Array<{ id: string; label: string; icon: IconType; group?: strin
   { id: "activity", label: "Activity", icon: Activity, group: "Observe" },
   { id: "providers", label: "Providers", icon: Network, group: "Observe" },
   { id: "devices", label: "Devices", icon: Monitor, group: "Observe" },
+  { id: "github", label: "GitHub", icon: ExternalLink, group: "Operate" },
   { id: "connectors", label: "Connectors", icon: Layers3, group: "Operate" },
   { id: "automation", label: "Automation", icon: TerminalSquare, group: "Operate" },
   { id: "website-builder", label: "Website builder", icon: Globe2, group: "Creative Suite" },
@@ -132,6 +137,7 @@ const routeLabels: Record<string, string> = {
   activity: "Activity",
   providers: "Providers",
   devices: "Devices",
+  github: "GitHub",
   connectors: "Connectors",
   automation: "Automation",
   "website-builder": "Website builder",
@@ -393,6 +399,7 @@ function renderWorkspace(route: string, props: WorkspaceProps) {
     case "library": return <LibraryWorkspace assets={props.assets} generations={props.generations} storageStatus={props.storageStatus} projects={props.projects} notify={props.notify} refresh={props.refresh} />;
     case "providers": return <ProvidersWorkspace providers={props.providers} adapters={props.adapters} capabilities={props.capabilities} fabricReady={props.fabricReady} />;
     case "devices": return <DevicesWorkspace voice={props.voice} />;
+    case "github": return <GitHubWorkspace notify={props.notify} />;
     case "connectors": return <ConnectorsWorkspace adapters={props.adapters} />;
     case "automation": return <AutomationWorkspace capabilities={props.capabilities} notify={props.notify} />;
     case "website-builder": return <WebsiteBuilderWorkspace projects={props.projects} notify={props.notify} refresh={props.refresh} />;
@@ -721,6 +728,266 @@ function StudioWorkspace({ kind, capabilities }: { kind: "video" | "image"; capa
 function UnavailableStudioWorkspace({ title, detail, icon: Icon }: { title: string; detail: string; icon: LucideIcon }) { return <div className="grid gap-6 xl:grid-cols-[1fr_0.8fr]"><Card red><SectionHeading eyebrow="Creative Suite" title={title} detail="This workspace is part of the Command Center, but no backend worker is currently configured." /><div className="mt-5 rounded-2xl border border-dashed border-amber/30 bg-amber/5 p-6"><Icon className="h-7 w-7 text-amber" /><h3 className="mt-4 font-semibold text-white">Capability unavailable</h3><p className="mt-2 text-sm leading-6 text-smoke">{detail}</p></div></Card><Card><SectionHeading eyebrow="Activation boundary" title="What is required" detail="David AI only enables this workspace after its server-side contract is verified." /><div className="mt-5 space-y-3"><StateRow label="Backend worker" value="Not configured" /><StateRow label="Provider credentials" value="Server-side required" /><StateRow label="Artifact provenance" value="Required before output" /><StateRow label="External delivery" value="Approval required" /></div></Card></div>; }
 
 function ActivityWorkspace({ conversations, tasks }: { conversations: ConversationItem[]; tasks: TaskItem[] }) { const entries = [...conversations.slice(0, 4).map((item) => ({ label: "conversation", detail: item.title || item.id || "Conversation", date: item.updated_at || item.created_at })), ...tasks.slice(0, 4).map((item) => ({ label: "task", detail: item.title || item.description || "Task", date: item.created_at }))]; return <div className="space-y-6"><Card red><SectionHeading eyebrow="Observability" title="Activity feed" detail="A lightweight view assembled from live conversation and task records." />{entries.length ? <div className="space-y-3">{entries.map((entry, index) => <div key={`${entry.label}-${index}`} className="flex items-start gap-3 rounded-xl border border-white/10 bg-black/20 p-4"><div className="mt-1 h-2 w-2 rounded-full bg-ember" /><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center justify-between gap-3"><span className="text-[10px] font-bold uppercase tracking-widest text-ember">{entry.label}</span><span className="text-[11px] text-smoke">{formatDate(entry.date)}</span></div><p className="mt-1 text-sm text-white">{entry.detail}</p></div></div>)}</div> : <EmptyState icon={Activity} title="No activity records" detail="Activity will appear as David receives conversations and tasks." />}</Card></div>; }
+
+function GitHubWorkspace({ notify }: { notify: WorkspaceProps["notify"] }) {
+  const [connecting, setConnecting] = useState(false);
+  const [repos, setRepos] = useState<GitHubRepositoryItem[]>([]);
+  const [connection, setConnection] = useState<GitHubConnection | null>(null);
+  const [health, setHealth] = useState<GitHubHealth | null>(null);
+  const [audit, setAudit] = useState<GitHubAuditItem[]>([]);
+  const [working, setWorking] = useState(false);
+  const [topic, setTopic] = useState("");
+  const [pushTarget, setPushTarget] = useState<string>("");
+  const [pushFileText, setPushFileText] = useState("");
+  const [initialized, setInitialized] = useState<Record<string, boolean>>({});
+
+  const loadAll = async () => {
+    try {
+      const [nextConnection, nextRepos, nextAudit] = await Promise.all([
+        api.github.connection().catch(() => null),
+        api.github.repositories().catch(() => []),
+        api.github.audit().catch(() => []),
+      ]);
+      setConnection(nextConnection);
+      setRepos(nextRepos || []);
+      setAudit(nextAudit || []);
+      setHealth({ configured: Boolean(nextConnection?.connected), connected: Boolean(nextConnection?.connected), owner: nextConnection?.owner || null });
+    } catch {
+      setConnection(null);
+    }
+  };
+
+  useEffect(() => {
+    void loadAll();
+  }, []);
+
+  const connect = async () => {
+    setConnecting(true);
+    try {
+      const result = await api.github.connect();
+      // Popup flow: the dashboard keeps the GitHub approval and callback
+      // round trip separate from the current workspace, then reloads when
+      // the callback reports success.
+      const popup = window.open(result.authorize_url, "github-connect", "popup=yes,width=520,height=700");
+      const listener = (event: MessageEvent) => {
+        if (event.origin !== window.location.origin) return;
+        if (event.data?.type === "github-connected") {
+          window.removeEventListener("message", listener);
+          notify("success", "Connected to GitHub. Tracked repositories and audit records now sync automatically.");
+          void loadAll();
+        }
+      };
+      window.addEventListener("message", listener);
+      const timeout = window.setTimeout(() => window.removeEventListener("message", listener), 600_000);
+      window.addEventListener("unload", () => {
+        window.removeEventListener("message", listener);
+        window.clearTimeout(timeout);
+      });
+      if (!popup) {
+        // Popup blocked: fall back to navigating the current tab.
+        window.location.href = result.authorize_url;
+      }
+    } catch (error) {
+      notify("error", error instanceof Error ? error.message : "GitHub connection could not be started");
+    } finally {
+      setConnecting(false);
+    }
+  };
+
+  const disconnect = async () => {
+    setWorking(true);
+    try {
+      await api.github.disconnect();
+      notify("success", "Disconnected from GitHub. Tracked repositories remain in the audit log.");
+      await loadAll();
+    } catch (error) {
+      notify("error", error instanceof Error ? error.message : "Disconnect failed");
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  const createRepo = async () => {
+    if (!topic.trim()) return notify("info", "Describe the website before creating a repository.");
+    setWorking(true);
+    try {
+      const repo = await api.github.createRepository(topic);
+      setInitialized((prev) => ({ ...prev, [repo.id || ""]: false }));
+      notify("success", `Repository ${repo.repository_full_name || repo.repository_name || ""} created on GitHub and saved to the audit log.`);
+      setTopic("");
+      await loadAll();
+    } catch (error) {
+      notify("error", error instanceof Error ? error.message : "Repository creation failed");
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  const initRepo = async (repo: GitHubRepositoryItem) => {
+    setWorking(true);
+    try {
+      await api.github.initializeRepository(repo.id || "", { "README.md": `# ${repo.repository_name || "David AI website"}\n\nGenerated by David AI.` });
+      setInitialized((prev) => ({ ...prev, [repo.id || ""]: true }));
+      notify("success", "Repository initialized with a README on GitHub.");
+      await loadAll();
+    } catch (error) {
+      notify("error", error instanceof Error ? error.message : "Initialization failed");
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  const pushFiles = async (repoId: string) => {
+    const lines = pushFileText.trim().split(/\n(?=[^\n]+:)/);
+    const files: Record<string, string> = {};
+    for (const block of lines) {
+      const colon = block.indexOf(":");
+      if (colon <= 0) continue;
+      files[block.slice(0, colon).trim()] = block.slice(colon + 1).trim();
+    }
+    if (!Object.keys(files).length) return notify("info", "Write files as one block per file, `filename: content`.");
+    setWorking(true);
+    try {
+      await api.github.pushFiles(repoId, files, "Update from David AI");
+      notify("success", `${Object.keys(files).length} file(s) pushed to GitHub; audit log updated.`);
+      setPushFileText("");
+      await loadAll();
+    } catch (error) {
+      notify("error", error instanceof Error ? error.message : "Push failed");
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  const connected = Boolean(connection?.connected);
+
+  return (
+    <div className="space-y-6">
+      <Card red>
+        <SectionHeading
+          eyebrow="Operate"
+          title="GitHub"
+          detail="One repository per generated website. Every create, push, and deployment is recorded in the audit log; secrets never leave the server."
+          action={
+            connected
+              ? <Button variant="ghost" className="px-2" onClick={() => void loadAll()}><RefreshCw className="h-4 w-4" /></Button>
+              : null
+          }
+        />
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className={`h-2 w-2 rounded-full ${connected ? "bg-signal" : "bg-amber"}`} />
+            <p className="text-sm text-white">{connected ? `Connected as ${connection?.owner}` : "Not connected to GitHub yet"}</p>
+          </div>
+          {connected               ? (
+            <Button variant="ghost" onClick={() => void disconnect()} disabled={working}>
+              <ExternalLink className="h-4 w-4" />Disconnect
+            </Button>
+          ) : (
+            <Button variant="primary" onClick={() => void connect()} disabled={connecting}>
+              <ExternalLink className="h-4 w-4" />{connecting ? "Starting connection" : "Connect GitHub"}
+            </Button>
+          )}
+        </div>
+        {!connected && (
+          <p className="mt-4 rounded-xl border border-amber/30 bg-amber/5 p-4 text-sm leading-6 text-smoke">
+            Connecting starts the approved GitHub App flow. The dashboard redirects you to GitHub, where the owner approves the installation.
+            If GitHub has not been configured on the backend yet, connecting will report that the app credentials are missing.
+          </p>
+        )}
+      </Card>
+
+      {connected ? (
+        <>
+          <Card>
+            <SectionHeading eyebrow="Repositories" title="Website repositories" detail="Each tracked repository maps to a David AI workspace or website project." />
+            {repos.length ? (
+              <div className="space-y-3">
+                {repos.map((repo) => (
+                  <div key={repo.id} className="rounded-xl border border-white/10 bg-black/15 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <a href={repo.repository_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm font-semibold text-white hover:text-ember">
+                          {repo.repository_full_name || repo.repository_name}
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                        <p className="mt-1 text-xs text-smoke">
+                          {repo.visibility} · {repo.default_branch} · {repo.deployment_status !== "none" ? `deployed ${repo.deployment_status}` : "not deployed yet"}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        {!initialized[repo.id || ""] ? (
+                          <Button variant="ghost" className="px-2" onClick={() => void initRepo(repo)} disabled={working}>
+                            <Plus className="h-3 w-3" />Initialize
+                          </Button>
+                        ) : null}
+                        <Button
+                          variant="ghost"
+                          className="px-2"
+                          onClick={() => setPushTarget(pushTarget === repo.id ? "" : repo.id || "")}
+                        >
+                          <Upload className="h-3 w-3" />Push files
+                        </Button>
+                      </div>
+                    </div>
+                    {pushTarget === repo.id && (
+                      <div className="mt-3 space-y-2">
+                        <textarea
+                          value={pushFileText}
+                          onChange={(event) => setPushFileText(event.target.value)}
+                          className="w-full rounded-xl border border-white/10 bg-black/30 p-3 font-mono text-xs text-white outline-none placeholder:text-smoke"
+                          placeholder={"index.html: <!doctype html>\n\n<title>Site</title>\nstyle.css: body { font-family: sans-serif; }"}
+                        />
+                        <Button variant="primary" className="w-full" onClick={() => void pushFiles(repo.id || "")} disabled={working}>
+                          <Upload className="h-4 w-4" />Push to GitHub
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <EmptyState icon={ExternalLink} title="No repositories tracked yet" detail="Describe a website below to create its dedicated GitHub repository." />
+            )}
+          </Card>
+          <div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
+            <Card>
+              <SectionHeading eyebrow="Create" title="New website repository" detail="A unique david- prefixed name is generated from the description." />
+              <textarea
+                value={topic}
+                onChange={(event) => setTopic(event.target.value)}
+                className="min-h-24 w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white outline-none placeholder:text-smoke"
+                placeholder="e.g. A minimalist portfolio for a ceramics studio"
+              />
+              <Button variant="primary" className="mt-3 w-full" onClick={() => void createRepo()} disabled={working || !topic.trim()}>
+                {working ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                {working ? "Creating" : "Create repository"}
+              </Button>
+            </Card>
+            <Card>
+              <SectionHeading eyebrow="Audit" title="Recent GitHub activity" detail="Every tracked GitHub action, with secrets stripped from the details." />
+              {audit.length ? (
+                <div className="space-y-3">
+                  {audit.slice(0, 8).map((entry, index) => (
+                    <div key={entry.id || index} className="rounded-xl border border-white/10 bg-black/15 p-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-ember">{entry.event}</span>
+                        <span className="text-[11px] text-smoke">{formatDate(entry.created_at)}</span>
+                      </div>
+                      <p className="mt-1 font-mono text-xs leading-5 text-smoke">{JSON.stringify(entry.details || {})}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState icon={ShieldCheck} title="No GitHub activity yet" detail="Repository creation, initialization, pushes, and deployments will appear here." />
+              )}
+            </Card>
+          </div>
+        </>
+      ) : null}
+    </div>
+  );
+}
 
 function SettingsWorkspace({ tone, voice }: { tone: string; voice: VoiceStatus | null }) { return <div className="grid gap-6 xl:grid-cols-2"><Card red><SectionHeading eyebrow="Personalization" title="Settings" detail="Client preferences are local UI state until a server settings endpoint is exposed." /><div className="space-y-3"><StateRow label="Default tone" value={tone} /><StateRow label="Language" value="AUTO" /><StateRow label="Theme" value="Red futuristic / dark" /><StateRow label="Voice engine" value={voice?.tts_engine || "Not configured"} /></div></Card><Card><SectionHeading eyebrow="Security" title="Guardrails" /><div className="space-y-3"><StateRow label="API keys" value="Server-side only" /><StateRow label="Approval gates" value="Active" /><StateRow label="Destructive actions" value="Fail closed" /><StateRow label="Reduced motion" value="Browser controlled" /></div></Card></div>; }
 

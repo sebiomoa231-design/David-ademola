@@ -47,12 +47,52 @@ export interface ProjectItem {
 }
 
 export interface TaskItem {
-  id?: string;
   title?: string;
   description?: string;
   status?: string;
   priority?: string;
   project_id?: string;
+  created_at?: string;
+}
+
+export interface GitHubHealth {
+  configured: boolean;
+  connected: boolean;
+  message?: string | null;
+  owner?: string | null;
+}
+
+export interface GitHubConnection {
+  connected: boolean;
+  owner?: string | null;
+  owner_html_url?: string | null;
+  installation_id?: string | null;
+  method?: string | null;
+  connected_at?: string | null;
+}
+
+export interface GitHubRepositoryItem {
+  id?: string;
+  repository_name?: string;
+  repository_full_name?: string;
+  repository_owner?: string;
+  repository_url?: string;
+  clone_url?: string | null;
+  default_branch?: string;
+  visibility?: string;
+  deployment_provider?: string | null;
+  deployment_url?: string | null;
+  deployment_status?: string;
+  last_commit_sha?: string | null;
+  project_id?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface GitHubAuditItem {
+  id?: string;
+  event?: string;
+  details?: Record<string, unknown>;
   created_at?: string;
 }
 

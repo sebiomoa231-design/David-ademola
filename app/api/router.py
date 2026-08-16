@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from agents import router as agents_router
+from github import router as github_router
 from auth import router as auth_router
 from chat import router as chat_router
 from conversations import router as conversations_router
@@ -34,6 +35,7 @@ for router in (
     voice_router,
     website_router,
     agents_router,
+    github_router,
 ):
     api_router.include_router(router)
 
