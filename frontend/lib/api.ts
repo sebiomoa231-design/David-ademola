@@ -1,0 +1,111 @@
+import type {
+  Adapter,
+  BackendHealth,
+  Capability,
+  ChatResponse,
+  ConversationItem,
+  Goal,
+  GoalPlan,
+  MemoryItem,
+  ProjectItem,
+  ReadinessResponse,
+  RouteResult,
+  Run,
+  RunDetails,
+  TaskItem,
+  VoiceStatus,
+} from "./types";
+
+const primaryBase = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/$/, "");
+const fallbackBase = (process.env.NEXT_PUBLIC_API_FALLBACK_URL || "").replace(/\/$/, "");
+const bases = [primaryBase, fallbackBase].filter((base, index, all) => Boolean(base) && all.indexOf(base) === index);
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  let lastError: Error | null = null;
+
+  for (const base of bases) {
+    try {
+      const response = await fetch(`${base}${path}`, {
+        ...init,
+        headers: {
+          "Content-Type": "application/json",
+          ...(init?.headers || {}),
+        },
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        const detail = await response.text();
+        throw new Error(detail || `${response.status} ${response.statusText}`);
+      }
+
+      return (await response.json()) as T;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error("Request failed");
+    }
+  }
+
+  throw lastError || new Error("No backend endpoint configured");
+}
+
+const json = (body: unknown): RequestInit => ({
+  method: "POST",
+  body: JSON.stringify(body),
+});
+
+export const api = {
+  health: () => request<BackendHealth>("/api/health"),
+  chat: (message: string, conversationId?: string) =>
+    request<ChatResponse>("/api/chat", json({ message, conversation_id: conversationId })),
+  voiceStatus: () => request<VoiceStatus>("/api/voice/status"),
+  synthesize: (text: string, languageMode = "AUTO") =>
+    request<{
+      audio_available: boolean;
+      provider: string;
+      text_fallback: string;
+      reason?: string | null;
+      audio_base64?: string | null;
+      audio_format?: string;
+    }>("/api/voice/synthesize", json({ text, language_mode: languageMode })),
+  memories: () => request<MemoryItem[]>("/api/memory"),
+  addMemory: (payload: Partial<MemoryItem> & { content: string }) => request<MemoryItem>("/api/memory", json(payload)),
+  searchMemories: (query: string) => request<MemoryItem[]>(`/api/memory/search?q=${encodeURIComponent(query)}`),
+  deleteMemory: (id: string) => request<void>(`/api/memory/${id}`, { method: "DELETE" }),
+  projects: () => request<ProjectItem[]>("/api/projects"),
+  createProject: (payload: Partial<ProjectItem> & { name: string }) => request<ProjectItem>("/api/projects", json(payload)),
+  tasks: () => request<TaskItem[]>("/api/projects/tasks"),
+  createTask: (payload: Partial<TaskItem> & { title?: string; description?: string }) => request<TaskItem>("/api/projects/tasks", json(payload)),
+  conversations: () => request<ConversationItem[]>("/api/conversations"),
+  websiteGenerate: (prompt: string) => request<Record<string, unknown>>("/api/website/generate", json({ prompt })),
+  planCreate: (goal: string) => request<Record<string, unknown>>("/api/plan", json({ goal })),
+  login: (email: string, password: string) => request<Record<string, unknown>>("/api/auth/login", json({ email, password })),
+  register: (name: string, email: string, password: string) => request<Record<string, unknown>>("/api/auth/register", json({ name, email, password })),
+
+  intelligence: {
+    health: () => request<Record<string, unknown>>("/api/intelligence/health"),
+    readiness: () => request<ReadinessResponse>("/api/intelligence/readiness"),
+    capabilities: () => request<{ capabilities: Capability[] }>("/api/intelligence/capabilities"),
+    adapters: () => request<{ adapters: Adapter[] }>("/api/intelligence/adapters"),
+    agents: () => request<Record<string, unknown>>("/api/intelligence/agents"),
+    tools: () => request<Record<string, unknown>>("/api/intelligence/tools"),
+    providers: () => request<Record<string, unknown>>("/api/intelligence/providers"),
+    workflows: () => request<Record<string, unknown>>("/api/intelligence/workflows"),
+    policies: () => request<Record<string, unknown>>("/api/intelligence/policies"),
+    route: (objective: string, requestedCapability?: string) =>
+      request<RouteResult>("/api/intelligence/route", json({ objective, requested_capability: requestedCapability || null })),
+    createGoal: (objective: string, context?: Record<string, unknown>) =>
+      request<Goal>("/api/intelligence/goals", json({ objective, context: context || {} })),
+    planGoal: (goalId: string) => request<GoalPlan>(`/api/intelligence/goals/${goalId}/plan`, { method: "POST" }),
+    createRun: (goalId: string, objective?: string, requestedCapability?: string) =>
+      request<Run>("/api/intelligence/runs", json({ goal_id: goalId, objective, requested_capability: requestedCapability || null })),
+    authorizeRun: (runId: string, capability: string) =>
+      request<Record<string, unknown>>(`/api/intelligence/runs/${runId}/authorize?capability=${encodeURIComponent(capability)}`, { method: "POST" }),
+    executeRun: (runId: string, payload: { approved?: boolean; objective?: string; requested_capability?: string; input?: Record<string, unknown> } = {}) =>
+      request<Record<string, unknown>>(`/api/intelligence/runs/${runId}/execute`, json(payload)),
+    runDetails: (runId: string) => request<RunDetails>(`/api/intelligence/runs/${runId}`),
+  },
+};
+
+export function toAudioUrl(base64: string, format = "wav"): string {
+  return `data:audio/${format};base64,${base64}`;
+}
