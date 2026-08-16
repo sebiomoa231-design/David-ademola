@@ -110,3 +110,47 @@ class PlanResponse(BaseModel):
     milestones: list[str]
     steps: list[PlanStep]
     estimated_phases: int
+
+
+class AssetItem(BaseModel):
+    id: str
+    owner_id: str = "default-owner"
+    project_id: Optional[str] = None
+    filename: str
+    storage_path: str
+    content_type: str = "application/octet-stream"
+    size_bytes: int = 0
+    kind: Literal["image", "video", "audio", "document", "website", "other"] = "other"
+    metadata: dict = Field(default_factory=dict)
+    favorite: bool = False
+    signed_url: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class GenerationCreate(BaseModel):
+    project_id: Optional[str] = None
+    asset_id: Optional[str] = None
+    kind: Literal["image", "video", "audio", "document", "website", "other"] = "other"
+    prompt: str = ""
+    provider: str = "unknown"
+    status: str = "completed"
+    output: str = ""
+    metadata: dict = Field(default_factory=dict)
+
+
+class GenerationItem(GenerationCreate):
+    id: str
+    owner_id: str = "default-owner"
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class FavoriteRequest(BaseModel):
+    favorite: bool = True
+
+
+class SupabaseStatus(BaseModel):
+    configured: bool
+    database_enabled: bool
+    storage_bucket: str
+    migration_required: bool = False

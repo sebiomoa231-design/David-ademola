@@ -1,5 +1,6 @@
 import type {
   Adapter,
+  AssetItem,
   BackendHealth,
   Capability,
   ChatResponse,
@@ -10,6 +11,8 @@ import type {
   ProjectItem,
   ReadinessResponse,
   RouteResult,
+  GenerationItem,
+  SupabaseStatus,
   Run,
   RunDetails,
   TaskItem,
@@ -25,12 +28,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
   for (const base of bases) {
     try {
+      const headers = new Headers(init?.headers);
+      if (!(init?.body instanceof FormData)) headers.set("Content-Type", "application/json");
       const response = await fetch(`${base}${path}`, {
         ...init,
-        headers: {
-          "Content-Type": "application/json",
-          ...(init?.headers || {}),
-        },
+        headers,
         cache: "no-store",
       });
 
@@ -80,6 +82,21 @@ export const api = {
   planCreate: (goal: string) => request<Record<string, unknown>>("/api/plan", json({ goal })),
   login: (email: string, password: string) => request<Record<string, unknown>>("/api/auth/login", json({ email, password })),
   register: (name: string, email: string, password: string) => request<Record<string, unknown>>("/api/auth/register", json({ name, email, password })),
+  uploadFile: (file: File, projectId?: string, kind = "other") => {
+    const form = new FormData();
+    form.append("file", file);
+    if (projectId) form.append("project_id", projectId);
+    form.append("kind", kind);
+    return request<AssetItem & { status?: string; stored_as?: string; backend?: string }>("/api/files/upload", { method: "POST", body: form });
+  },
+
+  library: {
+    status: () => request<SupabaseStatus>("/api/library/status"),
+    assets: (projectId?: string, kind?: string) => request<AssetItem[]>(`/api/library/assets${projectId || kind ? `?${new URLSearchParams({ ...(projectId ? { project_id: projectId } : {}), ...(kind ? { kind } : {}) }).toString()}` : ""}`),
+    favorite: (assetId: string, favorite: boolean) => request<AssetItem>(`/api/library/assets/${assetId}/favorite`, json({ favorite })),
+    generations: (projectId?: string) => request<GenerationItem[]>(`/api/library/generations${projectId ? `?project_id=${encodeURIComponent(projectId)}` : ""}`),
+    createGeneration: (payload: Partial<GenerationItem> & { kind?: string; prompt?: string }) => request<GenerationItem>("/api/library/generations", json(payload)),
+  },
 
   intelligence: {
     health: () => request<Record<string, unknown>>("/api/intelligence/health"),

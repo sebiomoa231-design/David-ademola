@@ -25,6 +25,17 @@ class Settings(BaseSettings):
     max_upload_mb: int = 25
     data_dir: str = str(PROJECT_ROOT / "data")
 
+    # Supabase is accessed only by the backend. Secret keys must be provided
+    # through the deployment environment and are never bundled into frontend code.
+    supabase_url: str = ""
+    supabase_publishable_key: str = ""
+    supabase_secret_key: str = ""
+    database_url: str = ""
+    supabase_storage_bucket: str = "Davidai"
+    supabase_persistence_enabled: bool = False
+    supabase_signed_url_ttl: int = 3600
+    supabase_request_timeout_seconds: int = 20
+
     provider_priority: str = (
         "gemini,groq,openrouter,cloudflare,cerebras,sambanova,huggingface"
     )
@@ -95,6 +106,14 @@ class Settings(BaseSettings):
     @property
     def max_upload_bytes(self) -> int:
         return self.max_upload_mb * 1024 * 1024
+
+    @property
+    def supabase_is_configured(self) -> bool:
+        return bool(self.supabase_url and self.supabase_secret_key)
+
+    @property
+    def supabase_database_is_configured(self) -> bool:
+        return bool(self.supabase_url and self.supabase_secret_key and self.supabase_persistence_enabled)
 
 
 @lru_cache
