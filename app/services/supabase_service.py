@@ -344,6 +344,47 @@ class SupabasePersistence:
     def delete_conversation(self, conversation_id: str) -> bool:
         return bool(self.require_database().delete("david_conversations", {"id": f"eq.{conversation_id}"}))
 
+    def list_github_repositories(self, project_id: str | None = None) -> list[dict[str, Any]]:
+        filters: dict[str, str] = {}
+        if project_id:
+            filters["project_id"] = f"eq.{project_id}"
+        return self._list("david_github_repositories", order="created_at.desc", filters=filters)
+
+    def get_github_repository(self, repository_id: str) -> dict[str, Any] | None:
+        rows = self.require_database().select("david_github_repositories", {"select": "*", "id": f"eq.{repository_id}", "limit": "1"})
+        rows = rows or []
+        return dict(rows[0]) if rows else None
+
+    def get_github_repository_by_full_name(self, repository_full_name: str) -> dict[str, Any] | None:
+        rows = self.require_database().select(
+            "david_github_repositories", {"select": "*", "repository_full_name": f"eq.{repository_full_name}", "limit": "1"}
+        )
+        rows = rows or []
+        return dict(rows[0]) if rows else None
+
+    def create_github_repository(self, payload: dict[str, Any]) -> dict[str, Any]:
+        data = dict(payload)
+        data.setdefault("id", str(uuid4()))
+        data.setdefault("owner_id", self.owner_id)
+        data.setdefault("deployment_status", "none")
+        data.setdefault("created_at", _now())
+        data.setdefault("updated_at", data["created_at"])
+        return _first(self.require_database().insert("david_github_repositories", data))
+
+    def update_github_repository(self, repository_id: str, payload: dict[str, Any]) -> list[dict[str, Any]]:
+        return self.require_database().update("david_github_repositories", {**payload, "updated_at": _now()}, {"id": f"eq.{repository_id}"})
+
+    def create_github_audit_event(self, event: str, details: dict[str, Any] | None = None) -> dict[str, Any]:
+        return _first(
+            self.require_database().insert(
+                "david_github_audit_log",
+                {"id": str(uuid4()), "owner_id": self.owner_id, "event": event, "details": details or {}, "created_at": _now()},
+            )
+        )
+
+    def list_github_audit_events(self, limit: int = 50) -> list[dict[str, Any]]:
+        return self._list("david_github_audit_log", order="created_at.desc", limit=min(limit, 200))
+
     def list_assets(self, project_id: str | None = None, kind: str | None = None, limit: int = 100) -> list[dict[str, Any]]:
         filters: dict[str, str] = {}
         if project_id:

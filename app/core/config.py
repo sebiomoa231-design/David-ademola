@@ -85,6 +85,25 @@ class Settings(BaseSettings):
     owner_email: str = ""
     owner_password: str = ""
 
+    # GitHub App integration (Section: multi-repository management).
+    # The GitHub App is installed and approved by the owner on their own
+    # account. All values are provided through the deployment environment
+    # (Render) and are never bundled into frontend code, API responses,
+    # or returned in error messages.
+    github_app_id: str = ""
+    github_app_private_key: str = ""
+    github_client_id: str = ""
+    github_client_secret: str = ""
+    github_installation_id: str = ""
+    github_installation_access_token: str = ""
+    public_base_url: str = ""
+
+    @property
+    def github_is_configured(self) -> bool:
+        has_installation_flow = bool(self.github_app_id and self.github_app_private_key and self.github_installation_id)
+        has_oauth_flow = bool(self.github_client_id and self.github_client_secret)
+        return bool(has_installation_flow or has_oauth_flow or self.github_installation_access_token)
+
     @property
     def is_production(self) -> bool:
         return self.app_env.lower() == "production"
