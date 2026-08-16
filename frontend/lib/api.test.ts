@@ -11,6 +11,18 @@ describe("Command Center API contracts", () => {
     expect(toAudioUrl("YXVkaW8=", "mp3")).toBe("data:audio/mp3;base64,YXVkaW8=");
   });
 
+  it("uses the deployed root health route only when the canonical API health route is unavailable", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("Not found", { status: 404, statusText: "Not Found" }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ status: "ok", service: "David AI backend" }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(api.health()).resolves.toEqual({ status: "ok", service: "David AI backend" });
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "http://localhost:8000/api/health", expect.objectContaining({ cache: "no-store" }));
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "http://localhost:8000/health", expect.objectContaining({ cache: "no-store" }));
+  });
+
   it("sends Voice workspace requests to the existing synthesis endpoint", async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ audio_available: false, provider: "configured", text_fallback: "Audio unavailable" }), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);

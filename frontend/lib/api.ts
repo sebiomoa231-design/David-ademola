@@ -50,13 +50,29 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   throw lastError || new Error("No backend endpoint configured");
 }
 
+async function requestAnyPath<T>(paths: string[], init?: RequestInit): Promise<T> {
+  let lastError: Error | null = null;
+
+  for (const path of paths) {
+    try {
+      return await request<T>(path, init);
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error("Request failed");
+    }
+  }
+
+  throw lastError || new Error("No backend endpoint configured");
+}
+
 const json = (body: unknown): RequestInit => ({
   method: "POST",
   body: JSON.stringify(body),
 });
 
 export const api = {
-  health: () => request<BackendHealth>("/api/health"),
+  // `/api/health` is the repository's canonical contract. `/health` preserves
+  // compatibility with the currently deployed Render service while it catches up.
+  health: () => requestAnyPath<BackendHealth>(["/api/health", "/health"]),
   chat: (message: string, conversationId?: string) =>
     request<ChatResponse>("/api/chat", json({ message, conversation_id: conversationId })),
   voiceStatus: () => request<VoiceStatus>("/api/voice/status"),
