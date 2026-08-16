@@ -1,14 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from app.core.config import Settings, get_settings
 from app.core.storage import JsonStorage
 from app.models import MemoryCreate, MemoryItem
 from app.services.memory_engine import MemoryEngine
+from app.services.supabase_service import SupabasePersistence
 
 router = APIRouter(prefix="/memory", tags=["memory"])
 
 
-def get_engine() -> MemoryEngine:
-    return MemoryEngine(JsonStorage())
+def get_engine(settings: Settings = Depends(get_settings)) -> MemoryEngine:
+    return MemoryEngine(JsonStorage(), SupabasePersistence(settings))
 
 
 @router.get("", response_model=list[MemoryItem])

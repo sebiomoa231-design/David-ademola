@@ -160,3 +160,42 @@ export interface ProviderDirectoryItem {
 export interface SettingsResponse {
   [key: string]: unknown;
 }
+
+
+export type AssetKind = "image" | "video" | "audio" | "document" | "website" | "other";
+
+export interface AssetItem {
+  id: string;
+  owner_id?: string;
+  project_id?: string | null;
+  filename: string;
+  storage_path: string;
+  content_type?: string;
+  size_bytes?: number;
+  kind?: AssetKind;
+  metadata?: Record<string, unknown>;
+  favorite?: boolean;
+  signed_url?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface GenerationItem {
+  id: string;
+  project_id?: string | null;
+  asset_id?: string | null;
+  kind?: AssetKind;
+  prompt?: string;
+  provider?: string;
+  status?: string;
+  output?: string;
+  metadata?: Record<string, unknown>;
+  created_at?: string;
+}
+
+export interface SupabaseStatus {
+  configured: boolean;
+  database_enabled: boolean;
+  storage_bucket: string;
+  migration_required?: boolean;
+}

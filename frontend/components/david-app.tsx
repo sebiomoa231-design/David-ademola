@@ -62,16 +62,19 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { api, toAudioUrl } from "../lib/api";
 import type {
   Adapter,
+  AssetItem,
   BackendHealth,
   Capability,
   ChatResponse,
   ConversationItem,
   GoalPlan,
+  GenerationItem,
   MemoryItem,
   ProjectItem,
   ReadinessResponse,
   RouteResult,
   RunDetails,
+  SupabaseStatus,
   TaskItem,
   VoicePhase,
   VoiceStatus,
@@ -98,6 +101,7 @@ const navItems: Array<{ id: string; label: string; icon: IconType; group?: strin
   { id: "memory", label: "Memory", icon: Database, group: "Workspace" },
   { id: "tasks", label: "Tasks", icon: ClipboardList, group: "Workspace" },
   { id: "projects", label: "Projects", icon: FolderKanban, group: "Workspace" },
+  { id: "library", label: "Library", icon: Archive, group: "Workspace" },
   { id: "activity", label: "Activity", icon: Activity, group: "Observe" },
   { id: "providers", label: "Providers", icon: Network, group: "Observe" },
   { id: "devices", label: "Devices", icon: Monitor, group: "Observe" },
@@ -119,6 +123,7 @@ const routeLabels: Record<string, string> = {
   memory: "Memory",
   tasks: "Tasks",
   projects: "Projects",
+  library: "Library",
   activity: "Activity",
   providers: "Providers",
   devices: "Devices",
@@ -256,6 +261,9 @@ function DavidApp({ route }: { route: string }) {
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
+  const [assets, setAssets] = useState<AssetItem[]>([]);
+  const [generations, setGenerations] = useState<GenerationItem[]>([]);
+  const [storageStatus, setStorageStatus] = useState<SupabaseStatus | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
   const [tone, setTone] = useState<(typeof toneOptions)[number]>("focused");
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -282,8 +290,11 @@ function DavidApp({ route }: { route: string }) {
       api.projects(),
       api.tasks(),
       api.conversations(),
+      api.library.status(),
+      api.library.assets(),
+      api.library.generations(),
     ]);
-    const [healthResult, voiceResult, readinessResult, capabilityResult, adapterResult, providerResult, memoryResult, projectResult, taskResult, conversationResult] = results;
+    const [healthResult, voiceResult, readinessResult, capabilityResult, adapterResult, providerResult, memoryResult, projectResult, taskResult, conversationResult, storageResult, assetsResult, generationsResult] = results;
     if (healthResult.status === "fulfilled") setHealth(healthResult.value);
     if (voiceResult.status === "fulfilled") setVoice(voiceResult.value);
     if (readinessResult.status === "fulfilled") setFabricReady(readinessResult.value);
@@ -297,6 +308,9 @@ function DavidApp({ route }: { route: string }) {
     if (projectResult.status === "fulfilled") setProjects(safeArray<ProjectItem>(projectResult.value));
     if (taskResult.status === "fulfilled") setTasks(safeArray<TaskItem>(taskResult.value));
     if (conversationResult.status === "fulfilled") setConversations(safeArray<ConversationItem>(conversationResult.value));
+    if (storageResult.status === "fulfilled") setStorageStatus(storageResult.value);
+    if (assetsResult.status === "fulfilled") setAssets(safeArray<AssetItem>(assetsResult.value));
+    if (generationsResult.status === "fulfilled") setGenerations(safeArray<GenerationItem>(generationsResult.value));
     setIsRefreshing(false);
   };
 
@@ -324,7 +338,7 @@ function DavidApp({ route }: { route: string }) {
         {mobileOpen && <button className="fixed inset-0 z-30 bg-black/65 lg:hidden" onClick={() => setMobileOpen(false)} aria-label="Close navigation overlay" />}
         <main className="min-w-0 flex-1">
           <header className="sticky top-0 z-20 border-b border-white/10 bg-[#050508]/80 backdrop-blur-xl"><div className="flex min-h-[76px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-9"><div className="flex items-center gap-3"><button className="rounded-xl border border-white/10 p-2 text-smoke hover:bg-white/5 lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Open navigation"><Menu className="h-5 w-5" /></button><div><p className="micro-label">{activeRoute === "dashboard" ? "David AI / home" : `David AI / ${activeRoute}`}</p><h1 className="mt-1 text-lg font-semibold text-white">{routeLabels[activeRoute] || "Command center"}</h1></div></div><div className="flex items-center gap-2 sm:gap-3"><div className="hidden items-center gap-2 rounded-xl border border-white/10 bg-white/[0.025] px-3 py-2 sm:flex"><span className="h-2 w-2 rounded-full bg-signal" /><span className="text-xs text-smoke">{health ? "Backend connected" : "Checking backend"}</span></div><select className="hidden rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-smoke outline-none sm:block" value={tone} onChange={(event) => setTone(event.target.value as (typeof toneOptions)[number])} aria-label="David tone"><option value="calm">Calm</option><option value="focused">Focused</option><option value="analytical">Analytical</option><option value="creative">Creative</option><option value="direct">Direct</option></select><button className="rounded-xl border border-white/10 p-2 text-smoke hover:bg-white/5" onClick={() => void refresh()} aria-label="Refresh command center" disabled={isRefreshing}>{isRefreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}</button><button className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] p-2 text-left hover:bg-white/[0.07]" onClick={() => go("owner")} aria-label="Open owner console"><span className="grid h-7 w-7 place-items-center rounded-lg bg-crimson/20 text-ember"><UserRound className="h-4 w-4" /></span><span className="hidden text-xs font-semibold text-white sm:block">OWNER</span></button></div></div></header>
-          <div className="mx-auto max-w-[1600px] p-4 sm:p-6 lg:p-9">{renderWorkspace(activeRoute, { health, voice, fabricReady, capabilities, adapters, providers, memories, projects, tasks, conversations, tone, notify, refresh, go })}</div>
+          <div className="mx-auto max-w-[1600px] p-4 sm:p-6 lg:p-9">{renderWorkspace(activeRoute, { health, voice, fabricReady, capabilities, adapters, providers, memories, projects, tasks, conversations, assets, generations, storageStatus, tone, notify, refresh, go })}</div>
         </main>
       </div>
       {toast && <div className={`fixed bottom-5 right-5 z-50 max-w-sm rounded-xl border px-4 py-3 text-sm shadow-2xl ${toast.kind === "error" ? "border-crimson/40 bg-crimson/15 text-ember" : toast.kind === "success" ? "border-signal/30 bg-signal/10 text-signal" : "border-white/10 bg-panel text-white"}`} role="status">{toast.text}</div>}
@@ -343,6 +357,9 @@ type WorkspaceProps = {
   projects: ProjectItem[];
   tasks: TaskItem[];
   conversations: ConversationItem[];
+  assets: AssetItem[];
+  generations: GenerationItem[];
+  storageStatus: SupabaseStatus | null;
   tone: string;
   notify: (kind: Toast["kind"], text: string) => void;
   refresh: () => Promise<void>;
@@ -358,6 +375,7 @@ function renderWorkspace(route: string, props: WorkspaceProps) {
     case "memory": return <MemoryWorkspace memories={props.memories} notify={props.notify} refresh={props.refresh} />;
     case "tasks": return <TasksWorkspace tasks={props.tasks} projects={props.projects} notify={props.notify} refresh={props.refresh} />;
     case "projects": return <ProjectsWorkspace projects={props.projects} notify={props.notify} refresh={props.refresh} />;
+    case "library": return <LibraryWorkspace assets={props.assets} generations={props.generations} storageStatus={props.storageStatus} projects={props.projects} notify={props.notify} refresh={props.refresh} />;
     case "providers": return <ProvidersWorkspace providers={props.providers} adapters={props.adapters} capabilities={props.capabilities} fabricReady={props.fabricReady} />;
     case "devices": return <DevicesWorkspace voice={props.voice} />;
     case "connectors": return <ConnectorsWorkspace adapters={props.adapters} />;
@@ -622,3 +640,99 @@ function OwnerWorkspace({ health, fabricReady, capabilities, adapters }: { healt
 function AuthWorkspace({ onSuccess, notify }: { onSuccess: () => void; notify: WorkspaceProps["notify"] }) { const [mode, setMode] = useState<"login" | "register">("login"); const [name, setName] = useState(""); const [email, setEmail] = useState(""); const [password, setPassword] = useState(""); const [working, setWorking] = useState(false); const submit = async (event: FormEvent) => { event.preventDefault(); setWorking(true); try { if (mode === "login") await api.login(email, password); else await api.register(name, email, password); notify("success", mode === "login" ? "Signed in." : "Registration submitted."); onSuccess(); } catch (error) { notify("error", error instanceof Error ? error.message : "Authentication failed"); } finally { setWorking(false); } }; return <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-ink p-5"><div className="shell-grid absolute inset-0" /><div className="relative z-10 grid w-full max-w-5xl gap-8 lg:grid-cols-[1fr_420px] lg:items-center"><div className="hidden lg:block"><p className="micro-label text-ember">David AI / secure access</p><h1 className="mt-5 max-w-xl text-6xl font-semibold leading-[0.95] tracking-[-0.06em] text-white">A calmer interface for <span className="text-ember">ambitious work.</span></h1><p className="mt-6 max-w-lg text-base leading-7 text-smoke">The command center keeps your context, agent runs, voice state, and operational boundaries visible in one place.</p><CoreVisual phase="idle" /></div><Card red><div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-crimson/15 text-ember"><Fingerprint className="h-5 w-5" /></span><div><p className="font-semibold text-white">{mode === "login" ? "Welcome back" : "Create an access record"}</p><p className="text-xs text-smoke">Owner approval remains backend-controlled.</p></div></div><form onSubmit={submit} className="mt-7 space-y-4">{mode === "register" && <input required value={name} onChange={(event) => setName(event.target.value)} className="min-h-11 w-full rounded-xl border border-white/10 bg-black/20 px-3 text-sm text-white outline-none placeholder:text-smoke" placeholder="Full name" aria-label="Full name" />}<input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="min-h-11 w-full rounded-xl border border-white/10 bg-black/20 px-3 text-sm text-white outline-none placeholder:text-smoke" placeholder="Email" aria-label="Email" /><input required minLength={6} type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="min-h-11 w-full rounded-xl border border-white/10 bg-black/20 px-3 text-sm text-white outline-none placeholder:text-smoke" placeholder="Password" aria-label="Password" /><Button type="submit" variant="primary" className="w-full" disabled={working}>{working ? <Loader2 className="h-4 w-4 animate-spin" /> : <LockKeyhole className="h-4 w-4" />}{working ? "Checking" : mode === "login" ? "Enter command center" : "Register"}</Button></form><button className="mt-5 w-full text-center text-xs text-smoke hover:text-white" onClick={() => setMode(mode === "login" ? "register" : "login")}>{mode === "login" ? "Need an account? Register" : "Already registered? Sign in"}</button></Card></div></div>; }
 
 export default DavidApp;
+
+
+function LibraryWorkspace({
+  assets,
+  generations,
+  storageStatus,
+  projects,
+  notify,
+  refresh,
+}: {
+  assets: AssetItem[];
+  generations: GenerationItem[];
+  storageStatus: SupabaseStatus | null;
+  projects: ProjectItem[];
+  notify: WorkspaceProps["notify"];
+  refresh: WorkspaceProps["refresh"];
+}) {
+  const [filter, setFilter] = useState("all");
+  const [uploading, setUploading] = useState(false);
+  const [selectedProject, setSelectedProject] = useState("");
+  const visibleAssets = useMemo(
+    () => filter === "all" ? assets : assets.filter((asset) => asset.kind === filter),
+    [assets, filter],
+  );
+
+  const upload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    setUploading(true);
+    const kind = file.type.startsWith("image/") ? "image" : file.type.startsWith("video/") ? "video" : file.type.startsWith("audio/") ? "audio" : file.type.includes("pdf") || file.type.includes("text") ? "document" : "other";
+    try {
+      await api.uploadFile(file, selectedProject || undefined, kind);
+      await refresh();
+      notify("success", storageStatus?.database_enabled ? "Asset uploaded to private Supabase Storage." : "Asset saved to the local fallback; apply the Supabase migration for persistence.");
+    } catch (error) {
+      notify("error", error instanceof Error ? error.message : "Asset upload failed.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const toggleFavorite = async (asset: AssetItem) => {
+    try {
+      await api.library.favorite(asset.id, !asset.favorite);
+      await refresh();
+    } catch (error) {
+      notify("error", error instanceof Error ? error.message : "Favorite update failed.");
+    }
+  };
+
+  return <div className="space-y-6">
+    <Card red>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="micro-label">Persistent creative library</p>
+          <h2 className="mt-1 text-xl font-semibold text-white">Assets, outputs, and history</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-smoke">David AI keeps project assets in a private bucket and records generation metadata in PostgreSQL. Signed previews are temporary and never expose the storage bucket publicly.</p>
+        </div>
+        <div className={`rounded-xl border px-3 py-2 text-right ${storageStatus?.database_enabled ? "border-signal/30 bg-signal/5" : "border-amber/30 bg-amber/5"}`}>
+          <p className="text-[10px] uppercase tracking-[0.18em] text-smoke">Storage state</p>
+          <p className={`mt-1 text-xs font-bold uppercase tracking-wider ${storageStatus?.database_enabled ? "text-signal" : "text-amber"}`}>{storageStatus?.database_enabled ? "private / persistent" : "migration required"}</p>
+          <p className="mt-1 text-[10px] text-smoke">bucket: {storageStatus?.storage_bucket || "Davidai"}</p>
+        </div>
+      </div>
+      <div className="mt-5 flex flex-wrap items-center gap-2">
+        <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-crimson px-4 py-2.5 text-sm font-semibold text-white shadow-glow transition hover:bg-ember has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50">
+          {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+          {uploading ? "Uploading..." : "Upload asset"}
+          <input type="file" className="sr-only" onChange={upload} disabled={uploading} />
+        </label>
+        <select value={selectedProject} onChange={(event) => setSelectedProject(event.target.value)} className="rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-xs text-smoke outline-none" aria-label="Assign uploaded asset to project">
+          <option value="">No project assignment</option>
+          {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+        </select>
+        <div className="ml-auto flex flex-wrap gap-1 rounded-xl border border-white/10 bg-black/20 p-1">
+          {["all", "image", "video", "audio", "document", "website", "other"].map((value) => <button key={value} onClick={() => setFilter(value)} className={`rounded-lg px-2.5 py-1.5 text-[10px] uppercase tracking-wider transition ${filter === value ? "bg-white/10 text-white" : "text-smoke hover:text-white"}`}>{value}</button>)}
+        </div>
+      </div>
+    </Card>
+
+    {visibleAssets.length ? <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{visibleAssets.map((asset) => <Card key={asset.id}>
+      <div className="relative flex aspect-[16/10] items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-black/30">
+        {asset.signed_url && asset.kind === "image" ? <img src={asset.signed_url} alt={asset.filename} className="h-full w-full object-cover" /> : asset.signed_url && asset.kind === "video" ? <video src={asset.signed_url} controls className="h-full w-full object-cover" /> : asset.kind === "audio" && asset.signed_url ? <audio src={asset.signed_url} controls className="w-[90%]" /> : <div className="text-center"><Archive className="mx-auto h-9 w-9 text-ember" /><p className="mt-2 max-w-[180px] truncate text-xs text-smoke">{asset.filename}</p></div>}
+        <button onClick={() => void toggleFavorite(asset)} className={`absolute right-2 top-2 rounded-lg border p-2 backdrop-blur ${asset.favorite ? "border-amber/40 bg-amber/15 text-amber" : "border-white/10 bg-black/40 text-smoke hover:text-white"}`} aria-label={asset.favorite ? "Remove from favorites" : "Add to favorites"}><span className="text-xs">{asset.favorite ? "★" : "☆"}</span></button>
+      </div>
+      <div className="mt-4 flex items-start justify-between gap-3"><div className="min-w-0"><h3 className="truncate text-sm font-semibold text-white">{asset.filename}</h3><p className="mt-1 text-[10px] uppercase tracking-wider text-smoke">{asset.kind || "other"} · {asset.content_type || "unknown type"}</p></div><span className="shrink-0 text-[10px] text-smoke">{asset.size_bytes ? `${Math.round(asset.size_bytes / 1024)} KB` : "—"}</span></div>
+      {asset.project_id && <p className="mt-3 text-xs text-smoke">Project: {projects.find((project) => project.id === asset.project_id)?.name || asset.project_id}</p>}
+    </Card>)}</div> : <EmptyState icon={Archive} title="No assets in the Library yet" detail={storageStatus?.database_enabled ? "Upload an image, audio file, video, or document to create the first private asset record." : "Apply the David AI migration and enable server-side persistence before using the remote Library."} />}
+
+    <Card>
+      <SectionHeading eyebrow="Generation ledger" title="Recent outputs" detail="Creative Suite and website-builder records are kept as inspectable history." />
+      <div className="mt-4 space-y-2">{generations.length ? generations.slice(0, 8).map((generation) => <div key={generation.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 px-4 py-3"><div className="flex items-center gap-3"><span className="grid h-8 w-8 place-items-center rounded-lg bg-crimson/15 text-ember">{generation.kind === "website" ? <Globe2 className="h-4 w-4" /> : generation.kind === "video" ? <Video className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}</span><div><p className="text-sm font-medium text-white">{generation.prompt || `${generation.kind || "other"} generation`}</p><p className="mt-1 text-[10px] uppercase tracking-wider text-smoke">{generation.provider || "unknown provider"} · {generation.status || "completed"}</p></div></div><span className="text-[10px] text-smoke">{formatDate(generation.created_at)}</span></div>) : <p className="rounded-xl border border-dashed border-white/10 px-4 py-6 text-center text-sm text-smoke">No generation records yet. Website-builder outputs and future creative jobs will appear here.</p>}</div>
+    </Card>
+  </div>;
+}

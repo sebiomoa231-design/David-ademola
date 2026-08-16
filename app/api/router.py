@@ -8,6 +8,7 @@ from david_fabric.api.router import fabric_router
 from files import router as files_router
 from health import router as health_router
 from knowledge import router as knowledge_router
+from library import router as library_router
 from memory import router as memory_router
 from plan import router as plan_router
 from projects import router as projects_router
@@ -25,6 +26,7 @@ for router in (
     conversations_router,
     files_router,
     knowledge_router,
+    library_router,
     memory_router,
     plan_router,
     projects_router,

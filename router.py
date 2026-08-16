@@ -7,6 +7,7 @@ from app.api.routes.conversations import router as conversations_router
 from app.api.routes.files import router as files_router
 from app.api.routes.health import router as health_router
 from app.api.routes.knowledge import router as knowledge_router
+from app.api.routes.library import router as library_router
 from app.api.routes.memory import router as memory_router
 from app.api.routes.plan import router as plan_router
 from app.api.routes.projects import router as projects_router
@@ -28,3 +29,4 @@ api_router.include_router(website_router)
 api_router.include_router(voice_router)
 api_router.include_router(agents_router)
 api_router.include_router(knowledge_router)
+api_router.include_router(library_router)

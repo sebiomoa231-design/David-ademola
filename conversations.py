@@ -1,14 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException
 
+from app.core.config import Settings, get_settings
 from app.core.storage import JsonStorage
 from app.models import ConversationItem
 from app.services.conversation_engine import ConversationEngine
+from app.services.supabase_service import SupabasePersistence
 
 router = APIRouter(prefix="/conversations", tags=["conversations"])
 
 
-def get_engine() -> ConversationEngine:
-    return ConversationEngine(JsonStorage())
+def get_engine(settings: Settings = Depends(get_settings)) -> ConversationEngine:
+    return ConversationEngine(JsonStorage(), SupabasePersistence(settings))
 
 
 @router.get("", response_model=list[ConversationItem])

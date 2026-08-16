@@ -6,6 +6,7 @@ from uuid import uuid4
 
 from app.core.storage import JsonStorage
 from app.models import MemoryCreate, MemoryItem, MemoryType
+from app.services.supabase_service import SupabasePersistence
 
 _STOPWORDS = {
     "the", "a", "an", "is", "are", "was", "were", "to", "of", "and", "or",
@@ -22,25 +23,31 @@ _LEARN_PATTERNS: list[tuple[str, MemoryType]] = [
 
 
 class MemoryEngine:
-    """
-    Long-term memory store supporting semantic memory, project memory,
-    preferences, instructions, decisions, knowledge, and experiences.
+    """Long-term memory with a stable API and selectable storage backend.
 
-    Backed by JSON storage today; the public API is stable so storage
-    can later move to PostgreSQL (or a vector store for `relevant()`)
-    without changing callers.
+    JSON storage remains the safe local fallback. When Supabase persistence is
+    enabled, the same public methods use the David AI relational memory table.
     """
 
-    def __init__(self, storage: JsonStorage) -> None:
+    def __init__(self, storage: JsonStorage, persistence: SupabasePersistence | None = None) -> None:
         self.storage = storage
+        self.persistence = persistence
+
+    def _remote(self) -> bool:
+        return bool(self.persistence and self.persistence.database_enabled)
 
     def _load(self) -> list[dict]:
+        if self._remote():
+            return self.persistence.list_memories()  # type: ignore[union-attr]
         return self.storage.read("memories", [])
 
     def _save(self, memories: list[dict]) -> None:
         self.storage.write("memories", memories)
 
     def add(self, payload: MemoryCreate) -> MemoryItem:
+        if self._remote():
+            item = self.persistence.create_memory(payload.model_dump(mode="json"))  # type: ignore[union-attr]
+            return MemoryItem(**item)
         item = MemoryItem(id=str(uuid4()), **payload.model_dump())
         memories = self._load()
         memories.append(item.model_dump(mode="json"))
@@ -67,18 +74,21 @@ class MemoryEngine:
         confidence: float | None = None,
         tags: list[str] | None = None,
     ) -> MemoryItem | None:
+        patch = {key: value for key, value in {
+            "content": content,
+            "importance": importance,
+            "confidence": confidence,
+            "tags": tags,
+        }.items() if value is not None}
+        if self._remote():
+            updated = self.persistence.update_memory(memory_id, patch)  # type: ignore[union-attr]
+            return MemoryItem(**updated) if updated else None
+
         memories = self._load()
         updated = None
         for m in memories:
             if m.get("id") == memory_id:
-                if content is not None:
-                    m["content"] = content
-                if importance is not None:
-                    m["importance"] = importance
-                if confidence is not None:
-                    m["confidence"] = confidence
-                if tags is not None:
-                    m["tags"] = tags
+                m.update(patch)
                 m["updated_at"] = datetime.utcnow().isoformat()
                 updated = m
                 break
@@ -88,6 +98,9 @@ class MemoryEngine:
         return None
 
     def delete(self, memory_id: str) -> bool:
+        if self._remote():
+            deleted = self.persistence.require_database().delete("david_memories", {"id": f"eq.{memory_id}"})  # type: ignore[union-attr]
+            return bool(deleted)
         memories = self._load()
         remaining = [m for m in memories if m.get("id") != memory_id]
         if len(remaining) == len(memories):
@@ -96,6 +109,8 @@ class MemoryEngine:
         return True
 
     def archive(self, memory_id: str) -> bool:
+        if self._remote():
+            return self.persistence.archive_memory(memory_id)  # type: ignore[union-attr]
         memories = self._load()
         found = False
         for m in memories:
@@ -133,10 +148,6 @@ class MemoryEngine:
         return items[:limit]
 
     def relevant(self, context: str, limit: int = 5) -> list[MemoryItem]:
-        """
-        Rank active memories by relevance to a block of context text,
-        weighting keyword overlap by each memory's stored importance.
-        """
         context_terms = {t for t in re.findall(r"\w+", context.lower()) if t not in _STOPWORDS}
         if not context_terms:
             return self.recent(limit=limit)
@@ -156,11 +167,6 @@ class MemoryEngine:
         return [MemoryItem(**m) for _, m in scored[:limit]]
 
     def learn_from_text(self, text: str, source: str = "conversation") -> list[MemoryItem]:
-        """
-        Lightweight pattern-based extraction that turns a chunk of
-        conversation text into candidate memories. Intended to run
-        after each chat turn; safe to call with plain, unstructured text.
-        """
         learned: list[MemoryItem] = []
         lowered = text.lower()
 

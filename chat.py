@@ -8,16 +8,17 @@ from app.services.conversation_engine import ConversationEngine
 from app.services.memory_engine import MemoryEngine
 from david_fabric.core.models import CapabilitySelectionRequest
 from david_fabric.api.router import route_capability
+from app.services.supabase_service import SupabasePersistence
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
 
-def get_memory_engine() -> MemoryEngine:
-    return MemoryEngine(JsonStorage())
+def get_memory_engine(settings: Settings = Depends(get_settings)) -> MemoryEngine:
+    return MemoryEngine(JsonStorage(), SupabasePersistence(settings))
 
 
-def get_conversation_engine() -> ConversationEngine:
-    return ConversationEngine(JsonStorage())
+def get_conversation_engine(settings: Settings = Depends(get_settings)) -> ConversationEngine:
+    return ConversationEngine(JsonStorage(), SupabasePersistence(settings))
 
 
 @router.post("", response_model=ChatResponse)

@@ -1,18 +1,28 @@
 from fastapi import APIRouter, Depends
 
+from app.core.config import Settings, get_settings
 from app.core.storage import JsonStorage
 from app.models import ProjectCreate, ProjectItem, TaskCreate, TaskItem
 from app.services.project_service import ProjectService, TaskService
+from app.services.supabase_service import SupabasePersistence
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
 
-def get_project_service() -> ProjectService:
-    return ProjectService(JsonStorage())
+def get_persistence(settings: Settings = Depends(get_settings)) -> SupabasePersistence:
+    return SupabasePersistence(settings)
 
 
-def get_task_service() -> TaskService:
-    return TaskService(JsonStorage())
+def get_project_service(
+    settings: Settings = Depends(get_settings),
+) -> ProjectService:
+    return ProjectService(JsonStorage(), SupabasePersistence(settings))
+
+
+def get_task_service(
+    settings: Settings = Depends(get_settings),
+) -> TaskService:
+    return TaskService(JsonStorage(), SupabasePersistence(settings))
 
 
 @router.get("", response_model=list[ProjectItem])
