@@ -6,6 +6,7 @@ from auth import router as auth_router
 from chat import router as chat_router
 from conversations import router as conversations_router
 from david_fabric.api.router import fabric_router
+from david_fabric.api.operating_router import router as operating_router
 from files import router as files_router
 from health import router as health_router
 from knowledge import router as knowledge_router
@@ -40,10 +41,10 @@ for router in (
     website_router,
     agents_router,
     github_router,
+    fabric_router,
+    operating_router,
 ):
     api_router.include_router(router)
 
-# David remains the only mounted control plane. The Fabric contributes
-# additive capabilities, planning, run tracking, approval policy, and adapter
-# health without replacing any legacy route.
-api_router.include_router(fabric_router)
+# David remains the only mounted control plane. The Fabric and operating system
+# contribute additive capabilities without replacing any legacy route.
