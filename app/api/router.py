@@ -7,6 +7,7 @@ from chat import router as chat_router
 from conversations import router as conversations_router
 from david_fabric.api.router import fabric_router
 from david_fabric.api.operating_router import router as operating_router
+from david_fabric.api.ai_core_router import router as ai_core_router
 from files import router as files_router
 from health import router as health_router
 from knowledge import router as knowledge_router
@@ -43,6 +44,7 @@ for router in (
     github_router,
     fabric_router,
     operating_router,
+    ai_core_router,
 ):
     api_router.include_router(router)
 
