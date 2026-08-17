@@ -21,6 +21,9 @@ import type {
   GitHubConnection,
   GitHubRepositoryItem,
   GitHubAuditItem,
+  ProviderStatusResponse,
+  CapabilityExecutionResponse,
+  RenderHealth,
 } from "./types";
 
 // The public canonical service is deliberately the development fallback. A
@@ -120,6 +123,20 @@ export const api = {
     favorite: (assetId: string, favorite: boolean) => request<AssetItem>(`/api/library/assets/${assetId}/favorite`, json({ favorite })),
     generations: (projectId?: string) => request<GenerationItem[]>(`/api/library/generations${projectId ? `?project_id=${encodeURIComponent(projectId)}` : ""}`),
     createGeneration: (payload: Partial<GenerationItem> & { kind?: string; prompt?: string }) => request<GenerationItem>("/api/library/generations", json(payload)),
+  },
+
+  providers: {
+    list: () => request<ProviderStatusResponse>("/api/providers"),
+    capabilities: () => request<Record<string, unknown>>("/api/providers/capabilities"),
+    reasoning: (prompt: string, preferredProviders: string[] = []) => request<CapabilityExecutionResponse>("/api/providers/reasoning", json({ prompt, preferred_providers: preferredProviders })),
+    image: (prompt: string, preferredProviders: string[] = []) => request<CapabilityExecutionResponse>("/api/providers/images", json({ prompt, preferred_providers: preferredProviders })),
+    execute: (capability: string, payload: Record<string, unknown> = {}, preferredProviders: string[] = []) => request<CapabilityExecutionResponse>("/api/providers/execute", json({ capability, payload, preferred_providers: preferredProviders })),
+  },
+
+  deployments: {
+    renderHealth: () => request<RenderHealth>("/api/deployments/render/health"),
+    services: () => request<Record<string, unknown> | unknown[]>("/api/deployments/render/services"),
+    deploy: (serviceId: string, clearCache = false) => request<Record<string, unknown>>(`/api/deployments/render/services/${encodeURIComponent(serviceId)}/deploy?clear_cache=${clearCache ? "true" : "false"}`, { method: "POST" }),
   },
 
   intelligence: {

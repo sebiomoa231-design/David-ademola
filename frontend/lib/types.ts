@@ -47,6 +47,7 @@ export interface ProjectItem {
 }
 
 export interface TaskItem {
+  id?: string;
   title?: string;
   description?: string;
   status?: string;
@@ -195,6 +196,39 @@ export interface ProviderDirectoryItem {
   capabilities?: string[];
   state?: string;
   readiness?: string[];
+}
+
+export interface ProviderStatus {
+  id: string;
+  label?: string;
+  category?: string;
+  capabilities?: string[];
+  configured?: boolean;
+  status?: string;
+  model?: string | null;
+  docs_url?: string;
+  notes?: string;
+}
+
+export interface ProviderStatusResponse {
+  providers: ProviderStatus[];
+}
+
+export interface RenderHealth {
+  configured?: boolean;
+  connected?: boolean;
+  message?: string;
+  code?: string;
+  service_count_sample?: number | null;
+}
+
+export interface CapabilityExecutionResponse {
+  provider?: string;
+  model?: string;
+  text?: string;
+  images?: Array<Record<string, unknown>>;
+  embeddings?: unknown[];
+  [key: string]: unknown;
 }
 
 export interface SettingsResponse {

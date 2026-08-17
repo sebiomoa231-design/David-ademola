@@ -13,6 +13,8 @@ from library import router as library_router
 from memory import router as memory_router
 from plan import router as plan_router
 from projects import router as projects_router
+from providers import router as providers_router
+from deployments import router as deployments_router
 from settings import router as settings_router
 from voice import router as voice_router
 from website import router as website_router
@@ -31,6 +33,8 @@ for router in (
     memory_router,
     plan_router,
     projects_router,
+    providers_router,
+    deployments_router,
     settings_router,
     voice_router,
     website_router,

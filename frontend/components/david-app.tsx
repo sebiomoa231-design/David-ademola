@@ -82,6 +82,8 @@ import type {
   TaskItem,
   VoicePhase,
   VoiceStatus,
+  ProviderStatus,
+  RenderHealth,
 } from "../lib/types";
 
 type IconType = LucideIcon;
@@ -278,6 +280,8 @@ function DavidApp({ route }: { route: string }) {
   const [capabilities, setCapabilities] = useState<Capability[]>([]);
   const [adapters, setAdapters] = useState<Adapter[]>([]);
   const [providers, setProviders] = useState<Array<Record<string, unknown>>>([]);
+  const [providerStatuses, setProviderStatuses] = useState<ProviderStatus[]>([]);
+  const [renderHealth, setRenderHealth] = useState<RenderHealth | null>(null);
   const [memories, setMemories] = useState<MemoryItem[]>([]);
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [tasks, setTasks] = useState<TaskItem[]>([]);
@@ -307,6 +311,8 @@ function DavidApp({ route }: { route: string }) {
       api.intelligence.capabilities(),
       api.intelligence.adapters(),
       api.intelligence.providers(),
+      api.providers.list(),
+      api.deployments.renderHealth(),
       api.memories(),
       api.projects(),
       api.tasks(),
@@ -315,7 +321,7 @@ function DavidApp({ route }: { route: string }) {
       api.library.assets(),
       api.library.generations(),
     ]);
-    const [healthResult, voiceResult, readinessResult, capabilityResult, adapterResult, providerResult, memoryResult, projectResult, taskResult, conversationResult, storageResult, assetsResult, generationsResult] = results;
+    const [healthResult, voiceResult, readinessResult, capabilityResult, adapterResult, providerResult, providerStatusResult, renderHealthResult, memoryResult, projectResult, taskResult, conversationResult, storageResult, assetsResult, generationsResult] = results;
     if (healthResult.status === "fulfilled") setHealth(healthResult.value);
     if (voiceResult.status === "fulfilled") setVoice(voiceResult.value);
     if (readinessResult.status === "fulfilled") setFabricReady(readinessResult.value);
@@ -325,6 +331,8 @@ function DavidApp({ route }: { route: string }) {
       const value = providerResult.value as { providers?: unknown[] };
       setProviders(safeArray<Record<string, unknown>>(value.providers));
     }
+    if (providerStatusResult.status === "fulfilled") setProviderStatuses(safeArray<ProviderStatus>(providerStatusResult.value.providers));
+    if (renderHealthResult.status === "fulfilled") setRenderHealth(renderHealthResult.value);
     if (memoryResult.status === "fulfilled") setMemories(safeArray<MemoryItem>(memoryResult.value));
     if (projectResult.status === "fulfilled") setProjects(safeArray<ProjectItem>(projectResult.value));
     if (taskResult.status === "fulfilled") setTasks(safeArray<TaskItem>(taskResult.value));
@@ -359,7 +367,7 @@ function DavidApp({ route }: { route: string }) {
         {mobileOpen && <button className="fixed inset-0 z-30 bg-black/65 lg:hidden" onClick={() => setMobileOpen(false)} aria-label="Close navigation overlay" />}
         <main className="min-w-0 flex-1">
           <header className="sticky top-0 z-20 border-b border-white/10 bg-[#050508]/80 backdrop-blur-xl"><div className="flex min-h-[76px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-9"><div className="flex items-center gap-3"><button className="rounded-xl border border-white/10 p-2 text-smoke hover:bg-white/5 lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Open navigation"><Menu className="h-5 w-5" /></button><div><p className="micro-label">{activeRoute === "dashboard" ? "David AI / home" : `David AI / ${activeRoute}`}</p><h1 className="mt-1 text-lg font-semibold text-white">{routeLabels[activeRoute] || "Command center"}</h1></div></div><div className="flex items-center gap-2 sm:gap-3"><div className="hidden items-center gap-2 rounded-xl border border-white/10 bg-white/[0.025] px-3 py-2 sm:flex"><span className="h-2 w-2 rounded-full bg-signal" /><span className="text-xs text-smoke">{health ? "Backend connected" : "Checking backend"}</span></div><select className="hidden rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-smoke outline-none sm:block" value={tone} onChange={(event) => setTone(event.target.value as (typeof toneOptions)[number])} aria-label="David tone"><option value="calm">Calm</option><option value="focused">Focused</option><option value="analytical">Analytical</option><option value="creative">Creative</option><option value="direct">Direct</option></select><button className="rounded-xl border border-white/10 p-2 text-smoke hover:bg-white/5" onClick={() => void refresh()} aria-label="Refresh command center" disabled={isRefreshing}>{isRefreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}</button><button className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] p-2 text-left hover:bg-white/[0.07]" onClick={() => go("owner")} aria-label="Open owner console"><span className="grid h-7 w-7 place-items-center rounded-lg bg-crimson/20 text-ember"><UserRound className="h-4 w-4" /></span><span className="hidden text-xs font-semibold text-white sm:block">OWNER</span></button></div></div></header>
-          <div className="mx-auto max-w-[1600px] p-4 sm:p-6 lg:p-9">{renderWorkspace(activeRoute, { health, voice, fabricReady, capabilities, adapters, providers, memories, projects, tasks, conversations, assets, generations, storageStatus, tone, notify, refresh, go })}</div>
+          <div className="mx-auto max-w-[1600px] p-4 sm:p-6 lg:p-9">{renderWorkspace(activeRoute, { health, voice, fabricReady, capabilities, adapters, providers, providerStatuses, renderHealth, memories, projects, tasks, conversations, assets, generations, storageStatus, tone, notify, refresh, go })}</div>
         </main>
       </div>
       {toast && <div className={`fixed bottom-5 right-5 z-50 max-w-sm rounded-xl border px-4 py-3 text-sm shadow-2xl ${toast.kind === "error" ? "border-crimson/40 bg-crimson/15 text-ember" : toast.kind === "success" ? "border-signal/30 bg-signal/10 text-signal" : "border-white/10 bg-panel text-white"}`} role="status">{toast.text}</div>}
@@ -374,6 +382,8 @@ type WorkspaceProps = {
   capabilities: Capability[];
   adapters: Adapter[];
   providers: Array<Record<string, unknown>>;
+  providerStatuses: ProviderStatus[];
+  renderHealth: RenderHealth | null;
   memories: MemoryItem[];
   projects: ProjectItem[];
   tasks: TaskItem[];
@@ -397,12 +407,12 @@ function renderWorkspace(route: string, props: WorkspaceProps) {
     case "tasks": return <TasksWorkspace tasks={props.tasks} projects={props.projects} notify={props.notify} refresh={props.refresh} />;
     case "projects": return <ProjectsWorkspace projects={props.projects} notify={props.notify} refresh={props.refresh} />;
     case "library": return <LibraryWorkspace assets={props.assets} generations={props.generations} storageStatus={props.storageStatus} projects={props.projects} notify={props.notify} refresh={props.refresh} />;
-    case "providers": return <ProvidersWorkspace providers={props.providers} adapters={props.adapters} capabilities={props.capabilities} fabricReady={props.fabricReady} />;
+    case "providers": return <ProvidersWorkspace providers={props.providers} providerStatuses={props.providerStatuses} renderHealth={props.renderHealth} adapters={props.adapters} capabilities={props.capabilities} fabricReady={props.fabricReady} notify={props.notify} />;
     case "devices": return <DevicesWorkspace voice={props.voice} />;
     case "github": return <GitHubWorkspace notify={props.notify} />;
     case "connectors": return <ConnectorsWorkspace adapters={props.adapters} />;
     case "automation": return <AutomationWorkspace capabilities={props.capabilities} notify={props.notify} />;
-    case "website-builder": return <WebsiteBuilderWorkspace projects={props.projects} notify={props.notify} refresh={props.refresh} />;
+    case "website-builder": return <WebsiteBuilderWorkspace projects={props.projects} renderHealth={props.renderHealth} notify={props.notify} refresh={props.refresh} />;
     case "video-studio": return <StudioWorkspace kind="video" capabilities={props.capabilities} />;
     case "image-studio": return <StudioWorkspace kind="image" capabilities={props.capabilities} />;
     case "music-studio": return <UnavailableStudioWorkspace title="Music studio" detail="Music generation has no configured backend worker in the current David AI deployment." icon={Headphones} />;
@@ -604,9 +614,29 @@ function ProjectsWorkspace({ projects, notify, refresh }: { projects: ProjectIte
   return <div className="space-y-6"><Card red><SectionHeading eyebrow="Creative workspace" title="Projects" detail="Organize work before it becomes a plan, task, or agent run." /><div className="flex gap-2"><input value={name} onChange={(event) => setName(event.target.value)} className="min-h-10 flex-1 rounded-xl border border-white/10 bg-black/20 px-3 text-sm text-white outline-none placeholder:text-smoke" placeholder="New project name..." aria-label="New project name" /><Button variant="primary" onClick={() => void add()}><Plus className="h-4 w-4" />Create project</Button></div></Card><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{projects.length ? projects.map((project, index) => <Card key={project.id || index}><div className="flex items-start justify-between"><div className="grid h-10 w-10 place-items-center rounded-xl bg-crimson/15 text-ember"><FolderKanban className="h-5 w-5" /></div><MoreHorizontal className="h-4 w-4 text-smoke" /></div><h3 className="mt-5 font-semibold text-white">{project.name}</h3><p className="mt-2 min-h-10 text-sm leading-5 text-smoke">{project.description || "No project description yet."}</p><div className="mt-5 flex items-center justify-between border-t border-white/10 pt-3 text-xs text-smoke"><span>{project.status || "active"}</span><span>{formatDate(project.updated_at || project.created_at)}</span></div></Card>) : <div className="md:col-span-2 xl:col-span-3"><EmptyState icon={FolderKanban} title="No projects yet" detail="Create a workspace for the next idea, system, or campaign." /></div>}</div></div>;
 }
 
-function ProvidersWorkspace({ providers, adapters, capabilities, fabricReady }: { providers: Array<Record<string, unknown>>; adapters: Adapter[]; capabilities: Capability[]; fabricReady: ReadinessResponse | null }) {
-  const providerRows: Array<Record<string, unknown>> = providers.length ? providers : capabilities.filter((item) => item.provider).map((item) => ({ id: item.provider, state: item.state, readiness: item.readiness }));
-  return <div className="space-y-6"><div className="grid gap-6 xl:grid-cols-[1fr_0.8fr]"><Card red><SectionHeading eyebrow="Model routing" title="Provider posture" detail="The frontend can observe provider readiness without exposing credentials." /><div className="space-y-3">{providerRows.length ? providerRows.map((provider, index) => <div key={String(provider.id || index)} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 p-4"><div><p className="font-semibold text-white">{String(provider.id || "provider")}</p><p className="mt-1 text-xs text-smoke">{String(provider.kind || "provider boundary")}</p></div><StateDot state={String(provider.state || "UNKNOWN")} /></div>) : <EmptyState icon={Network} title="No provider directory" detail="The backend has not returned provider records yet." />}</div></Card><Card><SectionHeading eyebrow="Readiness" title="System truth" detail="Unavailable dependencies are surfaced, not masked." /><div className="space-y-3"><StateRow label="Fabric" value={String(fabricReady?.status || "unknown")} /><StateRow label="Adapters" value={`${adapters.length} discovered`} /><StateRow label="Capability records" value={`${capabilities.length} loaded`} /><StateRow label="Credentials" value="Server-side only" /></div></Card></div><Card><SectionHeading eyebrow="Fallback posture" title="Provider switching" detail="The routing API returns fallback candidates when the primary capability is unavailable." /><div className="grid gap-3 sm:grid-cols-3"><StateRow label="Primary" value="Selected by objective" /><StateRow label="Fallback" value="Returned by Fabric" /><StateRow label="User control" value="Approval-aware" /></div></Card></div>;
+function ProviderControlPanel({ providerStatuses, renderHealth, notify }: { providerStatuses: ProviderStatus[]; renderHealth: RenderHealth | null; notify: WorkspaceProps["notify"] }) {
+  const [prompt, setPrompt] = useState("");
+  const [result, setResult] = useState<{ text?: string; provider?: string; model?: string } | null>(null);
+  const [working, setWorking] = useState(false);
+  const runReasoning = async () => {
+    if (!prompt.trim()) return;
+    setWorking(true);
+    try {
+      const response = await api.providers.reasoning(prompt);
+      setResult(response);
+      notify("success", `Reasoning completed through ${response.provider || "the selected provider"}.`);
+    } catch (error) {
+      notify("error", error instanceof Error ? error.message : "Provider execution failed");
+    } finally {
+      setWorking(false);
+    }
+  };
+  return <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]"><Card red><SectionHeading eyebrow="Capability router" title="Provider-backed execution" detail="Run a bounded reasoning check through the server-side fallback chain. No credential is sent to the browser." /><textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} className="min-h-24 w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white outline-none placeholder:text-smoke" placeholder="Ask for a short, verifiable reasoning response…" aria-label="Provider reasoning prompt" /><Button variant="primary" className="mt-3" onClick={() => void runReasoning()} disabled={working || !prompt.trim()}>{working ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}{working ? "Running" : "Run capability"}</Button>{result && <div className="mt-4 rounded-xl border border-signal/20 bg-signal/5 p-4"><div className="flex flex-wrap gap-3 text-[10px] uppercase tracking-widest text-signal"><span>{result.provider || "provider"}</span><span>{result.model || "model not returned"}</span></div><p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-white/90">{result.text || "Provider returned no text."}</p></div>}</Card><Card><SectionHeading eyebrow="Deployment boundary" title="Render posture" detail="Deployment controls remain server-side and approval-gated." /><StateRow label="Render API" value={renderHealth?.connected ? "Connected" : renderHealth?.configured ? "Configured / unavailable" : "Not configured"} /><StateRow label="Services" value={renderHealth?.service_count_sample != null ? `${renderHealth.service_count_sample} sampled` : "Not queried"} /><p className="mt-4 text-xs leading-5 text-smoke">A deploy button is intentionally not shown until the target Website Studio project has a tracked repository and explicit owner approval.</p></Card></div>;
+}
+
+function ProvidersWorkspace({ providers, providerStatuses, renderHealth, adapters, capabilities, fabricReady, notify }: { providers: Array<Record<string, unknown>>; providerStatuses: ProviderStatus[]; renderHealth: RenderHealth | null; adapters: Adapter[]; capabilities: Capability[]; fabricReady: ReadinessResponse | null; notify: WorkspaceProps["notify"] }) {
+  const providerRows: Array<Record<string, unknown>> = providerStatuses.length ? providerStatuses.map((item) => ({ ...item, state: item.status, kind: item.category })) : providers.length ? providers : capabilities.filter((item) => item.provider).map((item) => ({ id: item.provider, state: item.state, readiness: item.readiness }));
+  return <div className="space-y-6"><ProviderControlPanel providerStatuses={providerStatuses} renderHealth={renderHealth} notify={notify} /><div className="grid gap-6 xl:grid-cols-[1fr_0.8fr]"><Card red><SectionHeading eyebrow="Model routing" title="Provider posture" detail="The frontend can observe provider readiness without exposing credentials." /><div className="space-y-3">{providerRows.length ? providerRows.map((provider, index) => <div key={String(provider.id || index)} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 p-4"><div><p className="font-semibold text-white">{String(provider.id || "provider")}</p><p className="mt-1 text-xs text-smoke">{String(provider.kind || "provider boundary")}</p></div><StateDot state={String(provider.state || "UNKNOWN")} /></div>) : <EmptyState icon={Network} title="No provider directory" detail="The backend has not returned provider records yet." />}</div></Card><Card><SectionHeading eyebrow="Readiness" title="System truth" detail="Unavailable dependencies are surfaced, not masked." /><div className="space-y-3"><StateRow label="Fabric" value={String(fabricReady?.status || "unknown")} /><StateRow label="Adapters" value={`${adapters.length} discovered`} /><StateRow label="Capability records" value={`${capabilities.length} loaded`} /><StateRow label="Credentials" value="Server-side only" /></div></Card></div><Card><SectionHeading eyebrow="Fallback posture" title="Provider switching" detail="The routing API returns fallback candidates when the primary capability is unavailable." /><div className="grid gap-3 sm:grid-cols-3"><StateRow label="Primary" value="Selected by objective" /><StateRow label="Fallback" value="Returned by Fabric" /><StateRow label="User control" value="Approval-aware" /></div></Card></div>;
 }
 
 function StateRow({ label, value }: { label: string; value: string }) { return <div className="flex items-center justify-between gap-4 rounded-xl border border-white/10 bg-black/20 px-3 py-3"><span className="text-xs text-smoke">{label}</span><span className="text-xs font-semibold text-white">{value}</span></div>; }
@@ -699,11 +729,14 @@ function AutomationWorkspace({ capabilities, notify }: { capabilities: Capabilit
 
 function ConnectorsWorkspace({ adapters }: { adapters: Adapter[] }) { return <div className="space-y-6"><Card red><SectionHeading eyebrow="Integration plane" title="Connectors" detail="Imported repositories become bounded capabilities; credentials and external activation stay server-side." /><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{adapters.length ? adapters.map((adapter) => <div key={adapter.id} className="rounded-xl border border-white/10 bg-black/20 p-4"><div className="flex items-start justify-between gap-3"><div className="grid h-9 w-9 place-items-center rounded-lg bg-white/[0.05] text-ember"><Cloud className="h-4 w-4" /></div><StateDot state={adapter.state || (adapter.available ? "available" : "unavailable")} /></div><h3 className="mt-4 font-semibold text-white">{adapter.name || adapter.id}</h3><p className="mt-1 text-xs text-smoke">{adapter.kind || "service adapter"}</p><p className="mt-3 text-xs leading-5 text-smoke">{adapter.reason || adapter.readiness?.join(" · ") || "Readiness is reported by the backend."}</p></div>) : <EmptyState icon={Cloud} title="No connectors loaded" detail="Connect David’s backend to view adapter boundaries." />}</div></Card></div>; }
 
-function WebsiteBuilderWorkspace({ projects, notify, refresh }: { projects: ProjectItem[]; notify: WorkspaceProps["notify"]; refresh: WorkspaceProps["refresh"] }) {
+function WebsiteBuilderWorkspace({ projects, renderHealth, notify, refresh }: { projects: ProjectItem[]; renderHealth: RenderHealth | null; notify: WorkspaceProps["notify"]; refresh: WorkspaceProps["refresh"] }) {
   const [prompt, setPrompt] = useState("");
   const [projectId, setProjectId] = useState("");
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [working, setWorking] = useState(false);
+  const [repository, setRepository] = useState<GitHubRepositoryItem | null>(null);
+  const [renderServiceId, setRenderServiceId] = useState("");
+  const [opsWorking, setOpsWorking] = useState(false);
 
   const generate = async () => {
     if (!prompt.trim()) return notify("info", "Describe the website before submitting a request.");
@@ -720,7 +753,39 @@ function WebsiteBuilderWorkspace({ projects, notify, refresh }: { projects: Proj
     }
   };
 
-  return <div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]"><Card red><SectionHeading eyebrow="Creative studio" title="Website builder" detail="Generate a blueprint through the canonical backend and save it to an optional existing Project." /><label className="mb-3 block text-xs font-semibold text-smoke">Project association<select value={projectId} onChange={(event) => setProjectId(event.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white outline-none"><option value="">Unassigned Library record</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.name || project.id}</option>)}</select></label><textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} className="min-h-44 w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white outline-none placeholder:text-smoke" placeholder="Describe the site you want David to plan..." /><Button variant="primary" className="mt-3 w-full" onClick={() => void generate()} disabled={working}>{working ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}{working ? "Submitting" : "Generate and save"}</Button></Card><Card><SectionHeading eyebrow="Build envelope" title="Verified result" detail="No deployment or preview URL is created from this interface." />{result ? <pre className="max-h-[420px] overflow-auto rounded-xl border border-white/10 bg-black/30 p-4 text-xs leading-5 text-signal">{JSON.stringify(result, null, 2)}</pre> : <EmptyState icon={Globe2} title="No build response yet" detail="Submit a prompt to generate a backend blueprint. When Supabase is configured, the Library refreshes with the resulting generation record." />}</Card></div>;
+  return <div className="space-y-6"><div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]"><Card red><SectionHeading eyebrow="Creative studio" title="Website builder" detail="Generate a blueprint through the canonical backend and save it to an optional existing Project." /><label className="mb-3 block text-xs font-semibold text-smoke">Project association<select value={projectId} onChange={(event) => setProjectId(event.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white outline-none"><option value="">Unassigned Library record</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.name || project.id}</option>)}</select></label><textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} className="min-h-44 w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white outline-none placeholder:text-smoke" placeholder="Describe the site you want David to plan..." /><Button variant="primary" className="mt-3 w-full" onClick={() => void generate()} disabled={working}>{working ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}{working ? "Submitting" : "Generate and save"}</Button></Card><Card><SectionHeading eyebrow="Build envelope" title="Verified result" detail="No deployment or preview URL is created from this interface." />{result ? <pre className="max-h-[420px] overflow-auto rounded-xl border border-white/10 bg-black/30 p-4 text-xs leading-5 text-signal">{JSON.stringify(result, null, 2)}</pre> : <EmptyState icon={Globe2} title="No build response yet" detail="Submit a prompt to generate a backend blueprint. When Supabase is configured, the Library refreshes with the resulting generation record." />}</Card></div><WebsiteOpsPanel repository={repository} renderHealth={renderHealth} renderServiceId={renderServiceId} setRenderServiceId={setRenderServiceId} opsWorking={opsWorking} setOpsWorking={setOpsWorking} prompt={prompt} result={result} notify={notify} onRepository={(next) => setRepository(next)} /></div>;
+}
+
+function WebsiteOpsPanel({ repository, renderHealth, renderServiceId, setRenderServiceId, opsWorking, setOpsWorking, prompt, result, notify, onRepository }: { repository: GitHubRepositoryItem | null; renderHealth: RenderHealth | null; renderServiceId: string; setRenderServiceId: (value: string) => void; opsWorking: boolean; setOpsWorking: (value: boolean) => void; prompt: string; result: Record<string, unknown> | null; notify: WorkspaceProps["notify"]; onRepository: (value: GitHubRepositoryItem) => void }) {
+  const createRepository = async () => {
+    if (!prompt.trim()) return notify("info", "Describe the website before creating its repository.");
+    setOpsWorking(true);
+    try {
+      const next = await api.github.createRepository(prompt, undefined, { private: true });
+      const files = { "README.md": `# ${next.repository_name || "David AI website"}\\n\\nGenerated from Website Studio.`, "website-blueprint.json": JSON.stringify(result || { prompt }, null, 2) };
+      await api.github.initializeRepository(next.id || next.repository_full_name || "", files);
+      onRepository(next);
+      notify("success", "Private GitHub repository created and initialized.");
+    } catch (error) {
+      notify("error", error instanceof Error ? error.message : "GitHub repository creation failed");
+    } finally {
+      setOpsWorking(false);
+    }
+  };
+  const deploy = async () => {
+    if (!repository) return notify("info", "Create and initialize the website repository first.");
+    if (!renderServiceId.trim()) return notify("info", "Enter an existing Render service ID before deploying.");
+    setOpsWorking(true);
+    try {
+      const response = await api.deployments.deploy(renderServiceId.trim());
+      notify("success", `Render deployment requested${response.id ? ` (${String(response.id)})` : ""}.`);
+    } catch (error) {
+      notify("error", error instanceof Error ? error.message : "Render deployment failed");
+    } finally {
+      setOpsWorking(false);
+    }
+  };
+  return <Card><SectionHeading eyebrow="Website operations" title="Repository and deployment" detail="The generated blueprint can be tracked in a private repository. Render deployment requires an existing service ID and explicit owner action." /><div className="grid gap-4 lg:grid-cols-[1fr_1fr]"><div className="rounded-xl border border-white/10 bg-black/20 p-4"><div className="flex items-center justify-between gap-3"><div><p className="font-semibold text-white">GitHub project repository</p><p className="mt-1 text-xs text-smoke">{repository?.repository_full_name || "Not created for this blueprint"}</p></div><StateDot state={repository ? "ready" : "not configured"} /></div><Button variant="primary" className="mt-4 w-full" onClick={() => void createRepository()} disabled={opsWorking || !prompt.trim()}>{opsWorking ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}Create private repository</Button></div><div className="rounded-xl border border-white/10 bg-black/20 p-4"><div className="flex items-center justify-between gap-3"><div><p className="font-semibold text-white">Render deployment</p><p className="mt-1 text-xs text-smoke">{renderHealth?.connected ? "Render API connected" : renderHealth?.configured ? "Render configured but unavailable" : "Render API not configured"}</p></div><StateDot state={renderHealth?.connected ? "connected" : "not configured"} /></div><input value={renderServiceId} onChange={(event) => setRenderServiceId(event.target.value)} className="mt-4 w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-sm text-white outline-none placeholder:text-smoke" placeholder="Existing Render service ID" aria-label="Render service ID" /><Button className="mt-3 w-full" onClick={() => void deploy()} disabled={opsWorking || !repository || !renderServiceId.trim()}><Cloud className="h-4 w-4" />Request deployment</Button></div></div></Card>;
 }
 
 function StudioWorkspace({ kind, capabilities }: { kind: "video" | "image"; capabilities: Capability[] }) { const matches = capabilities.filter((item) => kind === "video" ? String(item.category || "").toLowerCase().includes("video") || item.id.includes("video") : String(item.category || "").toLowerCase().includes("image") || item.id.includes("image") || item.id.includes("comfy")); return <div className="space-y-6"><Card red><SectionHeading eyebrow={`${kind} studio`} title={kind === "video" ? "Video studio" : "Image studio"} detail="The workspace is connected to readiness metadata, not a simulated generation result." /><div className="grid gap-4 md:grid-cols-[1fr_0.8fr]"><div className="rounded-xl border border-white/10 bg-black/20 p-5"><div className="flex items-center gap-3"><div className="grid h-11 w-11 place-items-center rounded-xl bg-crimson/15 text-ember">{kind === "video" ? <Video className="h-5 w-5" /> : <ImageIcon className="h-5 w-5" />}</div><div><h3 className="font-semibold text-white">{kind === "video" ? "Video generation" : "Image generation"}</h3><p className="text-sm text-smoke">{matches.length ? `${matches.length} matching capability record(s)` : "No matching provider is currently registered."}</p></div></div><div className="mt-5 rounded-xl border border-dashed border-white/10 p-5 text-sm leading-6 text-smoke">{matches.length ? "A provider boundary is visible below. Activation requires the corresponding external worker, credentials, and approval policy." : "This workspace is ready for a worker connection. It does not fabricate an asset while the backend capability is unavailable."}</div></div><div className="space-y-3">{matches.length ? matches.map((item) => <CapabilityRow key={item.id} item={item} />) : <EmptyState icon={kind === "video" ? Video : ImageIcon} title="Provider not configured" detail="Use the Providers or Connectors workspace to inspect readiness." />}</div></div></Card></div>; }

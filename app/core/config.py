@@ -42,18 +42,62 @@ class Settings(BaseSettings):
         "gemini,groq,openrouter,cloudflare,cerebras,sambanova,huggingface"
     )
     provider_max_retries: int = 1
+    provider_health_timeout_seconds: int = 10
 
     openai_api_key: str = ""
+    openai_api_base_url: str = "https://api.openai.com/v1"
     openai_model: str = "gpt-5.3-mini"
+    openai_image_model: str = "gpt-image-1"
+    openai_tts_model: str = "gpt-4o-mini-tts"
+    openai_tts_voice: str = "alloy"
+    openai_stt_model: str = "gpt-4o-mini-transcribe"
+
+    anthropic_api_key: str = ""
+    anthropic_api_base_url: str = "https://api.anthropic.com/v1"
+    anthropic_model: str = "claude-sonnet-4-5"
 
     gemini_api_key: str = ""
+    gemini_api_base_url: str = "https://generativelanguage.googleapis.com/v1beta"
     gemini_model: str = "gemini-3.6-flash"
+    gemini_image_model: str = "gemini-3.1-flash-image"
+    gemini_video_model: str = "veo-3.1-generate-preview"
 
     groq_api_key: str = ""
+    groq_api_base_url: str = "https://api.groq.com/openai/v1"
     groq_model: str = "llama-3.3-70b-versatile"
+    groq_stt_model: str = "whisper-large-v3-turbo"
 
     openrouter_api_key: str = ""
+    openrouter_api_base_url: str = "https://openrouter.ai/api/v1"
     openrouter_model: str = "openai/gpt-5.3-chat"
+
+    voyage_api_key: str = ""
+    voyage_api_base_url: str = "https://api.voyageai.com/v1"
+    voyage_model: str = "voyage-3.5"
+
+    elevenlabs_api_key: str = ""
+    elevenlabs_api_base_url: str = "https://api.elevenlabs.io/v1"
+    elevenlabs_model: str = "eleven_multilingual_v2"
+    elevenlabs_stt_model: str = "scribe_v1"
+    elevenlabs_voice_id: str = ""
+
+    runway_api_key: str = ""
+    runway_api_base_url: str = "https://api.dev.runwayml.com/v1"
+    runway_model: str = ""
+
+    luma_api_key: str = ""
+    luma_api_base_url: str = "https://api.lumalabs.ai/dream-machine/v1"
+    luma_model: str = ""
+
+    v0_api_key: str = ""
+    v0_api_base_url: str = "https://api.v0.dev"
+    v0_model: str = ""
+
+    google_maps_api_key: str = ""
+
+    render_api_key: str = ""
+    render_api_base_url: str = "https://api.render.com/v1"
+    render_owner_id: str = ""
 
     cloudflare_api_key: str = ""
     cloudflare_account_id: str = ""
