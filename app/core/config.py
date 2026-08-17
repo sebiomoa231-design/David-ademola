@@ -1,6 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -12,6 +13,7 @@ class Settings(BaseSettings):
         env_file=str(PROJECT_ROOT / ".env"),
         env_file_encoding="utf-8",
         extra="ignore",
+        populate_by_name=True,
     )
 
     app_name: str = "David AI"
@@ -30,8 +32,14 @@ class Settings(BaseSettings):
     # Supabase is accessed only by the backend. Secret keys must be provided
     # through the deployment environment and are never bundled into frontend code.
     supabase_url: str = ""
-    supabase_publishable_key: str = ""
-    supabase_secret_key: str = ""
+    supabase_publishable_key: str = Field(
+        default="",
+        validation_alias=AliasChoices("SUPABASE_PUBLISHABLE_KEY", "SUPABASE_ANON_KEY"),
+    )
+    supabase_secret_key: str = Field(
+        default="",
+        validation_alias=AliasChoices("SUPABASE_SECRET_KEY", "SUPABASE_SERVICE_ROLE_KEY"),
+    )
     database_url: str = ""
     supabase_storage_bucket: str = "Davidai"
     supabase_persistence_enabled: bool = False
@@ -56,18 +64,27 @@ class Settings(BaseSettings):
     anthropic_api_base_url: str = "https://api.anthropic.com/v1"
     anthropic_model: str = "claude-sonnet-4-5"
 
-    gemini_api_key: str = ""
+    gemini_api_key: str = Field(
+        default="",
+        validation_alias=AliasChoices("GEMINI_API_KEY", "Gemini_key"),
+    )
     gemini_api_base_url: str = "https://generativelanguage.googleapis.com/v1beta"
     gemini_model: str = "gemini-3.6-flash"
     gemini_image_model: str = "gemini-3.1-flash-image"
     gemini_video_model: str = "veo-3.1-generate-preview"
 
-    groq_api_key: str = ""
+    groq_api_key: str = Field(
+        default="",
+        validation_alias=AliasChoices("GROQ_API_KEY", "Groq_key"),
+    )
     groq_api_base_url: str = "https://api.groq.com/openai/v1"
     groq_model: str = "llama-3.3-70b-versatile"
     groq_stt_model: str = "whisper-large-v3-turbo"
 
-    openrouter_api_key: str = ""
+    openrouter_api_key: str = Field(
+        default="",
+        validation_alias=AliasChoices("OPENROUTER_API_KEY", "Openrouter_key"),
+    )
     openrouter_api_base_url: str = "https://openrouter.ai/api/v1"
     openrouter_model: str = "openai/gpt-5.3-chat"
 
@@ -99,17 +116,29 @@ class Settings(BaseSettings):
     render_api_base_url: str = "https://api.render.com/v1"
     render_owner_id: str = ""
 
-    cloudflare_api_key: str = ""
+    cloudflare_api_key: str = Field(
+        default="",
+        validation_alias=AliasChoices("CLOUDFLARE_API_KEY", "Cloudflare_key"),
+    )
     cloudflare_account_id: str = ""
     cloudflare_model: str = "@cf/meta/llama-3.1-8b-instruct"
 
-    cerebras_api_key: str = ""
+    cerebras_api_key: str = Field(
+        default="",
+        validation_alias=AliasChoices("CEREBRAS_API_KEY", "Cerebras_key"),
+    )
     cerebras_model: str = "llama-3.3-70b"
 
-    sambanova_api_key: str = ""
+    sambanova_api_key: str = Field(
+        default="",
+        validation_alias=AliasChoices("SAMBANOVA_API_KEY", "Sambanova_key"),
+    )
     sambanova_model: str = "Meta-Llama-3.1-70B-Instruct"
 
-    huggingface_api_key: str = ""
+    huggingface_api_key: str = Field(
+        default="",
+        validation_alias=AliasChoices("HUGGINGFACE_API_KEY", "Huggingface_key"),
+    )
     huggingface_model: str = "openai/gpt-oss-120b:cerebras"
 
     # Piper TTS. The large ONNX model is intentionally not committed to
@@ -139,7 +168,10 @@ class Settings(BaseSettings):
     github_client_id: str = ""
     github_client_secret: str = ""
     github_installation_id: str = ""
-    github_installation_access_token: str = ""
+    github_installation_access_token: str = Field(
+        default="",
+        validation_alias=AliasChoices("GITHUB_INSTALLATION_ACCESS_TOKEN", "GITHUB_TOKEN"),
+    )
     public_base_url: str = ""
 
     @property
