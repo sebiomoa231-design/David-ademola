@@ -120,6 +120,7 @@ class VoiceEngine:
         self,
         audio_bytes: bytes,
         language_mode: LanguageMode = LanguageMode.AUTO,
+        filename: str = "audio.wav",
     ) -> TranscriptionResult:
         """Transcribe audio to text using ElevenLabs Scribe.
 
@@ -149,6 +150,7 @@ class VoiceEngine:
             result = await self._elevenlabs_stt.transcribe(
                 audio_bytes=audio_bytes,
                 language_code=language_code,
+                filename=filename,
             )
             return TranscriptionResult(
                 text=result.get("text", ""),

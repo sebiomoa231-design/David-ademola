@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from agents import router as agents_router
 from app.api.routes.integrations import router as integrations_router
+from app.api.routes.orchestrator import router as orchestrator_router
 from github import router as github_router
 from auth import router as auth_router
 from chat import router as chat_router
@@ -43,6 +44,7 @@ for router in (
     website_router,
     integrations_router,
     agents_router,
+    orchestrator_router,
     github_router,
     fabric_router,
     operating_router,

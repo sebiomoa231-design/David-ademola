@@ -4,12 +4,18 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.router import api_router
+from app.api.routes.orchestrator import init_orchestrator
+from app.agents.orchestrator import MasterOrchestrator
 from app.core.config import get_settings
+from app.providers.intelligent_router import IntelligentRouter
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import log_request, log_shutdown, log_startup
 from app.core.security import check_rate_limit
 
 settings = get_settings()
+intelligent_router = IntelligentRouter(settings)
+master_orchestrator = MasterOrchestrator(ai_router=intelligent_router)
+init_orchestrator(master_orchestrator, intelligent_router)
 
 
 @asynccontextmanager

@@ -96,15 +96,22 @@ export const api = {
     cancel: (runId: string) => request<AgentRun>(`/api/agents/runs/${encodeURIComponent(runId)}/cancel`, { method: "POST" }),
   },
   voiceStatus: () => request<VoiceStatus>("/api/voice/status"),
-  synthesize: (text: string, languageMode = "AUTO") =>
+  synthesize: (text: string) =>
     request<{
-      audio_available: boolean;
-      provider: string;
-      text_fallback: string;
-      reason?: string | null;
       audio_base64?: string | null;
       audio_format?: string;
-    }>("/api/voice/synthesize", json({ text, language_mode: languageMode })),
+      voice_id?: string;
+      model_id?: string;
+      audio_available?: boolean;
+      provider?: string;
+      text_fallback?: string;
+      reason?: string | null;
+    }>("/api/voice/synthesize", json({ text })),
+  transcribe: (audioBase64: string, language?: string, audioFormat = "webm") =>
+    request<{ text: string; language?: string; confidence?: number | null; provider?: string }>(
+      "/api/voice/transcribe",
+      json({ audio_base64: audioBase64, language: language || null, audio_format: audioFormat }),
+    ),
   memories: () => request<MemoryItem[]>("/api/memory"),
   addMemory: (payload: Partial<MemoryItem> & { content: string }) => request<MemoryItem>("/api/memory", json(payload)),
   searchMemories: (query: string) => request<MemoryItem[]>(`/api/memory/search?q=${encodeURIComponent(query)}`),
@@ -166,6 +173,23 @@ export const api = {
       }>("/api/integrations/sources"),
   },
 
+  orchestrator: {
+    process: (message: string, context: Record<string, unknown> = {}) =>
+      request<{
+        text: string;
+        plan_id?: string | null;
+        objective?: string | null;
+        agents_used: string[];
+        providers_used: string[];
+        tasks_completed: number;
+        tasks_failed: number;
+        total_tasks: number;
+        task_details: Array<Record<string, unknown>>;
+      }>("/api/orchestrator/process", json({ message, context, use_multi_agent: true })),
+    status: () => request<Record<string, unknown>>("/api/orchestrator/status"),
+    agents: () => request<{ agents: Array<Record<string, unknown>> }>("/api/orchestrator/agents"),
+    plans: () => request<{ plans: Array<Record<string, unknown>>; total: number }>("/api/orchestrator/plans"),
+  },
   intelligence: {
     health: () => request<Record<string, unknown>>("/api/intelligence/health"),
     readiness: () => request<ReadinessResponse>("/api/intelligence/readiness"),

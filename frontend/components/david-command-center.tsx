@@ -57,6 +57,7 @@ import type { LucideIcon } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api";
+import { useVoiceOS } from "@/hooks/useVoiceOS";
 import {
   baseExecutionSteps,
   phaseFromRunStatus,
@@ -66,6 +67,7 @@ import {
 } from "@/lib/execution-state";
 
 type RouteKey =
+  | "operating-system"
   | "dashboard"
   | "chat"
   | "projects"
@@ -95,6 +97,7 @@ const navGroups: { label: string; items: { route: RouteKey; label: string; icon:
   {
     label: "Command center",
     items: [
+      { route: "operating-system", label: "David OS", icon: Command, badge: "LIVE" },
       { route: "dashboard", label: "Overview", icon: LayoutDashboard },
       { route: "chat", label: "Conversation", icon: MessageSquare, badge: "AI" },
       { route: "agents", label: "Agents", icon: Bot },
@@ -135,6 +138,7 @@ const navGroups: { label: string; items: { route: RouteKey; label: string; icon:
 ];
 
 const routeMeta: Record<RouteKey, { eyebrow: string; title: string; description: string }> = {
+  "operating-system": { eyebrow: "David AI / Operating system", title: "David is listening.", description: "A voice-first command environment for conversation, delegation, execution, and verified results." },
   dashboard: { eyebrow: "David AI / Command center", title: "Good morning, David is ready.", description: "Turn one clear objective into a coordinated plan, finished work, and a decision-ready summary." },
   chat: { eyebrow: "David AI / Conversation", title: "What should we move forward today?", description: "Ask a question, delegate a goal, or start a creative production workflow." },
   projects: { eyebrow: "David AI / Work systems", title: "Projects with momentum.", description: "Keep goals, tasks, files, and agent runs connected in one operating view." },
@@ -214,6 +218,17 @@ export default function DavidCommandCenter({ initialRoute = "dashboard" }: { ini
     { id: "welcome", role: "assistant", text: "I’m David. Give me an objective, a question, or a creative direction. I’ll plan the work, show you what will happen, and ask before sensitive actions.", time: "09:41" },
   ]);
   const [execution, setExecution] = useState<ExecutionSnapshot>(initialExecution);
+  const voice = useVoiceOS({
+    onResult: (result) => {
+      setMessages((current) => [
+        ...current,
+        { id: crypto.randomUUID(), role: "user", text: result.transcript, time: formatTime(), status: "voice command" },
+        { id: crypto.randomUUID(), role: "assistant", text: result.response, time: formatTime(), status: result.agentsUsed.length ? `delegated · ${result.agentsUsed.join(", ")}` : "voice response" },
+      ]);
+      setToast({ kind: "success", text: result.agentsUsed.length ? `David delegated to ${result.agentsUsed.length} sub-agent${result.agentsUsed.length === 1 ? "" : "s"}.` : "David completed the voice response." });
+    },
+    onError: (message) => setToast({ kind: "error", text: message }),
+  });
 
   useEffect(() => {
     let mounted = true;
@@ -240,10 +255,10 @@ export default function DavidCommandCenter({ initialRoute = "dashboard" }: { ini
     setDraft("");
     setWorking(true);
     try {
-      const response = await api.chat(text);
-      const raw = response as unknown as Record<string, unknown>;
-      const reply = String(raw.response || raw.message || raw.content || "Your request has been received. David has prepared the next step.");
-      setMessages((current) => [...current, { id: crypto.randomUUID(), role: "assistant", text: reply, time: formatTime(), status: "live response" }]);
+      const response = await api.orchestrator.process(text, { source: "text_command_center" });
+      const reply = response.text || "David has prepared the next step.";
+      const delegated = response.agents_used?.length ? `delegated · ${response.agents_used.join(", ")}` : "live response";
+      setMessages((current) => [...current, { id: crypto.randomUUID(), role: "assistant", text: reply, time: formatTime(), status: delegated }]);
     } catch {
       setMessages((current) => [...current, { id: crypto.randomUUID(), role: "assistant", text: "I’m in interface mode because the backend is not reachable right now. Your workspace is ready; reconnect the API to execute this request live.", time: formatTime(), status: "offline-ready" }]);
       setToast({ kind: "info", text: "David saved the conversation locally. Connect the API to execute live actions." });
@@ -316,7 +331,8 @@ export default function DavidCommandCenter({ initialRoute = "dashboard" }: { ini
               <div className="topbar-title">David operating normally</div>
             </div>
           </div>
-          <div className="topbar-actions">
+            <div className="topbar-actions">
+            <VoiceHUD voice={voice} />
             <div className={cx("connection-pill", connected ? "is-online" : "is-offline")}><span className="status-dot" />{connected ? "API connected" : "Interface mode"}</div>
             <button className="icon-button" onClick={() => setToast({ kind: "info", text: "Command search is ready for your next prompt." })} aria-label="Search"><Search size={17} /></button>
             <button className="profile-chip" onClick={() => navigate("settings")}><span className="avatar">D</span><span className="profile-name">David Ademola</span><ChevronRight size={15} /></button>
@@ -324,6 +340,7 @@ export default function DavidCommandCenter({ initialRoute = "dashboard" }: { ini
         </header>
 
         <div className="page-frame">
+          {activeRoute === "operating-system" && <OperatingSystemView voice={voice} connected={connected} onNavigate={navigate} />}
           {activeRoute === "dashboard" && <Dashboard onNavigate={navigate} onRunObjective={(prompt) => void runObjective(prompt)} execution={execution} />}
           {activeRoute === "chat" && <ChatView messages={messages} draft={draft} setDraft={setDraft} working={working} onSubmit={() => void submitMessage()} onPrompt={(prompt) => void submitMessage(prompt)} onNavigate={navigate} />}
           {activeRoute === "projects" && <ProjectsView onNavigate={navigate} notify={setToast} />}
@@ -352,6 +369,29 @@ export default function DavidCommandCenter({ initialRoute = "dashboard" }: { ini
   );
 }
 
+function VoiceHUD({ voice }: { voice: ReturnType<typeof useVoiceOS> }) {
+  const active = voice.state !== "idle";
+  const label = voice.state === "listening" ? "LISTENING" : voice.state === "thinking" ? "PROCESSING" : voice.state === "speaking" ? "SPEAKING" : voice.state === "error" ? "VOICE ERROR" : "STANDBY";
+  return (
+    <div className={cx("voice-os-hud", `voice-state-${voice.state}`)} data-state={voice.state}>
+      <div className="voice-core-mini" style={{ transform: `scale(${1 + voice.volume * 0.22})` }} aria-hidden="true">
+        <span className="voice-core-ring voice-core-ring-one" />
+        <span className="voice-core-ring voice-core-ring-two" />
+        <span className="voice-core-sphere" />
+      </div>
+      <div className="voice-os-copy">
+        <span className="voice-os-label">DAVID / {label}</span>
+        <strong>{voice.activeAction || "Ready for your voice"}</strong>
+        {(voice.interimTranscript || voice.transcript) && <small>{voice.interimTranscript || voice.transcript}</small>}
+      </div>
+      <button className="voice-os-button" onClick={voice.state === "speaking" ? voice.cancel : voice.toggle} disabled={voice.state === "thinking"} aria-label={voice.state === "speaking" ? "Stop David speaking" : "Talk to David"}>
+        {voice.state === "listening" ? <Mic size={15} /> : voice.state === "speaking" ? <AudioLines size={15} /> : <Mic size={15} />}
+      </button>
+      {active && <button className="voice-os-stop" onClick={voice.cancel} aria-label="Stop voice operation"><X size={13} /></button>}
+    </div>
+  );
+}
+
 function Sidebar({ activeRoute, open, onClose, onNavigate }: { activeRoute: RouteKey; open: boolean; onClose: () => void; onNavigate: (route: RouteKey) => void }) {
   return <>
     {open && <button className="mobile-scrim" onClick={onClose} aria-label="Close navigation" />}
@@ -367,6 +407,25 @@ function Sidebar({ activeRoute, open, onClose, onNavigate }: { activeRoute: Rout
 function PageHeader({ route, action }: { route: RouteKey; action?: React.ReactNode }) {
   const meta = routeMeta[route];
   return <div className="page-header"><div><div className="micro-label">{meta.eyebrow}</div><h1>{meta.title}</h1><p>{meta.description}</p></div>{action}</div>;
+}
+
+function OperatingSystemView({ voice, connected, onNavigate }: { voice: ReturnType<typeof useVoiceOS>; connected: boolean; onNavigate: (route: RouteKey) => void }) {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const status = voice.state === "listening" ? "LISTENING" : voice.state === "thinking" ? "PROCESSING" : voice.state === "speaking" ? "SPEAKING" : voice.state === "error" ? "WARNING" : "STANDBY";
+  const action = voice.activeAction || (voice.state === "idle" ? "READY FOR YOUR VOICE" : "PROCESSING REQUEST");
+  const clock = new Intl.DateTimeFormat("en", { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(now);
+  return <div className={cx("os-view", `os-state-${voice.state}`)}>
+    <div className="os-view-header"><div><span className="micro-label">DAVID AI / VOICE-FIRST OPERATING SYSTEM</span><h1>Command the system naturally.</h1><p>Speak a goal. David interprets it, assigns governed sub-agents, and returns an audible, reviewable result.</p></div><div className="os-header-status"><span className="status-dot" />{connected ? "NETWORK CONNECTED" : "CONNECTION UNAVAILABLE"}</div></div>
+    <div className="os-stage" aria-live="polite"><div className="os-grid-lines" /><div className="os-radar os-radar-one" /><div className="os-radar os-radar-two" /><div className="os-radar os-radar-three" /><div className="os-core" style={{ transform: `scale(${1 + voice.volume * 0.18})` }}><span className="os-core-orbit os-orbit-a" /><span className="os-core-orbit os-orbit-b" /><span className="os-core-orbit os-orbit-c" /><span className="os-core-lens" /><span className="os-core-nucleus" /></div><div className="os-core-copy"><span>DAVID AI</span><strong>{status}</strong><small>{action}</small></div>{(voice.transcript || voice.interimTranscript || voice.response) && <div className="os-transcript-panel"><span className="micro-label">LIVE TRANSCRIPT / RESPONSE</span>{voice.transcript && <p><em>YOU</em> {voice.transcript}</p>}{voice.interimTranscript && !voice.transcript && <p><em>LISTENING</em> {voice.interimTranscript}</p>}{voice.response && <p><em>DAVID</em> {voice.response}</p>}</div>}</div>
+    <div className="os-telemetry"><span>TIME <strong>{clock}</strong></span><span>MIC <strong>{voice.state === "listening" ? "ACTIVE" : "STANDBY"}</strong></span><span>NETWORK <strong>{connected ? "ONLINE" : "OFFLINE"}</strong></span><span>MODE <strong>GOVERNED</strong></span></div>
+    <div className="os-controls"><button className="button button-primary" onClick={voice.state === "speaking" ? voice.cancel : voice.toggle} disabled={voice.state === "thinking"}><Mic size={16} />{voice.state === "listening" ? "Stop & process" : voice.state === "speaking" ? "Stop speaking" : "Talk to David"}</button><button className="button button-secondary" onClick={voice.cancel} disabled={voice.state === "idle"}><X size={16} />Cancel</button><button className="button button-secondary" onClick={() => onNavigate("agents")}><Bot size={16} />Open sub-agents</button><button className="button button-secondary" onClick={() => onNavigate("chat")}><MessageSquare size={16} />Text fallback</button></div>
+    {voice.error && <div className="os-warning"><span className="status-tag tag-amber">VOICE WARNING</span><span>{voice.error}</span></div>}
+    {voice.response && <div className="os-response panel-card"><div><span className="micro-label">RESPONSE READY</span><h2>David has returned a result.</h2><p>{voice.response}</p></div><span className="os-response-mark"><AudioLines size={18} /></span></div>}
+  </div>;
 }
 
 function Dashboard({ onNavigate, onRunObjective, execution }: { onNavigate: (route: RouteKey) => void; onRunObjective: (prompt: string) => void; execution: ExecutionSnapshot }) {
@@ -402,7 +461,42 @@ function TasksView({ notify }: { notify: (toast: Toast) => void }) {
 
 function TaskCard({ task, notify }: { task: { title: string; project: string; state: string; tone: string; icon: LucideIcon }; notify: (toast: Toast) => void }) { const Icon = task.icon; return <button className="task-card" onClick={() => notify({ kind: task.tone === "amber" ? "info" : "success", text: task.tone === "amber" ? "Approval details opened." : `${task.title} marked for review.` })}><div className={cx("task-icon", `tone-${task.tone}`)}><Icon size={16} /></div><div className="task-card-content"><strong>{task.title}</strong><span>{task.project}</span><div className="task-card-meta"><em className={cx("status-tag", `tag-${task.tone}`)}>{task.state}</em><MoreHorizontal size={15} /></div></div></button>; }
 
-function AgentsView({ notify }: { notify: (toast: Toast) => void }) { const agents = [{ name: "Strategy", role: "Research & planning", icon: Target, state: "Available", color: "red", detail: "Turns ambiguous objectives into sequenced plans." }, { name: "Studio", role: "Creative production", icon: Palette, state: "Working", color: "purple", detail: "Builds connected visual, video, voice, and web assets." }, { name: "Analyst", role: "Data & reporting", icon: Gauge, state: "Available", color: "blue", detail: "Finds patterns, creates charts, and explains the evidence." }, { name: "Guardian", role: "Quality & governance", icon: ShieldCheck, state: "Watching", color: "green", detail: "Checks risk, brand rules, sources, and approval gates." }]; return <div><PageHeader route="agents" action={<button className="button button-primary" onClick={() => notify({ kind: "info", text: "Agent builder is ready for a custom specialist." })}><Plus size={16} /> Build an agent</button>} /><div className="agent-banner panel-card"><div className="agent-banner-icon"><Bot size={25} /></div><div><div className="eyebrow-pill">MULTI-AGENT ORCHESTRATION</div><h2>David delegates, then brings you the answer.</h2><p>Every specialist works inside the same memory, project context, and approval policy.</p></div><div className="agent-flow"><span>Objective</span><ChevronRight size={15} /><span>Plan</span><ChevronRight size={15} /><span>Specialists</span><ChevronRight size={15} /><span>Verified result</span></div></div><div className="agent-grid">{agents.map((agent) => { const Icon = agent.icon; return <button className="panel-card agent-card" key={agent.name} onClick={() => notify({ kind: "info", text: `${agent.name} agent details opened.` })}><div className="agent-card-top"><div className={cx("agent-icon", `tone-${agent.color}`)}><Icon size={20} /></div><span className={cx("status-tag", agent.state === "Working" ? "tag-red" : agent.state === "Watching" ? "tag-green" : "tag-blue")}>{agent.state}</span></div><h3>{agent.name} agent</h3><p className="agent-role">{agent.role}</p><p className="agent-detail">{agent.detail}</p><div className="agent-card-footer"><span>4 capabilities</span><ArrowUpRight size={16} /></div></button>; })}</div></div>; }
+function AgentsView({ notify }: { notify: (toast: Toast) => void }) {
+  const [agents, setAgents] = useState<Array<Record<string, unknown>>>([]);
+  const [objective, setObjective] = useState("Review the current David operating system and recommend the next safe improvement.");
+  const [loading, setLoading] = useState(true);
+  const [dispatching, setDispatching] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    api.orchestrator.agents()
+      .then((payload) => mounted && setAgents(payload.agents || []))
+      .catch(() => mounted && notify({ kind: "error", text: "The live sub-agent registry is unavailable." }))
+      .finally(() => mounted && setLoading(false));
+    return () => { mounted = false; };
+  }, [notify]);
+
+  async function dispatchObjective() {
+    const text = objective.trim();
+    if (!text || dispatching) return;
+    setDispatching(true);
+    try {
+      const result = await api.orchestrator.process(text, { source: "agent_registry", requested_by: "owner" });
+      notify({ kind: "success", text: `David completed the orchestration with ${result.tasks_completed}/${result.total_tasks} sub-agent task${result.total_tasks === 1 ? "" : "s"}.` });
+    } catch {
+      notify({ kind: "error", text: "David could not dispatch this objective through the live orchestrator." });
+    } finally {
+      setDispatching(false);
+    }
+  }
+
+  return <div>
+    <PageHeader route="agents" action={<button className="button button-primary" onClick={dispatchObjective} disabled={dispatching}><Play size={16} /> {dispatching ? "Delegating..." : "Assign objective"}</button>} />
+    <div className="agent-banner panel-card"><div className="agent-banner-icon"><Bot size={25} /></div><div><div className="eyebrow-pill">LIVE MULTI-AGENT ORCHESTRATION</div><h2>David assigns duties to governed specialists.</h2><p>Each sub-agent receives a bounded objective, operates inside David's policy, and returns evidence to the main operating system.</p></div><div className="agent-flow"><span>Objective</span><ChevronRight size={15} /><span>Route</span><ChevronRight size={15} /><span>Sub-agents</span><ChevronRight size={15} /><span>Result</span></div></div>
+    <div className="panel-card agent-dispatch-panel"><div><div className="micro-label">ASSIGN A DUTY</div><h2>Give David one outcome to coordinate.</h2></div><textarea value={objective} onChange={(event) => setObjective(event.target.value)} rows={3} placeholder="Describe the outcome you want David and the specialist agents to deliver..." /><div className="agent-dispatch-footer"><span><ShieldCheck size={14} /> High-impact actions remain behind approval gates.</span><button className="button button-primary" onClick={dispatchObjective} disabled={!objective.trim() || dispatching}><Send size={14} /> {dispatching ? "Working..." : "Run through David"}</button></div></div>
+    {loading ? <div className="panel-card padded-card"><span className="micro-label">LOADING SUB-AGENTS</span></div> : <div className="agent-grid">{agents.map((agent) => { const role = String(agent.role || "agent"); const name = String(agent.name || role.replaceAll("_", " ")); const busy = Boolean(agent.is_busy); return <button className="panel-card agent-card" key={role} onClick={() => { setObjective(`Assign the ${name} to ${objective}`); notify({ kind: "info", text: `${name} selected for the next objective.` }); }}><div className="agent-card-top"><div className="agent-icon tone-blue"><Bot size={20} /></div><span className={cx("status-tag", busy ? "tag-red" : "tag-green")}>{busy ? "Working" : "Available"}</span></div><h3>{name}</h3><p className="agent-role">{String(agent.role || "specialist")}</p><p className="agent-detail">{busy ? "Currently processing a governed sub-task." : "Ready to receive a bounded duty from David."}</p><div className="agent-card-footer"><span>{String(agent.completed_tasks || 0)} completed · {String(agent.active_tasks || 0)} active</span><ArrowUpRight size={16} /></div></button>; })}</div>}
+  </div>;
+}
 
 function MemoryView({ notify }: { notify: (toast: Toast) => void }) { const memories = [{ title: "Brand voice", detail: "Confident, direct, warm. Avoid jargon and empty superlatives.", tag: "Preference", icon: Palette }, { title: "Launch objective", detail: "Atlas should become the clearest entry point for first-time customers.", tag: "Decision", icon: Target }, { title: "Brand handbook", detail: "14 pages · Indexed 1 hour ago · 86 searchable passages", tag: "Source", icon: FileText }, { title: "Customer profile", detail: "Business owners who need leverage without adding headcount.", tag: "Knowledge", icon: Users }]; return <div><PageHeader route="memory" action={<button className="button button-primary" onClick={() => notify({ kind: "success", text: "Memory capture opened." })}><Plus size={16} /> Add memory</button>} /><div className="memory-overview"><div className="memory-score"><div className="score-ring"><strong>92</strong><span>/100</span></div><div><span className="micro-label">CONTEXT QUALITY</span><h2>David knows how you work.</h2><p>Connect two more sources to improve project-level recommendations.</p></div></div><div className="memory-facts"><div><strong>128</strong><span>memories</span></div><div><strong>24</strong><span>sources</span></div><div><strong>06</strong><span>projects</span></div></div></div><div className="memory-grid">{memories.map((memory) => { const Icon = memory.icon; return <button className="panel-card memory-card" key={memory.title} onClick={() => notify({ kind: "info", text: `${memory.title} memory opened for editing.` })}><div className="memory-card-top"><span className="memory-icon"><Icon size={17} /></span><span className="status-tag tag-blue">{memory.tag}</span><MoreHorizontal size={16} /></div><h3>{memory.title}</h3><p>{memory.detail}</p><div className="memory-card-footer"><span>Last used today</span><ArrowUpRight size={15} /></div></button>; })}</div></div>; }
 
