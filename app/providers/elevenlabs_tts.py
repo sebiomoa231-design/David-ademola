@@ -28,6 +28,40 @@ class ElevenLabsError(Exception):
     pass
 
 
+def _provider_error_detail(response: httpx.Response) -> str:
+    """Extract a safe provider error without returning credentials or headers."""
+    try:
+        payload = response.json()
+        if isinstance(payload, dict):
+            detail = payload.get("detail") or payload.get("message") or payload.get("error")
+            if detail:
+                return str(detail)
+    except ValueError:
+        pass
+    text = response.text.strip()
+    return text[:500] if text else response.reason_phrase or "empty provider response"
+
+
+def _validate_audio_response(response: httpx.Response, output_format: str) -> bytes:
+    """Reject JSON/error bodies accidentally returned where binary audio is required."""
+    content = response.content
+    content_type = response.headers.get("content-type", "").split(";", 1)[0].lower()
+    if not content:
+        raise ElevenLabsError("ElevenLabs returned an empty audio response.")
+    if content_type and not content_type.startswith("audio/"):
+        raise ElevenLabsError(
+            f"ElevenLabs returned {content_type} instead of audio for {output_format}."
+        )
+    if content.startswith(b"{") or content.startswith(b"["):
+        raise ElevenLabsError("ElevenLabs returned structured error data instead of audio.")
+    if output_format.startswith("mp3") and not (
+        content.startswith(b"ID3")
+        or (len(content) > 1 and content[0] == 0xFF and content[1] & 0xE0 == 0xE0)
+    ):
+        raise ElevenLabsError("ElevenLabs returned invalid MP3 data.")
+    return content
+
+
 class ElevenLabsTTSClient:
     """Client for ElevenLabs Text-to-Speech API.
 
@@ -102,13 +136,26 @@ class ElevenLabsTTSClient:
                 response = await client.post(
                     url, json=payload, headers=headers, params=params
                 )
-                response.raise_for_status()
-                return response.content
+                if response.is_error:
+                    error_detail = _provider_error_detail(response)
+                    logger.error(
+                        "ElevenLabs API error: %s - %s",
+                        response.status_code,
+                        error_detail,
+                    )
+                    raise ElevenLabsError(
+                        f"ElevenLabs API returned {response.status_code}: {error_detail}"
+                    )
+                return _validate_audio_response(response, output_format)
             except httpx.HTTPStatusError as exc:
-                error_detail = exc.response.text if exc.response else str(exc)
-                logger.error(f"ElevenLabs API error: {exc.response.status_code} - {error_detail}")
+                error_detail = _provider_error_detail(exc.response) if exc.response else str(exc)
+                logger.error(
+                    "ElevenLabs API error: %s - %s",
+                    exc.response.status_code if exc.response else "unknown",
+                    error_detail,
+                )
                 raise ElevenLabsError(
-                    f"ElevenLabs API returned {exc.response.status_code}: {error_detail}"
+                    f"ElevenLabs API returned {exc.response.status_code if exc.response else 'an error'}: {error_detail}"
                 ) from exc
             except httpx.RequestError as exc:
                 logger.error(f"ElevenLabs request failed: {exc}")
