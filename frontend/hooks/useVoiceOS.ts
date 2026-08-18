@@ -49,6 +49,8 @@ export function useVoiceOS(options: VoiceOSOptions = {}) {
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const lastSpokenTextRef = useRef("");
+  const [isPaused, setIsPaused] = useState(false);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationRef = useRef<number | null>(null);
 
@@ -88,24 +90,61 @@ export function useVoiceOS(options: VoiceOSOptions = {}) {
   }, []);
 
   const speak = useCallback(async (text: string) => {
-    const payload = await api.synthesize(text);
-    if (!payload.audio_base64) {
+    lastSpokenTextRef.current = text;
+    setIsPaused(false);
+    try {
+      const payload = await api.synthesize(text);
+      if (payload.audio_base64) {
+        const audio = new Audio(toAudioUrl(payload.audio_base64, payload.audio_format || "mp3"));
+        audioRef.current = audio;
+        setState("speaking");
+        setActiveAction("SPEAKING · ELEVENLABS");
+        await new Promise<void>((resolve, reject) => {
+          audio.onended = () => resolve();
+          audio.onerror = () => reject(new Error("David's server voice could not be played."));
+          void audio.play().catch(reject);
+        });
+        audioRef.current = null;
+        setState("idle");
+        setActiveAction("STANDBY");
+        return;
+      }
+      throw new Error(payload.reason || "Server TTS returned no audio");
+    } catch {
+      if (typeof window === "undefined" || !("speechSynthesis" in window)) throw new Error("No voice output is available. Configure ElevenLabs or enable browser speech synthesis.");
+      window.speechSynthesis.cancel();
+      setState("speaking");
+      setActiveAction("SPEAKING · BROWSER FALLBACK");
+      await new Promise<void>((resolve) => {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.96;
+        utterance.pitch = 0.82;
+        utterance.onend = () => resolve();
+        utterance.onerror = () => resolve();
+        window.speechSynthesis.speak(utterance);
+      });
       setState("idle");
-      return;
+      setActiveAction("STANDBY · BROWSER VOICE FALLBACK");
     }
-    const audio = new Audio(toAudioUrl(payload.audio_base64, payload.audio_format || "mp3"));
-    audioRef.current = audio;
-    setState("speaking");
-    setActiveAction("RESPONSE READY");
-    await new Promise<void>((resolve, reject) => {
-      audio.onended = () => resolve();
-      audio.onerror = () => reject(new Error("David's voice output could not be played."));
-      void audio.play().catch(reject);
-    });
-    audioRef.current = null;
-    setState("idle");
-    setActiveAction("STANDBY");
   }, []);
+
+  const pause = useCallback(() => {
+    if (audioRef.current) audioRef.current.pause();
+    if (typeof window !== "undefined" && "speechSynthesis" in window && window.speechSynthesis.speaking) window.speechSynthesis.pause();
+    setIsPaused(true);
+    setActiveAction("OUTPUT PAUSED");
+  }, []);
+
+  const resume = useCallback(() => {
+    if (audioRef.current) void audioRef.current.play();
+    if (typeof window !== "undefined" && "speechSynthesis" in window && window.speechSynthesis.paused) window.speechSynthesis.resume();
+    setIsPaused(false);
+    setActiveAction("SPEAKING");
+  }, []);
+
+  const replay = useCallback(async () => {
+    if (lastSpokenTextRef.current) await speak(lastSpokenTextRef.current);
+  }, [speak]);
 
   const processAudio = useCallback(async (blob: Blob) => {
     setState("thinking");
@@ -210,6 +249,10 @@ export function useVoiceOS(options: VoiceOSOptions = {}) {
     error,
     isListening: state === "listening",
     isSpeaking: state === "speaking",
+    isPaused,
+    pause,
+    resume,
+    replay,
     toggle: state === "listening" ? stopListening : startListening,
     startListening,
     stopListening,

@@ -23,6 +23,7 @@ import {
   Headphones,
   Image as ImageIcon,
   LayoutDashboard,
+  PenLine,
   Library,
   LifeBuoy,
   Link2,
@@ -32,11 +33,13 @@ import {
   Mic,
   MoreHorizontal,
   Palette,
+  Pause,
   Play,
   Plus,
   Rocket,
   Search,
   Send,
+  Sun,
   Settings,
   ShieldCheck,
   SlidersHorizontal,
@@ -55,7 +58,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { useVoiceOS } from "@/hooks/useVoiceOS";
 import {
@@ -68,6 +71,8 @@ import {
 
 type RouteKey =
   | "operating-system"
+  | "freehand"
+  | "lighting"
   | "dashboard"
   | "chat"
   | "projects"
@@ -98,6 +103,8 @@ const navGroups: { label: string; items: { route: RouteKey; label: string; icon:
     label: "Command center",
     items: [
       { route: "operating-system", label: "David OS", icon: Command, badge: "LIVE" },
+      { route: "freehand", label: "Freehand", icon: PenLine },
+      { route: "lighting", label: "Lighting", icon: Sun },
       { route: "dashboard", label: "Overview", icon: LayoutDashboard },
       { route: "chat", label: "Conversation", icon: MessageSquare, badge: "AI" },
       { route: "agents", label: "Agents", icon: Bot },
@@ -139,6 +146,8 @@ const navGroups: { label: string; items: { route: RouteKey; label: string; icon:
 
 const routeMeta: Record<RouteKey, { eyebrow: string; title: string; description: string }> = {
   "operating-system": { eyebrow: "David AI / Operating system", title: "David is listening.", description: "A voice-first command environment for conversation, delegation, execution, and verified results." },
+  freehand: { eyebrow: "David AI / Freehand canvas", title: "Sketch the system.", description: "A local drawing surface for visual thinking. Nothing is uploaded until you explicitly export or attach it." },
+  lighting: { eyebrow: "David AI / Lighting control", title: "Tune the atmosphere.", description: "Adjust the local interface illumination and core response without pretending to control physical devices." },
   dashboard: { eyebrow: "David AI / Command center", title: "Good morning, David is ready.", description: "Turn one clear objective into a coordinated plan, finished work, and a decision-ready summary." },
   chat: { eyebrow: "David AI / Conversation", title: "What should we move forward today?", description: "Ask a question, delegate a goal, or start a creative production workflow." },
   projects: { eyebrow: "David AI / Work systems", title: "Projects with momentum.", description: "Keep goals, tasks, files, and agent runs connected in one operating view." },
@@ -208,7 +217,7 @@ function cx(...classes: Array<string | false | null | undefined>) {
 export default function DavidCommandCenter({ initialRoute = "dashboard" }: { initialRoute?: string }) {
   const pathname = usePathname() || `/${initialRoute}`;
   const router = useRouter();
-  const activeRoute = routeFromPath(pathname);
+  const activeRoute = pathname === "/" ? (initialRoute as RouteKey) : routeFromPath(pathname);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [toast, setToast] = useState<Toast>(null);
   const [connected, setConnected] = useState(true);
@@ -318,7 +327,7 @@ export default function DavidCommandCenter({ initialRoute = "dashboard" }: { ini
   };
 
   return (
-    <div className="david-shell">
+    <div className={cx("david-shell", activeRoute === "operating-system" && "david-shell-os")}>
       <div className="shell-grid" />
       <div className="noise" />
       <Sidebar activeRoute={activeRoute} open={mobileOpen} onClose={() => setMobileOpen(false)} onNavigate={navigate} />
@@ -341,6 +350,8 @@ export default function DavidCommandCenter({ initialRoute = "dashboard" }: { ini
 
         <div className="page-frame">
           {activeRoute === "operating-system" && <OperatingSystemView voice={voice} connected={connected} onNavigate={navigate} />}
+          {activeRoute === "freehand" && <FreehandView />}
+          {activeRoute === "lighting" && <LightingView />}
           {activeRoute === "dashboard" && <Dashboard onNavigate={navigate} onRunObjective={(prompt) => void runObjective(prompt)} execution={execution} />}
           {activeRoute === "chat" && <ChatView messages={messages} draft={draft} setDraft={setDraft} working={working} onSubmit={() => void submitMessage()} onPrompt={(prompt) => void submitMessage(prompt)} onNavigate={navigate} />}
           {activeRoute === "projects" && <ProjectsView onNavigate={navigate} notify={setToast} />}
@@ -415,14 +426,33 @@ function OperatingSystemView({ voice, connected, onNavigate }: { voice: ReturnTy
     const timer = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(timer);
   }, []);
-  const status = voice.state === "listening" ? "LISTENING" : voice.state === "thinking" ? "PROCESSING" : voice.state === "speaking" ? "SPEAKING" : voice.state === "error" ? "WARNING" : "STANDBY";
-  const action = voice.activeAction || (voice.state === "idle" ? "READY FOR YOUR VOICE" : "PROCESSING REQUEST");
+  const isExecuting = voice.state === "thinking" && /DELEGATING|ASSIGNED|EXECUTING/i.test(voice.activeAction);
+  const stateConfig = {
+    idle: { label: "IDLE / STANDBY", detail: "System is calm and waiting.", action: "NO ACTIVE TASK" },
+    listening: { label: "LISTENING", detail: "Microphone active. Listening to user.", action: "VOICE INPUT" },
+    thinking: { label: isExecuting ? "EXECUTING ACTION" : "PROCESSING / THINKING", detail: isExecuting ? "Performing the requested action." : "Analyzing request and preparing response.", action: isExecuting ? "DELEGATED WORK IN PROGRESS" : "ANALYZING REQUEST" },
+    speaking: { label: "RESPONSE READY", detail: "Answer or result is ready.", action: "RESPONDING" },
+    error: { label: "SYSTEM ALERT", detail: "Voice service needs attention.", action: "CHECK CONNECTION" },
+  }[voice.state];
   const clock = new Intl.DateTimeFormat("en", { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(now);
+  const micStatus = voice.state === "listening" ? "ON" : "OFF";
+  const networkStatus = connected ? "ONLINE" : "OFFLINE";
+  const waveform = [0.2, 0.42, 0.7, 0.34, 0.9, 0.5, 0.25, 0.62, 0.34, 0.78, 0.4, 0.25, 0.58, 0.86, 0.36, 0.64, 0.24, 0.5, 0.32, 0.72];
   return <div className={cx("os-view", `os-state-${voice.state}`)}>
     <div className="os-view-header"><div><span className="micro-label">DAVID AI / VOICE-FIRST OPERATING SYSTEM</span><h1>Command the system naturally.</h1><p>Speak a goal. David interprets it, assigns governed sub-agents, and returns an audible, reviewable result.</p></div><div className="os-header-status"><span className="status-dot" />{connected ? "NETWORK CONNECTED" : "CONNECTION UNAVAILABLE"}</div></div>
-    <div className="os-stage" aria-live="polite"><div className="os-grid-lines" /><div className="os-radar os-radar-one" /><div className="os-radar os-radar-two" /><div className="os-radar os-radar-three" /><div className="os-core" style={{ transform: `scale(${1 + voice.volume * 0.18})` }}><span className="os-core-orbit os-orbit-a" /><span className="os-core-orbit os-orbit-b" /><span className="os-core-orbit os-orbit-c" /><span className="os-core-lens" /><span className="os-core-nucleus" /></div><div className="os-core-copy"><span>DAVID AI</span><strong>{status}</strong><small>{action}</small></div>{(voice.transcript || voice.interimTranscript || voice.response) && <div className="os-transcript-panel"><span className="micro-label">LIVE TRANSCRIPT / RESPONSE</span>{voice.transcript && <p><em>YOU</em> {voice.transcript}</p>}{voice.interimTranscript && !voice.transcript && <p><em>LISTENING</em> {voice.interimTranscript}</p>}{voice.response && <p><em>DAVID</em> {voice.response}</p>}</div>}</div>
-    <div className="os-telemetry"><span>TIME <strong>{clock}</strong></span><span>MIC <strong>{voice.state === "listening" ? "ACTIVE" : "STANDBY"}</strong></span><span>NETWORK <strong>{connected ? "ONLINE" : "OFFLINE"}</strong></span><span>MODE <strong>GOVERNED</strong></span></div>
-    <div className="os-controls"><button className="button button-primary" onClick={voice.state === "speaking" ? voice.cancel : voice.toggle} disabled={voice.state === "thinking"}><Mic size={16} />{voice.state === "listening" ? "Stop & process" : voice.state === "speaking" ? "Stop speaking" : "Talk to David"}</button><button className="button button-secondary" onClick={voice.cancel} disabled={voice.state === "idle"}><X size={16} />Cancel</button><button className="button button-secondary" onClick={() => onNavigate("agents")}><Bot size={16} />Open sub-agents</button><button className="button button-secondary" onClick={() => onNavigate("chat")}><MessageSquare size={16} />Text fallback</button></div>
+    <div className="os-stage os-reference-stage" aria-live="polite">
+      <div className="os-reference-title"><span>ORBITAL</span><strong>CORE</strong></div>
+      <div className="os-reference-lines" />
+      <aside className="os-hud-panel os-hud-left"><section><span className="os-hud-label">SYSTEM</span><p>Dashboard</p><p>Files</p><p>Devices</p><p>Network</p></section><section><span className="os-hud-label">APPLICATIONS</span><p>Browser</p><p>Terminal</p><p>Code Editor</p><p>Media Player</p></section><section><span className="os-hud-label">QUICK ACCESS</span><p>Notes</p><p>Calendar</p><p>Tasks</p></section></aside>
+      <aside className="os-hud-panel os-hud-right"><section><span className="os-hud-label">NOTIFICATIONS</span><p>{voice.response ? "1 active response" : "No new notifications"}</p></section><section><span className="os-hud-label">SYSTEM HEALTH</span><p>MIC <b>{micStatus}</b></p><p>NET <b>{networkStatus}</b></p><p>MODE <b>GOVERNED</b></p></section></aside>
+      <div className="os-reference-axis" />
+      <div className="os-reference-core" style={{ transform: `translate(-50%, -50%) scale(${1 + voice.volume * 0.18})` }}><span className="os-core-orbit os-orbit-a" /><span className="os-core-orbit os-orbit-b" /><span className="os-core-orbit os-orbit-c" /><span className="os-reference-ring ring-one" /><span className="os-reference-ring ring-two" /><span className="os-reference-ring ring-three" /><span className="os-reference-sphere" /><span className="os-core-nucleus" /></div>
+      <div className="os-reference-readout"><span>DAVID AI</span><strong>{stateConfig.label}</strong><small>{stateConfig.detail}</small><em>{voice.activeAction || stateConfig.action}</em></div>
+      {(voice.state === "listening" || voice.state === "speaking") && <div className="os-reference-waveform" aria-label="Voice activity waveform">{waveform.map((height, index) => <i key={index} style={{ height: `${Math.max(4, height * (voice.state === "listening" ? 34 + voice.volume * 42 : 24))}px` }} />)}</div>}
+      {(voice.transcript || voice.interimTranscript || voice.response) && <div className="os-transcript-panel"><span className="micro-label">LIVE TRANSCRIPT / RESPONSE</span>{voice.transcript && <p><em>YOU</em> {voice.transcript}</p>}{voice.interimTranscript && !voice.transcript && <p><em>LISTENING</em> {voice.interimTranscript}</p>}{voice.response && <p><em>DAVID</em> {voice.response}</p>}</div>}
+      <div className="os-reference-bottom"><span>{clock}</span><span>ACTIVE TASK: {voice.activeAction || "NONE"}</span><span>MIC: {micStatus}</span><span>NETWORK: {networkStatus}</span><span>SYSTEM: OPTIMAL</span></div>
+    </div>
+    <div className="os-controls"><button className="button button-primary" onClick={voice.state === "speaking" ? voice.cancel : voice.toggle} disabled={voice.state === "thinking"}><Mic size={16} />{voice.state === "listening" ? "Stop & process" : voice.state === "speaking" ? "Stop speaking" : "Talk to David"}</button><button className="button button-secondary" onClick={voice.isPaused ? voice.resume : voice.pause} disabled={!voice.isSpeaking}><Pause size={16} />{voice.isPaused ? "Resume" : "Pause"}</button><button className="button button-secondary" onClick={() => void voice.replay()} disabled={!voice.response}><Play size={16} />Replay</button><button className="button button-secondary" onClick={voice.cancel} disabled={voice.state === "idle"}><X size={16} />Cancel</button><button className="button button-secondary" onClick={() => onNavigate("agents")}><Bot size={16} />Open sub-agents</button><button className="button button-secondary" onClick={() => onNavigate("chat")}><MessageSquare size={16} />Text fallback</button></div>
     {voice.error && <div className="os-warning"><span className="status-tag tag-amber">VOICE WARNING</span><span>{voice.error}</span></div>}
     {voice.response && <div className="os-response panel-card"><div><span className="micro-label">RESPONSE READY</span><h2>David has returned a result.</h2><p>{voice.response}</p></div><span className="os-response-mark"><AudioLines size={18} /></span></div>}
   </div>;
@@ -504,7 +534,62 @@ function CreativeView({ onNavigate, notify }: { onNavigate: (route: RouteKey) =>
 
 function WebsiteBuilder({ notify }: { notify: (toast: Toast) => void }) { const [brief, setBrief] = useState("A conversion-focused launch page for Atlas, a calm operating system for independent business owners."); const [building, setBuilding] = useState(false); return <div><PageHeader route="website-builder" action={<div className="header-actions"><button className="button button-secondary" onClick={() => notify({ kind: "info", text: "Preview opened in a new workspace." })}><Globe2 size={16} /> Preview</button><button className="button button-primary" onClick={() => { setBuilding(true); window.setTimeout(() => { setBuilding(false); notify({ kind: "success", text: "Website plan generated and ready for review." }); }, 900); }}><Rocket size={16} /> {building ? "Building..." : "Build website"}</button></div>} /><div className="builder-layout"><section className="panel-card builder-prompt"><SectionHeader eyebrow="BUILD BRIEF" title="Tell David what to build" detail="The agent will propose the structure, copy, visual direction, and implementation plan." icon={WandSparkles} /><textarea value={brief} onChange={(event) => setBrief(event.target.value)} /><div className="builder-options"><button className="option-chip active"><Palette size={14} /> Brand-aware</button><button className="option-chip"><Globe2 size={14} /> Responsive</button><button className="option-chip"><ShieldCheck size={14} /> Review before publish</button></div><div className="builder-action-row"><span><LockKeyhole size={14} /> Publishing always requires approval</span><button className="button button-primary" onClick={() => notify({ kind: "success", text: "Build brief saved to Atlas project." })}><Check size={15} /> Save brief</button></div></section><section className="panel-card browser-preview"><div className="browser-top"><div className="browser-dots"><span /><span /><span /></div><span>atlas.david.ai / preview</span><MoreHorizontal size={17} /></div><div className="preview-content"><div className="preview-nav"><strong>ATLAS</strong><span>Product</span><span>How it works</span><span>Pricing</span><button>Start free</button></div><div className="preview-hero"><span className="eyebrow-pill">A CALMER WAY TO OPERATE</span><h2>Your business, with more leverage.</h2><p>Bring your plans, systems, and next best actions into one intelligent workspace.</p><button><Sparkles size={14} /> Explore Atlas</button></div><div className="preview-blocks"><div /><div /><div /></div></div></section></div></div>; }
 
-function VideoStudio({ notify }: { notify: (toast: Toast) => void }) { const [prompt, setPrompt] = useState("A 30-second cinematic product teaser for Atlas. Warm light, confident pacing, premium founder-focused tone."); return <div><PageHeader route="video-studio" action={<button className="button button-primary" onClick={() => notify({ kind: "success", text: "Video render queued. David will notify you when the cuts are ready." })}><Play size={16} /> Render video</button>} /><div className="video-studio-layout"><section className="panel-card video-prompt-card"><SectionHeader eyebrow="PRODUCTION BRIEF" title="Shape the next cut" icon={Film} /><textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} /><div className="video-controls"><div><span className="micro-label">FORMAT</span><button className="select-like">Landscape 16:9 <ChevronRight size={14} /></button></div><div><span className="micro-label">VOICE</span><button className="select-like">David / Warm <ChevronRight size={14} /></button></div><div><span className="micro-label">OUTPUTS</span><button className="select-like">4 social cuts <ChevronRight size={14} /></button></div></div><button className="button button-primary wide-button" onClick={() => notify({ kind: "info", text: "Storyboard generated from your brief." })}><WandSparkles size={16} /> Generate storyboard</button></section><section className="panel-card timeline-card"><div className="timeline-header"><div><div className="micro-label">ATLAS TEASER / V1</div><h2>Storyboard timeline</h2></div><span className="status-tag tag-amber">Needs review</span></div><div className="video-canvas"><div className="canvas-orbit" /><div className="canvas-brand">ATLAS</div><div className="canvas-copy">More leverage.<br /><span>Less noise.</span></div><div className="canvas-caption">Scene 03 / 00:14</div></div><div className="timeline-track"><div className="timeline-ruler"><span>00:00</span><span>00:10</span><span>00:20</span><span>00:30</span></div><div className="timeline-row"><span className="track-label"><Film size={13} /> Scenes</span><div className="track-bar"><i /><i /><i className="active" /><i /></div></div><div className="timeline-row"><span className="track-label"><AudioLines size={13} /> Voice</span><div className="voice-wave"><span /><span /><span /><span /><span /><span /><span /><span /><span /><span /><span /><span /><span /><span /><span /><span /><span /><span /></div></div></div></section></div></div>; }
+function VideoStudio({ notify }: { notify: (toast: Toast) => void }) {
+  const [prompt, setPrompt] = useState("A 30-second cinematic product teaser for Atlas. Dark cyan HUD, restrained orbital light, confident pacing, premium founder-focused tone.");
+  const [working, setWorking] = useState(false);
+  const [result, setResult] = useState<string>("");
+  async function renderVideo() {
+    if (!prompt.trim() || working) return;
+    setWorking(true);
+    setResult("");
+    try {
+      const response = await api.providers.execute("video", { prompt, duration_seconds: 30, aspect_ratio: "16:9" }, ["gemini", "runway", "luma"]);
+      const url = String(response.artifact_url || response.url || response.output_url || "");
+      setResult(url ? `Video artifact ready: ${url}` : "The provider accepted the request but returned no artifact URL. David will not mark this as complete.");
+      notify({ kind: url ? "success" : "info", text: url ? "Verified video artifact returned." : "Video provider returned no artifact; nothing was marked generated." });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Video provider unavailable";
+      setResult(`Video generation unavailable: ${message}`);
+      notify({ kind: "error", text: "No verified video was generated. Check the provider configuration and deployment." });
+    } finally {
+      setWorking(false);
+    }
+  }
+  return <div><PageHeader route="video-studio" action={<button className="button button-primary" onClick={() => void renderVideo()} disabled={working || !prompt.trim()}><Play size={16} /> {working ? "Requesting provider..." : "Generate video"}</button>} /><div className="video-studio-layout"><section className="panel-card video-prompt-card"><SectionHeader eyebrow="PROVIDER-BACKED PRODUCTION" title="Shape the next cut" icon={Film} /><textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} /><div className="video-controls"><div><span className="micro-label">FORMAT</span><span className="select-like">Landscape 16:9</span></div><div><span className="micro-label">LIGHTING</span><span className="select-like">Dark cyan orbital</span></div><div><span className="micro-label">OUTPUT</span><span className="select-like">One verified artifact</span></div></div><button className="button button-primary wide-button" onClick={() => void renderVideo()} disabled={working || !prompt.trim()}><WandSparkles size={16} /> {working ? "Calling provider" : "Generate video"}</button>{result && <div className="provider-result"><span className="micro-label">PROVIDER RESULT</span><p>{result}</p></div>}</section><section className="panel-card timeline-card"><div className="timeline-header"><div><div className="micro-label">TRUTHFUL RENDER STATE</div><h2>No fake timeline</h2></div><span className={cx("status-tag", working ? "tag-amber" : result.startsWith("Video artifact") ? "tag-green" : "tag-blue")}>{working ? "Working" : result.startsWith("Video artifact") ? "Verified artifact" : result ? "Unavailable" : "Ready"}</span></div><div className="video-canvas"><div className="canvas-orbit" /><div className="canvas-brand">DAVID OS</div><div className="canvas-copy">Provider-backed.<br /><span>Reviewable.</span></div><div className="canvas-caption">The preview updates only after a real provider response.</div></div><div className="timeline-track"><div className="timeline-row"><span className="track-label"><Film size={13} /> Provider</span><div className="track-bar"><i className={working ? "active" : ""} /><i /><i /></div></div><div className="timeline-row"><span className="track-label"><AudioLines size={13} /> Voice</span><div className="voice-wave"><span /><span /><span /><span /><span /><span /><span /><span /><span /><span /><span /><span /></div></div></div></section></div></div>;
+}
+
+function FreehandView() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const drawing = useRef(false);
+  const [color, setColor] = useState("#39e6e6");
+  const [size, setSize] = useState(3);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const context = canvas.getContext("2d");
+    if (!context) return;
+    context.fillStyle = "#020507";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.strokeStyle = "rgba(57,230,230,.09)";
+    context.lineWidth = 1;
+    for (let x = 0; x < canvas.width; x += 40) { context.beginPath(); context.moveTo(x, 0); context.lineTo(x, canvas.height); context.stroke(); }
+    for (let y = 0; y < canvas.height; y += 40) { context.beginPath(); context.moveTo(0, y); context.lineTo(canvas.width, y); context.stroke(); }
+  }, []);
+  function point(event: React.PointerEvent<HTMLCanvasElement>) { const canvas = canvasRef.current; if (!canvas) return null; const rect = canvas.getBoundingClientRect(); return { x: (event.clientX - rect.left) * canvas.width / rect.width, y: (event.clientY - rect.top) * canvas.height / rect.height }; }
+  function start(event: React.PointerEvent<HTMLCanvasElement>) { const canvas = canvasRef.current; const context = canvas?.getContext("2d"); const p = point(event); if (!context || !p) return; drawing.current = true; canvas?.setPointerCapture(event.pointerId); context.beginPath(); context.moveTo(p.x, p.y); }
+  function move(event: React.PointerEvent<HTMLCanvasElement>) { if (!drawing.current) return; const canvas = canvasRef.current; const context = canvas?.getContext("2d"); const p = point(event); if (!context || !p) return; context.strokeStyle = color; context.lineWidth = size; context.lineCap = "round"; context.lineJoin = "round"; context.lineTo(p.x, p.y); context.stroke(); }
+  function clear() { const canvas = canvasRef.current; const context = canvas?.getContext("2d"); if (!canvas || !context) return; context.clearRect(0, 0, canvas.width, canvas.height); context.fillStyle = "#020507"; context.fillRect(0, 0, canvas.width, canvas.height); }
+  function exportCanvas() { const canvas = canvasRef.current; if (!canvas) return; const link = document.createElement("a"); link.download = "david-freehand.png"; link.href = canvas.toDataURL("image/png"); link.click(); }
+  return <div className="tool-page"><PageHeader route="freehand" action={<div className="header-actions"><button className="button button-secondary" onClick={clear}><X size={16} /> Clear</button><button className="button button-primary" onClick={exportCanvas}><Upload size={16} /> Export PNG</button></div>} /><section className="panel-card freehand-panel"><div className="tool-toolbar"><div><span className="micro-label">INK COLOR</span><input aria-label="Ink color" type="color" value={color} onChange={(event) => setColor(event.target.value)} /></div><label><span className="micro-label">BRUSH SIZE</span><input aria-label="Brush size" type="range" min="1" max="20" value={size} onChange={(event) => setSize(Number(event.target.value))} /><strong>{size}px</strong></label><span className="freehand-note">Local canvas · nothing uploaded</span></div><canvas ref={canvasRef} width={1200} height={620} className="freehand-canvas" onPointerDown={start} onPointerMove={move} onPointerUp={() => { drawing.current = false; }} onPointerLeave={() => { drawing.current = false; }} aria-label="Freehand drawing canvas" /></section></div>;
+}
+
+function LightingView() {
+  const [cyan, setCyan] = useState(72);
+  const [blue, setBlue] = useState(28);
+  const [ambient, setAmbient] = useState(22);
+  const [quiet, setQuiet] = useState(false);
+  return <div className="tool-page"><PageHeader route="lighting" action={<span className="connection-pill is-online"><span className="status-dot" /> Local interface control</span>} /><div className="lighting-layout"><section className="panel-card lighting-preview" style={{ background: `radial-gradient(circle at 50% 42%, rgba(57,230,230,${cyan / 500}), rgba(57,167,255,${blue / 700}) 20%, rgba(2,5,7,${Math.max(.75, 1 - ambient / 100)})), #020507` }}><div className="lighting-core" style={{ boxShadow: `0 0 ${20 + cyan / 2}px rgba(57,230,230,${cyan / 100}), 0 0 ${50 + blue}px rgba(57,167,255,${blue / 100})` }}><span /></div><span className="micro-label">PREVIEW / LOCAL ONLY</span><h2>Atmosphere follows your settings.</h2><p>This control changes David’s interface illumination. It does not claim to control physical lights or devices.</p></section><section className="panel-card lighting-controls"><span className="micro-label">LIGHTING MIXER</span><h2>Adjust the system glow.</h2><label><span>Cyan intensity <strong>{cyan}%</strong></span><input type="range" min="0" max="100" value={cyan} onChange={(event) => setCyan(Number(event.target.value))} /></label><label><span>Blue response <strong>{blue}%</strong></span><input type="range" min="0" max="100" value={blue} onChange={(event) => setBlue(Number(event.target.value))} /></label><label><span>Ambient darkness <strong>{ambient}%</strong></span><input type="range" min="0" max="70" value={ambient} onChange={(event) => setAmbient(Number(event.target.value))} /></label><button className={cx("quiet-toggle", quiet && "is-on")} onClick={() => setQuiet((current) => !current)}><span className="status-dot" /> {quiet ? "Quiet mode on" : "Quiet mode off"}</button></section></div></div>;
+}
 
 type MultimodalKind = "voice" | "image" | "music" | "enhance" | "edit" | "reshoot";
 
