@@ -146,6 +146,14 @@ export function useVoiceOS(options: VoiceOSOptions = {}) {
     if (lastSpokenTextRef.current) await speak(lastSpokenTextRef.current);
   }, [speak]);
 
+  const clearTranscript = useCallback(() => {
+    setTranscript("");
+    setInterimTranscript("");
+    setResponse("");
+    setError("");
+    setActiveAction("STANDBY");
+  }, []);
+
   const processAudio = useCallback(async (blob: Blob) => {
     setState("thinking");
     setActiveAction("ANALYZING REQUEST");
@@ -253,6 +261,7 @@ export function useVoiceOS(options: VoiceOSOptions = {}) {
     pause,
     resume,
     replay,
+    clearTranscript,
     toggle: state === "listening" ? stopListening : startListening,
     startListening,
     stopListening,

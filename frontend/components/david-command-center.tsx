@@ -55,12 +55,14 @@ import {
   X,
   Zap,
   RefreshCw,
+  Trash2,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { useVoiceOS } from "@/hooks/useVoiceOS";
+import { defaultDavidSettings, davidStateCopy, readDavidSettings, writeDavidSettings, type DavidPreferenceKey, type DavidSettings } from "@/lib/david-os-config";
 import {
   baseExecutionSteps,
   phaseFromRunStatus,
@@ -227,6 +229,10 @@ export default function DavidCommandCenter({ initialRoute = "dashboard" }: { ini
     { id: "welcome", role: "assistant", text: "I’m David. Give me an objective, a question, or a creative direction. I’ll plan the work, show you what will happen, and ask before sensitive actions.", time: "09:41" },
   ]);
   const [execution, setExecution] = useState<ExecutionSnapshot>(initialExecution);
+  const [preferences, setPreferences] = useState<DavidSettings>(defaultDavidSettings);
+  useEffect(() => setPreferences(readDavidSettings()), []);
+  useEffect(() => writeDavidSettings(preferences), [preferences]);
+  const setPreference = (key: DavidPreferenceKey, value: boolean) => setPreferences((current) => ({ ...current, [key]: value }));
   const voice = useVoiceOS({
     onResult: (result) => {
       setMessages((current) => [
@@ -327,7 +333,7 @@ export default function DavidCommandCenter({ initialRoute = "dashboard" }: { ini
   };
 
   return (
-    <div className={cx("david-shell", activeRoute === "operating-system" && "david-shell-os")}>
+    <div className={cx("david-shell", activeRoute === "operating-system" && "david-shell-os", preferences.reducedMotion && "david-pref-reduced-motion", preferences.highContrast && "david-pref-high-contrast", preferences.quietMode && "david-pref-quiet", preferences.demoMode && "david-pref-demo")}>
       <div className="shell-grid" />
       <div className="noise" />
       <Sidebar activeRoute={activeRoute} open={mobileOpen} onClose={() => setMobileOpen(false)} onNavigate={navigate} />
@@ -349,7 +355,7 @@ export default function DavidCommandCenter({ initialRoute = "dashboard" }: { ini
         </header>
 
         <div className="page-frame">
-          {activeRoute === "operating-system" && <OperatingSystemView voice={voice} connected={connected} onNavigate={navigate} />}
+          {activeRoute === "operating-system" && <OperatingSystemView voice={voice} connected={connected} preferences={preferences} onPreferenceChange={setPreference} onNavigate={navigate} />}
           {activeRoute === "freehand" && <FreehandView />}
           {activeRoute === "lighting" && <LightingView />}
           {activeRoute === "dashboard" && <Dashboard onNavigate={navigate} onRunObjective={(prompt) => void runObjective(prompt)} execution={execution} />}
@@ -371,7 +377,7 @@ export default function DavidCommandCenter({ initialRoute = "dashboard" }: { ini
           {activeRoute === "providers" && <ProvidersView notify={setToast} />}
           {activeRoute === "activity" && <ActivityView />}
           {activeRoute === "devices" && <DevicesView notify={setToast} />}
-          {activeRoute === "settings" && <SettingsView notify={setToast} />}
+          {activeRoute === "settings" && <SettingsView notify={setToast} preferences={preferences} onPreferenceChange={setPreference} />}
           {activeRoute === "owner" && <OwnerView notify={setToast} />}
         </div>
       </main>
@@ -420,20 +426,19 @@ function PageHeader({ route, action }: { route: RouteKey; action?: React.ReactNo
   return <div className="page-header"><div><div className="micro-label">{meta.eyebrow}</div><h1>{meta.title}</h1><p>{meta.description}</p></div>{action}</div>;
 }
 
-function OperatingSystemView({ voice, connected, onNavigate }: { voice: ReturnType<typeof useVoiceOS>; connected: boolean; onNavigate: (route: RouteKey) => void }) {
+function OperatingSystemView({ voice, connected, preferences, onPreferenceChange, onNavigate }: { voice: ReturnType<typeof useVoiceOS>; connected: boolean; preferences: DavidSettings; onPreferenceChange: (key: DavidPreferenceKey, value: boolean) => void; onNavigate: (route: RouteKey) => void }) {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(timer);
   }, []);
   const isExecuting = voice.state === "thinking" && /DELEGATING|ASSIGNED|EXECUTING/i.test(voice.activeAction);
-  const stateConfig = {
-    idle: { label: voice.response ? "RESPONSE READY" : "IDLE / STANDBY", detail: voice.response ? "Answer or result is ready." : "System is calm and waiting.", action: voice.response ? "RESPONSE READY" : "NO ACTIVE TASK" },
-    listening: { label: "LISTENING", detail: "Microphone active. Listening to user.", action: "VOICE INPUT" },
-    thinking: { label: isExecuting ? "EXECUTING ACTION" : "PROCESSING / THINKING", detail: isExecuting ? "Performing the requested action." : "Analyzing request and preparing response.", action: isExecuting ? "DELEGATED WORK IN PROGRESS" : "ANALYZING REQUEST" },
-    speaking: { label: "RESPONSE READY", detail: "Answer or result is ready.", action: "RESPONDING" },
-    error: { label: "SYSTEM ALERT", detail: "Voice service needs attention.", action: "CHECK CONNECTION" },
-  }[voice.state];
+  const baseStateConfig = davidStateCopy[voice.state];
+  const stateConfig = voice.state === "idle" && voice.response
+    ? { ...baseStateConfig, label: "RESPONSE READY", detail: "Answer or result is ready.", action: "RESPONSE READY" }
+    : voice.state === "thinking" && isExecuting
+      ? { ...baseStateConfig, label: "EXECUTING ACTION", detail: "Performing the requested action.", action: "DELEGATED WORK IN PROGRESS" }
+      : baseStateConfig;
   const clock = new Intl.DateTimeFormat("en", { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(now);
   const micStatus = voice.state === "listening" ? "ON" : "OFF";
   const networkStatus = connected ? "ONLINE" : "OFFLINE";
@@ -448,12 +453,12 @@ function OperatingSystemView({ voice, connected, onNavigate }: { voice: ReturnTy
       <aside className="os-hud-panel os-hud-right"><section><span className="os-hud-label">NOTIFICATIONS</span><p>{voice.response ? "1 active response" : "No new notifications"}</p></section><section><span className="os-hud-label">SYSTEM HEALTH</span><p>MIC <b>{micStatus}</b></p><p>NET <b>{networkStatus}</b></p><p>MODE <b>GOVERNED</b></p></section></aside>
       <div className="os-reference-axis" />
       <div className="os-reference-core" style={{ transform: `translate(-50%, -50%) scale(${1 + voice.volume * 0.18})` }}><span className="os-reference-ticks">{Array.from({ length: 12 }, (_, index) => <i key={index} style={{ transform: `rotate(${index * 30}deg)` }} />)}</span><span className="os-core-orbit os-orbit-a" /><span className="os-core-orbit os-orbit-b" /><span className="os-core-orbit os-orbit-c" /><span className="os-reference-ring ring-one" /><span className="os-reference-ring ring-two" /><span className="os-reference-ring ring-three" /><span className="os-reference-sphere" /><span className="os-core-nucleus" /></div>
-      <div className="os-reference-readout"><span>DAVID AI</span><strong>{stateConfig.label}</strong><small>{stateConfig.detail}</small><em>{voice.activeAction || stateConfig.action}</em></div>
+      <div className="os-reference-readout"><span>DAVID AI</span><strong>{stateConfig.label}</strong><small>{stateConfig.detail}{preferences.quietMode ? " · QUIET MODE" : ""}</small><em>{voice.activeAction || stateConfig.action}{preferences.demoMode ? " · DEMO" : ""}</em></div>
       {(voice.state === "listening" || voice.state === "speaking") && <div className="os-reference-waveform" aria-label="Voice activity waveform">{waveform.map((height, index) => <i key={index} style={{ height: `${Math.max(4, height * (voice.state === "listening" ? 34 + voice.volume * 42 : 24))}px` }} />)}</div>}
       {voice.state === "listening" && <div className="os-video-state-card os-listening-card"><span>MICROPHONE ACTIVE</span><p>{voice.interimTranscript || voice.transcript || "Listening for your command..."}</p></div>}
       {isExecuting && <div className="os-video-state-card os-executing-card"><span>OPENING DAVID WORKSPACE</span><strong>ACTION IN PROGRESS</strong><div><i /></div></div>}
-      {voice.response && <div className="os-video-state-card os-response-card"><p>{voice.response}</p></div>}
-      {(voice.transcript || voice.interimTranscript) && voice.state !== "listening" && <div className="os-transcript-panel"><span className="micro-label">LIVE TRANSCRIPT</span>{voice.transcript && <p><em>YOU</em> {voice.transcript}</p>}{voice.interimTranscript && !voice.transcript && <p><em>LISTENING</em> {voice.interimTranscript}</p>}</div>}
+      {voice.response && <div className="os-video-state-card os-response-card"><p>{voice.response}</p><button className="os-card-clear" onClick={voice.clearTranscript}><Trash2 size={13} /> Clear transcript</button></div>}
+      {(voice.transcript || voice.interimTranscript) && voice.state !== "listening" && <div className="os-transcript-panel"><span className="micro-label">LIVE TRANSCRIPT</span>{voice.transcript && <p><em>YOU</em> {voice.transcript}</p>}{voice.interimTranscript && !voice.transcript && <p><em>LISTENING</em> {voice.interimTranscript}</p>}<button className="text-button" onClick={voice.clearTranscript}><Trash2 size={13} /> Delete transcript</button></div>}
       <div className="os-reference-bottom"><span>{clock}</span><span>ACTIVE TASK: {voice.activeAction || "NONE"}</span><span>MIC: {micStatus}</span><span>NETWORK: {networkStatus}</span><span>SYSTEM: OPTIMAL</span></div>
     </div>
     <div className="os-controls"><button className="button button-primary" onClick={voice.state === "speaking" ? voice.cancel : voice.toggle} disabled={voice.state === "thinking"}><Mic size={16} />{voice.state === "listening" ? "Stop & process" : voice.state === "speaking" ? "Stop speaking" : "Talk to David"}</button><button className="button button-secondary" onClick={voice.isPaused ? voice.resume : voice.pause} disabled={!voice.isSpeaking}><Pause size={16} />{voice.isPaused ? "Resume" : "Pause"}</button><button className="button button-secondary" onClick={() => void voice.replay()} disabled={!voice.response}><Play size={16} />Replay</button><button className="button button-secondary" onClick={voice.cancel} disabled={voice.state === "idle"}><X size={16} />Cancel</button><button className="button button-secondary" onClick={() => onNavigate("agents")}><Bot size={16} />Open sub-agents</button><button className="button button-secondary" onClick={() => onNavigate("chat")}><MessageSquare size={16} />Text fallback</button></div>
@@ -649,7 +654,19 @@ function ActivityView() { return <div><PageHeader route="activity" action={<butt
 
 function DevicesView({ notify }: { notify: (toast: Toast) => void }) { return <div><PageHeader route="devices" action={<button className="button button-primary" onClick={() => notify({ kind: "info", text: "Device pairing flow started." })}><Plus size={16} /> Pair device</button>} /><div className="device-grid"><div className="panel-card device-card device-active"><div className="device-card-top"><span className="device-icon"><Command size={21} /></span><span className="status-tag tag-green">Current session</span></div><h3>Web command center</h3><p>Chrome · Ubuntu · Last active now</p><div className="device-footer"><ShieldCheck size={14} /> Trusted device</div></div><div className="panel-card device-card"><div className="device-card-top"><span className="device-icon tone-blue"><Mic size={21} /></span><span className="status-tag tag-blue">Ready</span></div><h3>Voice companion</h3><p>Use your voice to ask, interrupt, and approve.</p><button className="text-button" onClick={() => notify({ kind: "info", text: "Voice companion setup opened." })}>Configure voice <ArrowUpRight size={14} /></button></div><div className="panel-card device-card"><div className="device-card-top"><span className="device-icon tone-purple"><Github size={21} /></span><span className="status-tag tag-amber">Connected</span></div><h3>GitHub workspace</h3><p>David-ademola · Repository sync enabled.</p><button className="text-button" onClick={() => notify({ kind: "success", text: "GitHub workspace is connected." })}>Review connection <ArrowUpRight size={14} /></button></div></div></div>; }
 
-function SettingsView({ notify }: { notify: (toast: Toast) => void }) { const settings = [{ title: "Approval gates", detail: "Ask before sending, publishing, deleting, or spending.", enabled: true, icon: ShieldCheck }, { title: "Long-term memory", detail: "Remember preferences and project context across sessions.", enabled: true, icon: BrainCircuit }, { title: "Background monitoring", detail: "Let David watch approved sources and surface changes.", enabled: false, icon: Activity }, { title: "Voice activation", detail: "Use voice input and spoken responses when available.", enabled: false, icon: Mic }]; return <div><PageHeader route="settings" action={<button className="button button-primary" onClick={() => notify({ kind: "success", text: "Settings saved." })}><Check size={16} /> Save changes</button>} /><div className="settings-layout"><section className="panel-card settings-card"><SectionHeader eyebrow="CONTROL & TRUST" title="How David should act" icon={LockKeyhole} />{settings.map((setting) => { const Icon = setting.icon; return <button className="setting-row" key={setting.title} onClick={() => notify({ kind: "info", text: `${setting.title} preference toggled for review.` })}><span className="setting-icon"><Icon size={17} /></span><span className="setting-copy"><strong>{setting.title}</strong><small>{setting.detail}</small></span><span className={cx("toggle", setting.enabled && "toggle-on")}><span /></span></button>; })}</section><section className="panel-card settings-card"><SectionHeader eyebrow="YOUR IDENTITY" title="Brand and workspace" icon={UserRound} /><div className="profile-form"><label>Workspace name<input defaultValue="David Ademola" /></label><label>Default brand voice<select defaultValue="confident"><option value="confident">Confident / direct</option><option value="warm">Warm / conversational</option><option value="technical">Technical / precise</option></select></label><label>Primary timezone<select defaultValue="london"><option value="london">Europe / London</option><option value="lagos">Africa / Lagos</option><option value="new-york">America / New York</option></select></label></div></section></div></div>; }
+function SettingsView({ notify, preferences, onPreferenceChange }: { notify: (toast: Toast) => void; preferences: DavidSettings; onPreferenceChange: (key: DavidPreferenceKey, value: boolean) => void }) {
+  const settings: Array<{ key: DavidPreferenceKey; title: string; detail: string; icon: LucideIcon }> = [
+    { key: "approvalGates", title: "Approval gates", detail: "Ask before sending, publishing, deleting, or spending.", icon: ShieldCheck },
+    { key: "longTermMemory", title: "Long-term memory", detail: "Remember preferences and project context across sessions.", icon: BrainCircuit },
+    { key: "backgroundMonitoring", title: "Background monitoring", detail: "Let David watch approved sources and surface changes.", icon: Activity },
+    { key: "voiceActivation", title: "Voice activation", detail: "Use voice input and spoken responses when available.", icon: Mic },
+    { key: "quietMode", title: "Quiet mode", detail: "Reduce nonessential interface motion and audio cues.", icon: Headphones },
+    { key: "reducedMotion", title: "Reduced motion", detail: "Disable nonessential animation while keeping state changes visible.", icon: TimerReset },
+    { key: "highContrast", title: "High contrast", detail: "Increase cyan edge contrast and text legibility across the shell.", icon: Sun },
+    { key: "demoMode", title: "Five-state demo mode", detail: "Expose the reference state language for supervised demonstrations.", icon: Command },
+  ];
+  return <div><PageHeader route="settings" action={<button className="button button-primary" onClick={() => notify({ kind: "success", text: "Settings saved locally for this browser." })}><Check size={16} /> Save changes</button>} /><div className="settings-layout"><section className="panel-card settings-card"><SectionHeader eyebrow="CONTROL & TRUST" title="How David should act" icon={LockKeyhole} />{settings.map((setting) => { const Icon = setting.icon; const enabled = preferences[setting.key]; return <button className="setting-row" key={setting.key} onClick={() => { onPreferenceChange(setting.key, !enabled); notify({ kind: "info", text: `${setting.title} ${enabled ? "disabled" : "enabled"}.` }); }} aria-pressed={enabled}><span className="setting-icon"><Icon size={17} /></span><span className="setting-copy"><strong>{setting.title}</strong><small>{setting.detail}</small></span><span className={cx("toggle", enabled && "toggle-on")}><span /></span></button>; })}</section><section className="panel-card settings-card"><SectionHeader eyebrow="YOUR IDENTITY" title="Brand and workspace" icon={UserRound} /><div className="profile-form"><label>Workspace name<input defaultValue="David Ademola" /></label><label>Default brand voice<select defaultValue="confident"><option value="confident">Confident / direct</option><option value="warm">Warm / conversational</option><option value="technical">Technical / precise</option></select></label><label>Primary timezone<select defaultValue="london"><option value="london">Europe / London</option><option value="lagos">Africa / Lagos</option><option value="new-york">America / New York</option></select></label></div><div className="settings-note"><ShieldCheck size={15} /> Preferences persist locally and never expose provider secrets.</div></section></div></div>;
+}
 
 function OwnerView({ notify }: { notify: (toast: Toast) => void }) { return <div><PageHeader route="owner" action={<button className="button button-secondary" onClick={() => notify({ kind: "info", text: "Owner audit report generated." })}><FileText size={16} /> Generate report</button>} /><div className="owner-grid"><div className="owner-stat panel-card"><span className="micro-label">TOTAL WORKSPACES</span><strong>24</strong><p>+6 this month</p></div><div className="owner-stat panel-card"><span className="micro-label">AUTOMATION RUNS</span><strong>1,284</strong><p>96.8% completed successfully</p></div><div className="owner-stat panel-card"><span className="micro-label">CAPABILITY COVERAGE</span><strong>84%</strong><p>12 optional connectors available</p></div><div className="owner-stat panel-card"><span className="micro-label">TRUST SCORE</span><strong>98.4</strong><p>Approval policy active</p></div></div><div className="split-grid section-block"><div className="panel-card padded-card"><SectionHeader eyebrow="PLATFORM ROADMAP" title="Next capability layers" icon={Rocket} /><div className="roadmap-list">{["Scheduled background agents", "Template marketplace", "Team workspaces and roles", "Public developer actions"].map((item, index) => <div className="roadmap-row" key={item}><span className="roadmap-number">0{index + 1}</span><strong>{item}</strong><span className={cx("status-tag", index < 2 ? "tag-amber" : "tag-blue")}>{index < 2 ? "Building" : "Planned"}</span></div>)}</div></div><div className="panel-card padded-card"><SectionHeader eyebrow="GOVERNANCE" title="Protection is online" icon={ShieldCheck} /><div className="governance-list"><div><Check size={15} /> Sensitive actions require confirmation</div><div><Check size={15} /> Provider keys stay server-side</div><div><Check size={15} /> Activity is recorded for review</div><div><Check size={15} /> Knowledge stays workspace-scoped</div></div><button className="button button-secondary wide-button" onClick={() => notify({ kind: "success", text: "Governance controls reviewed." })}>Review policy <ArrowUpRight size={14} /></button></div></div></div>; }
 
