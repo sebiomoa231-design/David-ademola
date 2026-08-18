@@ -152,7 +152,7 @@ export function useVoiceOS(options: VoiceOSOptions = {}) {
       try {
         const payload = await api.synthesize(text, "AUTO", { persist: true });
         if (payload.audio_base64) {
-          const audioSource = payload.audio_url || toAudioUrl(payload.audio_base64, payload.audio_format || "mp3");
+          const audioSource = toAudioUrl(payload.audio_base64, payload.audio_format || "mp3");
           const audio = new Audio(audioSource);
           audio.preload = "auto";
           audioRef.current = audio;
