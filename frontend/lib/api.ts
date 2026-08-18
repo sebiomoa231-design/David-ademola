@@ -148,6 +148,24 @@ export const api = {
     deploy: (serviceId: string, clearCache = false) => request<Record<string, unknown>>(`/api/deployments/render/services/${encodeURIComponent(serviceId)}/deploy?clear_cache=${clearCache ? "true" : "false"}`, { method: "POST" }),
   },
 
+  integrations: {
+    sources: () =>
+      request<{
+        status: string;
+        primary_repository: string;
+        count: number;
+        sources: Array<{
+          id: string;
+          name: string;
+          repository: string;
+          family: string;
+          adapted_capabilities: string[];
+          integration_boundary: string;
+          source_files: string[];
+        }>;
+      }>("/api/integrations/sources"),
+  },
+
   intelligence: {
     health: () => request<Record<string, unknown>>("/api/intelligence/health"),
     readiness: () => request<ReadinessResponse>("/api/intelligence/readiness"),
