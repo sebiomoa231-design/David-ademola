@@ -381,7 +381,7 @@ export default function DavidCommandCenter({ initialRoute = "dashboard" }: { ini
           {activeRoute === "reshoot-studio" && <MultimodalStudio kind="reshoot" notify={setToast} />}
           {activeRoute === "files" && <FilesView notify={setToast} />}
           {activeRoute === "providers" && <ProvidersView notify={setToast} />}
-          {activeRoute === "activity" && <ActivityView />}
+          {activeRoute === "activity" && <ActivityView notify={setToast} />}
           {activeRoute === "devices" && <DevicesView notify={setToast} />}
           {activeRoute === "settings" && <SettingsView notify={setToast} preferences={preferences} onPreferenceChange={setPreference} />}
           {activeRoute === "owner" && <OwnerView notify={setToast} />}
@@ -809,10 +809,62 @@ function ProvidersView({ notify }: { notify: (toast: Toast) => void }) {
 
   return <div><PageHeader route="providers" action={<button className="button button-secondary" onClick={() => void loadProviders()} disabled={refreshing}><Activity size={16} /> {refreshing ? "Refreshing..." : "Refresh registry"}</button>} /><div className="provider-health panel-card"><div className="health-ring"><strong>{loading ? "—" : `${readiness}%`}</strong><span>configured</span></div><div><div className="eyebrow-pill">SERVER-SIDE PROVIDER REGISTRY</div><h2>{loading ? "Reading provider configuration." : `${configuredCount} of ${providers.length} providers configured.`}</h2><p>Keys remain on the backend. This screen reports configuration and adapter readiness only; it does not claim a provider is healthy until a real request succeeds.</p></div><span className="status-tag tag-blue"><span className="status-dot" /> Secrets protected</span></div>{loading ? <div className="panel-card padded-card"><span className="micro-label">LOADING PROVIDER REGISTRY</span></div> : !providers.length ? <div className="panel-card padded-card"><span className="micro-label">NO PROVIDERS RETURNED</span><p>The backend returned no provider metadata.</p></div> : <div className="provider-grid">{providers.map((provider) => { const Icon = iconFor(provider); const tone = toneFor(provider); return <article className="panel-card provider-card" key={provider.id}><div className="provider-card-top"><span className={cx("provider-icon", `tone-${tone}`)}><Icon size={18} /></span><span className={cx("status-tag", `tag-${tone}`)}>{labelFor(provider)}</span></div><h3>{provider.label || provider.id}</h3><p>{provider.capabilities?.join(" · ") || provider.category || "Registered provider"}</p><div className="provider-footer"><span>Model <strong>{provider.model || "Not configured"}</strong></span>{provider.docs_url && <button className="text-button" onClick={() => window.open(provider.docs_url, "_blank", "noopener,noreferrer")} aria-label={`Open ${provider.label || provider.id} documentation`}>Docs <ArrowUpRight size={14} /></button>}</div>{provider.notes && <small className="provider-note">{provider.notes}</small>}</article>; })}</div>}</div>;
 }
-function ActivityView() { return <div><PageHeader route="activity" action={<button className="button button-secondary"><FileText size={16} /> Export log</button>} /><div className="activity-summary"><div><span className="micro-label">LAST 7 DAYS</span><strong>86 system events</strong><p>All actions are recorded with source, status, and approval context.</p></div><div className="event-bars"><span style={{ height: "35%" }} /><span style={{ height: "52%" }} /><span style={{ height: "42%" }} /><span style={{ height: "70%" }} /><span style={{ height: "58%" }} /><span style={{ height: "84%" }} /><span style={{ height: "66%" }} /></div></div><div className="panel-card log-card"><div className="log-header"><span>EVENT</span><span>CONTEXT</span><span>TIME</span><span>STATUS</span></div>{activityItems.concat([{ icon: Github, title: "Repository sync completed", detail: "GitHub / David-ademola", color: "purple" }]).map((item) => <div className="log-row" key={item.title}><span className="log-event"><span className={cx("log-icon", `tone-${item.color}`)}><item.icon size={15} /></span><strong>{item.title}</strong></span><span>{item.detail}</span><time>Today</time><span className="status-tag tag-green">Verified</span></div>)}</div></div>; }
+function ActivityView({ notify }: { notify: (toast: Toast) => void }) {
+  const [events, setEvents] = useState<Array<{ id?: string; event?: string; details?: Record<string, unknown>; created_at?: string; source?: string; status?: string }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-function DevicesView({ notify }: { notify: (toast: Toast) => void }) { return <div><PageHeader route="devices" action={<button className="button button-primary" onClick={() => notify({ kind: "info", text: "Device pairing flow started." })}><Plus size={16} /> Pair device</button>} /><div className="device-grid"><div className="panel-card device-card device-active"><div className="device-card-top"><span className="device-icon"><Command size={21} /></span><span className="status-tag tag-green">Current session</span></div><h3>Web command center</h3><p>Chrome · Ubuntu · Last active now</p><div className="device-footer"><ShieldCheck size={14} /> Trusted device</div></div><div className="panel-card device-card"><div className="device-card-top"><span className="device-icon tone-blue"><Mic size={21} /></span><span className="status-tag tag-blue">Ready</span></div><h3>Voice companion</h3><p>Use your voice to ask, interrupt, and approve.</p><button className="text-button" onClick={() => notify({ kind: "info", text: "Voice companion setup opened." })}>Configure voice <ArrowUpRight size={14} /></button></div><div className="panel-card device-card"><div className="device-card-top"><span className="device-icon tone-purple"><Github size={21} /></span><span className="status-tag tag-amber">Connected</span></div><h3>GitHub workspace</h3><p>David-ademola · Repository sync enabled.</p><button className="text-button" onClick={() => notify({ kind: "success", text: "GitHub workspace is connected." })}>Review connection <ArrowUpRight size={14} /></button></div></div></div>; }
+  async function loadActivity() {
+    setRefreshing(true);
+    try {
+      const [audit, plans] = await Promise.all([api.github.audit(), api.orchestrator.plans()]);
+      const auditEvents = audit.map((item) => ({ id: item.id, event: item.event, details: item.details, created_at: item.created_at, source: "GitHub audit", status: "Recorded" }));
+      const planEvents = (plans.plans || []).map((plan) => ({ id: String(plan.id || `plan-${Math.random()}`), event: "Orchestration plan created", details: { objective: plan.objective, status: plan.status, total_tasks: plan.total_tasks }, created_at: String(plan.created_at || ""), source: "David orchestrator", status: String(plan.status || "Recorded") }));
+      setEvents([...auditEvents, ...planEvents].sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || ""))));
+    } catch {
+      notify({ kind: "error", text: "Live activity is unavailable. David did not substitute sample events." });
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }
 
+  useEffect(() => { void loadActivity(); }, []);
+
+  function exportActivity() {
+    if (!events.length) { notify({ kind: "info", text: "There are no live activity records to export." }); return; }
+    const payload = JSON.stringify(events, null, 2);
+    const url = URL.createObjectURL(new Blob([payload], { type: "application/json" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `david-activity-${new Date().toISOString().slice(0, 10)}.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    notify({ kind: "success", text: "Live activity records exported." });
+  }
+
+  return <div><PageHeader route="activity" action={<div className="header-actions"><button className="button button-secondary" onClick={() => void loadActivity()} disabled={refreshing}><Activity size={16} /> {refreshing ? "Refreshing..." : "Refresh"}</button><button className="button button-primary" onClick={exportActivity}><FileText size={16} /> Export live log</button></div>} /><div className="activity-summary"><div><span className="micro-label">LIVE ACTIVITY</span><strong>{loading ? "Loading records" : `${events.length} recorded event${events.length === 1 ? "" : "s"}`}</strong><p>Events come from GitHub audit persistence and the David orchestrator.</p></div><div className="event-bars"><span style={{ height: `${events.length ? 35 : 8}%` }} /><span style={{ height: `${events.length ? 52 : 8}%` }} /><span style={{ height: `${events.length ? 42 : 8}%` }} /><span style={{ height: `${events.length ? 70 : 8}%` }} /><span style={{ height: `${events.length ? 58 : 8}%` }} /><span style={{ height: `${events.length ? 84 : 8}%` }} /><span style={{ height: `${events.length ? 66 : 8}%` }} /></div></div>{loading ? <div className="panel-card padded-card"><span className="micro-label">LOADING LIVE ACTIVITY</span></div> : !events.length ? <div className="panel-card padded-card"><span className="micro-label">NO LIVE ACTIVITY</span><p>David has no persisted GitHub or orchestration events available for this workspace.</p></div> : <div className="panel-card log-card"><div className="log-header"><span>EVENT</span><span>CONTEXT</span><span>TIME</span><span>STATUS</span></div>{events.map((item) => <div className="log-row" key={item.id || `${item.event}-${item.created_at}`}><span className="log-event"><span className="log-icon tone-blue"><Activity size={15} /></span><strong>{item.event || "Recorded event"}</strong></span><span>{item.source || "David"}{item.details?.objective ? ` · ${String(item.details.objective).slice(0, 70)}` : ""}</span><time>{item.created_at ? new Date(item.created_at).toLocaleString() : "Time unavailable"}</time><span className="status-tag tag-blue">{item.status || "Recorded"}</span></div>)}</div>}</div>;
+}
+function DevicesView({ notify }: { notify: (toast: Toast) => void }) {
+  const [voice, setVoice] = useState<{ stt_configured?: boolean; tts_configured?: boolean }>({});
+  const [github, setGithub] = useState<{ configured?: boolean; connected?: boolean; message?: string | null }>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    Promise.allSettled([api.voiceStatus(), api.github.health()]).then(([voiceResult, githubResult]) => {
+      if (!mounted) return;
+      if (voiceResult.status === "fulfilled") setVoice(voiceResult.value);
+      if (githubResult.status === "fulfilled") setGithub(githubResult.value);
+      if (voiceResult.status === "rejected" && githubResult.status === "rejected") notify({ kind: "error", text: "Live device integrations are unavailable." });
+    }).finally(() => mounted && setLoading(false));
+    return () => { mounted = false; };
+  }, [notify]);
+
+  const voiceReady = Boolean(voice.stt_configured || voice.tts_configured);
+  const githubReady = Boolean(github.connected);
+  return <div><PageHeader route="devices" action={<button className="button button-secondary" onClick={() => notify({ kind: "info", text: "Device enrollment is not configured. David did not claim that a device was paired." })}><Plus size={16} /> Pair device</button>} /><div className="device-grid"><div className="panel-card device-card device-active"><div className="device-card-top"><span className="device-icon"><Command size={21} /></span><span className="status-tag tag-green">Local session</span></div><h3>Web command center</h3><p>This browser session is running David’s interface locally.</p><div className="device-footer"><ShieldCheck size={14} /> Session visible to this browser</div></div><div className="panel-card device-card"><div className="device-card-top"><span className="device-icon tone-blue"><Mic size={21} /></span><span className={cx("status-tag", voiceReady ? "tag-green" : "tag-blue")}>{loading ? "Checking" : voiceReady ? "Configured" : "Not configured"}</span></div><h3>Voice companion</h3><p>{loading ? "Reading the server voice configuration." : voiceReady ? `STT ${voice.stt_configured ? "ready" : "unavailable"} · TTS ${voice.tts_configured ? "ready" : "unavailable"}.` : "No server voice provider is configured for this environment."}</p><div className="device-footer"><Mic size={14} /> Microphone access remains browser-controlled</div></div><div className="panel-card device-card"><div className="device-card-top"><span className="device-icon tone-purple"><Github size={21} /></span><span className={cx("status-tag", githubReady ? "tag-green" : "tag-blue")}>{loading ? "Checking" : githubReady ? "Connected" : "Not connected"}</span></div><h3>GitHub workspace</h3><p>{loading ? "Reading the server GitHub integration." : githubReady ? "The server reports an authenticated GitHub connection." : github.message || "No authenticated GitHub connection is available."}</p><div className="device-footer"><Github size={14} /> Credentials remain server-side</div></div></div></div>;
+}
 function SettingsView({ notify, preferences, onPreferenceChange }: { notify: (toast: Toast) => void; preferences: DavidSettings; onPreferenceChange: (key: DavidPreferenceKey, value: boolean) => void }) {
   const settings: Array<{ key: DavidPreferenceKey; title: string; detail: string; icon: LucideIcon }> = [
     { key: "approvalGates", title: "Approval gates", detail: "Ask before sending, publishing, deleting, or spending.", icon: ShieldCheck },
