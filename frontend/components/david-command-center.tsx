@@ -4,6 +4,7 @@ import {
   Activity,
   ArrowUpRight,
   AudioLines,
+  AudioWaveform,
   Bot,
   BrainCircuit,
   Check,
@@ -19,6 +20,7 @@ import {
   Gauge,
   Globe2,
   Github,
+  Headphones,
   Image as ImageIcon,
   LayoutDashboard,
   Library,
@@ -45,9 +47,11 @@ import {
   UserRound,
   Users,
   Video,
+  Wand2,
   WandSparkles,
   X,
   Zap,
+  RefreshCw,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
@@ -71,6 +75,12 @@ type RouteKey =
   | "creative"
   | "website-builder"
   | "video-studio"
+  | "voice-studio"
+  | "image-studio"
+  | "music-studio"
+  | "enhance-studio"
+  | "edit-studio"
+  | "reshoot-studio"
   | "files"
   | "providers"
   | "activity"
@@ -105,6 +115,12 @@ const navGroups: { label: string; items: { route: RouteKey; label: string; icon:
       { route: "creative", label: "Creative suite", icon: Palette },
       { route: "website-builder", label: "Website builder", icon: Globe2 },
       { route: "video-studio", label: "Video studio", icon: Video },
+      { route: "voice-studio", label: "Voice studio", icon: Headphones },
+      { route: "image-studio", label: "Image lab", icon: ImageIcon },
+      { route: "music-studio", label: "Music studio", icon: AudioWaveform },
+      { route: "enhance-studio", label: "Enhance media", icon: Wand2 },
+      { route: "edit-studio", label: "Edit studio", icon: SlidersHorizontal },
+      { route: "reshoot-studio", label: "Reshoot studio", icon: RefreshCw },
     ],
   },
   {
@@ -128,6 +144,12 @@ const routeMeta: Record<RouteKey, { eyebrow: string; title: string; description:
   creative: { eyebrow: "David AI / Creative studio", title: "From brief to finished media.", description: "Create connected websites, videos, voices, images, documents, and campaign assets." },
   "website-builder": { eyebrow: "David AI / Creative studio", title: "Describe the site. David builds the system.", description: "Generate an on-brand landing page, internal tool, or customer portal from one brief." },
   "video-studio": { eyebrow: "David AI / Creative studio", title: "A production room for every idea.", description: "Build scripts, scenes, voiceovers, captions, and social cuts from a single concept." },
+  "voice-studio": { eyebrow: "David AI / Creative studio", title: "Give every idea a voice.", description: "Shape narration, dialogue, and spoken interaction with a clear review boundary before playback." },
+  "image-studio": { eyebrow: "David AI / Creative studio", title: "Build the visual language.", description: "Create campaign visuals, thumbnails, diagrams, and variants from a brand-aware brief." },
+  "music-studio": { eyebrow: "David AI / Creative studio", title: "Score the next moment.", description: "Plan a soundtrack or sonic identity with duration, mood, and delivery requirements in view." },
+  "enhance-studio": { eyebrow: "David AI / Creative studio", title: "Make the source stronger.", description: "Prepare an enhancement pass for image, video, or audio while preserving provenance and approval." },
+  "edit-studio": { eyebrow: "David AI / Creative studio", title: "Edit with intent.", description: "Describe the cut, cleanup, translation, or transformation you want before David prepares the edit plan." },
+  "reshoot-studio": { eyebrow: "David AI / Creative studio", title: "Reimagine the shot.", description: "Direct a reshoot or scene variation with continuity notes, reference assets, and a reviewable brief." },
   files: { eyebrow: "David AI / Work systems", title: "Your knowledge, organized.", description: "Upload source material once and let David retrieve, summarize, and connect it across projects." },
   providers: { eyebrow: "David AI / System", title: "Capability health at a glance.", description: "See which models and services are configured, healthy, or waiting for a connection." },
   activity: { eyebrow: "David AI / System", title: "Everything David does, visible.", description: "Review decisions, approvals, generated artifacts, and system events with confidence." },
@@ -311,6 +333,12 @@ export default function DavidCommandCenter({ initialRoute = "dashboard" }: { ini
           {activeRoute === "creative" && <CreativeView onNavigate={navigate} notify={setToast} />}
           {activeRoute === "website-builder" && <WebsiteBuilder notify={setToast} />}
           {activeRoute === "video-studio" && <VideoStudio notify={setToast} />}
+          {activeRoute === "voice-studio" && <MultimodalStudio kind="voice" notify={setToast} />}
+          {activeRoute === "image-studio" && <MultimodalStudio kind="image" notify={setToast} />}
+          {activeRoute === "music-studio" && <MultimodalStudio kind="music" notify={setToast} />}
+          {activeRoute === "enhance-studio" && <MultimodalStudio kind="enhance" notify={setToast} />}
+          {activeRoute === "edit-studio" && <MultimodalStudio kind="edit" notify={setToast} />}
+          {activeRoute === "reshoot-studio" && <MultimodalStudio kind="reshoot" notify={setToast} />}
           {activeRoute === "files" && <FilesView notify={setToast} />}
           {activeRoute === "providers" && <ProvidersView notify={setToast} />}
           {activeRoute === "activity" && <ActivityView />}
@@ -383,6 +411,52 @@ function CreativeView({ onNavigate, notify }: { onNavigate: (route: RouteKey) =>
 function WebsiteBuilder({ notify }: { notify: (toast: Toast) => void }) { const [brief, setBrief] = useState("A conversion-focused launch page for Atlas, a calm operating system for independent business owners."); const [building, setBuilding] = useState(false); return <div><PageHeader route="website-builder" action={<div className="header-actions"><button className="button button-secondary" onClick={() => notify({ kind: "info", text: "Preview opened in a new workspace." })}><Globe2 size={16} /> Preview</button><button className="button button-primary" onClick={() => { setBuilding(true); window.setTimeout(() => { setBuilding(false); notify({ kind: "success", text: "Website plan generated and ready for review." }); }, 900); }}><Rocket size={16} /> {building ? "Building..." : "Build website"}</button></div>} /><div className="builder-layout"><section className="panel-card builder-prompt"><SectionHeader eyebrow="BUILD BRIEF" title="Tell David what to build" detail="The agent will propose the structure, copy, visual direction, and implementation plan." icon={WandSparkles} /><textarea value={brief} onChange={(event) => setBrief(event.target.value)} /><div className="builder-options"><button className="option-chip active"><Palette size={14} /> Brand-aware</button><button className="option-chip"><Globe2 size={14} /> Responsive</button><button className="option-chip"><ShieldCheck size={14} /> Review before publish</button></div><div className="builder-action-row"><span><LockKeyhole size={14} /> Publishing always requires approval</span><button className="button button-primary" onClick={() => notify({ kind: "success", text: "Build brief saved to Atlas project." })}><Check size={15} /> Save brief</button></div></section><section className="panel-card browser-preview"><div className="browser-top"><div className="browser-dots"><span /><span /><span /></div><span>atlas.david.ai / preview</span><MoreHorizontal size={17} /></div><div className="preview-content"><div className="preview-nav"><strong>ATLAS</strong><span>Product</span><span>How it works</span><span>Pricing</span><button>Start free</button></div><div className="preview-hero"><span className="eyebrow-pill">A CALMER WAY TO OPERATE</span><h2>Your business, with more leverage.</h2><p>Bring your plans, systems, and next best actions into one intelligent workspace.</p><button><Sparkles size={14} /> Explore Atlas</button></div><div className="preview-blocks"><div /><div /><div /></div></div></section></div></div>; }
 
 function VideoStudio({ notify }: { notify: (toast: Toast) => void }) { const [prompt, setPrompt] = useState("A 30-second cinematic product teaser for Atlas. Warm light, confident pacing, premium founder-focused tone."); return <div><PageHeader route="video-studio" action={<button className="button button-primary" onClick={() => notify({ kind: "success", text: "Video render queued. David will notify you when the cuts are ready." })}><Play size={16} /> Render video</button>} /><div className="video-studio-layout"><section className="panel-card video-prompt-card"><SectionHeader eyebrow="PRODUCTION BRIEF" title="Shape the next cut" icon={Film} /><textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} /><div className="video-controls"><div><span className="micro-label">FORMAT</span><button className="select-like">Landscape 16:9 <ChevronRight size={14} /></button></div><div><span className="micro-label">VOICE</span><button className="select-like">David / Warm <ChevronRight size={14} /></button></div><div><span className="micro-label">OUTPUTS</span><button className="select-like">4 social cuts <ChevronRight size={14} /></button></div></div><button className="button button-primary wide-button" onClick={() => notify({ kind: "info", text: "Storyboard generated from your brief." })}><WandSparkles size={16} /> Generate storyboard</button></section><section className="panel-card timeline-card"><div className="timeline-header"><div><div className="micro-label">ATLAS TEASER / V1</div><h2>Storyboard timeline</h2></div><span className="status-tag tag-amber">Needs review</span></div><div className="video-canvas"><div className="canvas-orbit" /><div className="canvas-brand">ATLAS</div><div className="canvas-copy">More leverage.<br /><span>Less noise.</span></div><div className="canvas-caption">Scene 03 / 00:14</div></div><div className="timeline-track"><div className="timeline-ruler"><span>00:00</span><span>00:10</span><span>00:20</span><span>00:30</span></div><div className="timeline-row"><span className="track-label"><Film size={13} /> Scenes</span><div className="track-bar"><i /><i /><i className="active" /><i /></div></div><div className="timeline-row"><span className="track-label"><AudioLines size={13} /> Voice</span><div className="voice-wave"><span /><span /><span /><span /><span /><span /><span /><span /><span /><span /><span /><span /><span /><span /><span /><span /><span /><span /></div></div></div></section></div></div>; }
+
+type MultimodalKind = "voice" | "image" | "music" | "enhance" | "edit" | "reshoot";
+
+const multimodalConfig: Record<MultimodalKind, { route: RouteKey; label: string; eyebrow: string; icon: LucideIcon; description: string; placeholder: string; steps: string[]; accent: string }> = {
+  voice: { route: "voice-studio", label: "Voice studio", eyebrow: "SPEECH + VOICE", icon: Headphones, description: "Shape narration, dialogue, and spoken interaction with an approval-aware playback boundary.", placeholder: "A warm, confident narration for the Atlas product launch…", steps: ["Script", "Voice", "Preview", "Approve"] , accent: "blue" },
+  image: { route: "image-studio", label: "Image lab", eyebrow: "VISUAL GENERATION", icon: ImageIcon, description: "Turn a visual direction into brand-aware campaign images, thumbnails, diagrams, and variants.", placeholder: "A premium editorial product image for Atlas with warm window light…", steps: ["Brief", "Composition", "Variants", "Review"], accent: "purple" },
+  music: { route: "music-studio", label: "Music studio", eyebrow: "SOUND + SCORE", icon: AudioWaveform, description: "Plan a soundtrack or sonic identity with mood, duration, instruments, and delivery context.", placeholder: "A restrained cinematic score for a 30-second founder-focused product film…", steps: ["Mood", "Structure", "Mix", "License"], accent: "amber" },
+  enhance: { route: "enhance-studio", label: "Enhance media", eyebrow: "MEDIA ENHANCEMENT", icon: Wand2, description: "Prepare an enhancement pass for image, video, or audio while retaining source provenance.", placeholder: "Clean the dialogue, reduce room noise, and preserve the speaker’s natural tone…", steps: ["Source", "Enhance", "Compare", "Export"], accent: "green" },
+  edit: { route: "edit-studio", label: "Edit studio", eyebrow: "CONTROLLED EDITING", icon: SlidersHorizontal, description: "Describe the cut, cleanup, translation, or transformation you want before David prepares the edit plan.", placeholder: "Turn this long interview into three social cuts with captions and translated titles…", steps: ["Source", "Edit plan", "Render", "Verify"], accent: "red" },
+  reshoot: { route: "reshoot-studio", label: "Reshoot studio", eyebrow: "SCENE DIRECTION", icon: RefreshCw, description: "Direct a scene variation with continuity notes, reference assets, and a reviewable cinematic brief.", placeholder: "Reimagine scene three with a tighter close-up while keeping the same lighting and wardrobe…", steps: ["Reference", "Direction", "Variation", "Review"], accent: "purple" },
+};
+
+function MultimodalStudio({ kind, notify }: { kind: MultimodalKind; notify: (toast: Toast) => void }) {
+  const config = multimodalConfig[kind];
+  const Icon = config.icon;
+  const [brief, setBrief] = useState(config.placeholder);
+  const [stage, setStage] = useState<"idle" | "planning" | "ready" | "approval">("idle");
+  const [plan, setPlan] = useState("");
+  const [working, setWorking] = useState(false);
+
+  const createPlan = async () => {
+    if (!brief.trim() || working) return;
+    setWorking(true);
+    setStage("planning");
+    try {
+      const response = await api.chat(`Create a ${config.label} production plan for this brief. Do not claim that media was generated: ${brief}`);
+      const raw = response as unknown as Record<string, unknown>;
+      setPlan(String(raw.response || raw.message || raw.content || "A production plan was returned by the configured David backend."));
+      setStage("ready");
+      notify({ kind: "success", text: `${config.label} plan is ready for review.` });
+    } catch {
+      setPlan("The planning backend is unavailable. The brief is preserved locally and no media was marked as generated.");
+      setStage("approval");
+      notify({ kind: "info", text: "Brief saved in interface mode. Connect the backend to plan this workflow live." });
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  const requestApproval = () => {
+    setStage("approval");
+    notify({ kind: "info", text: `Approval requested before ${config.label.toLowerCase()} execution.` });
+  };
+
+  return <div className="multimodal-page"><PageHeader route={config.route} action={<div className="header-actions"><span className={cx("status-tag", stage === "ready" ? "tag-green" : stage === "approval" ? "tag-amber" : "tag-blue")}><span className="status-dot" /> {stage === "idle" ? "Brief ready" : stage === "planning" ? "Planning" : stage === "ready" ? "Plan ready" : "Approval gate"}</span><button className="button button-primary" onClick={createPlan} disabled={working || !brief.trim()}>{working ? <TimerReset size={16} className="spin" /> : <Sparkles size={16} />}{working ? "Planning..." : "Plan workflow"}</button></div>} /><div className="multimodal-hero panel-card"><div className={cx("multimodal-icon", `tone-${config.accent}`)}><Icon size={25} /></div><div><div className="eyebrow-pill">{config.eyebrow}</div><h2>{config.label} is ready for a real brief.</h2><p>{config.description}</p></div><div className="multimodal-boundary"><ShieldCheck size={15} /><span>Provider and artifact status remain truthful</span></div></div><div className="multimodal-grid"><section className="panel-card multimodal-brief"><SectionHeader eyebrow="PRODUCTION BRIEF" title="Tell David what to make" detail="David will create a plan first. External rendering stays behind provider readiness and approval." icon={WandSparkles} /><textarea value={brief} onChange={(event) => setBrief(event.target.value)} aria-label={`${config.label} production brief`} /><div className="multimodal-actions"><button className="button button-primary" onClick={createPlan} disabled={working || !brief.trim()}>{working ? <TimerReset size={16} className="spin" /> : <Sparkles size={16} />}{working ? "Planning workflow" : "Generate production plan"}</button><button className="button button-secondary" onClick={requestApproval} disabled={!brief.trim()}><ShieldCheck size={16} /> Request approval</button></div></section><section className="panel-card multimodal-plan"><SectionHeader eyebrow="CINEMATIC PIPELINE" title="Visible production stages" detail="Every stage can be connected to a verified worker without changing the creative surface." icon={Film} /><div className="multimodal-steps">{config.steps.map((step, index) => <div className={cx("multimodal-step", stage === "ready" && index === 0 ? "is-ready" : stage === "approval" && index === config.steps.length - 1 ? "is-blocked" : index === 0 ? "is-active" : "")} key={step}><span>{String(index + 1).padStart(2, "0")}</span><strong>{step}</strong>{index < config.steps.length - 1 && <ChevronRight size={14} />}</div>)}</div><div className="multimodal-preview"><div className="preview-orbit" /><Icon size={24} /><span>{plan || "Your production plan and provider evidence will appear here."}</span></div>{stage === "approval" && <div className="multimodal-approval"><ShieldCheck size={16} /><div><strong>Approval required before external action</strong><span>No media is published, sent, or exported automatically.</span></div></div>}</section></div></div>;
+}
 
 function FilesView({ notify }: { notify: (toast: Toast) => void }) { return <div><PageHeader route="files" action={<button className="button button-primary" onClick={() => notify({ kind: "success", text: "File picker ready. Uploads will be indexed into memory." })}><Upload size={16} /> Add knowledge</button>} /><div className="knowledge-banner panel-card"><div className="knowledge-icon"><Database size={24} /></div><div><div className="eyebrow-pill">PRIVATE KNOWLEDGE BASE</div><h2>Give David the source material.</h2><p>Upload documents once and use them across conversations, projects, reports, and creative workflows.</p></div><div className="knowledge-stat"><strong>128</strong><span>indexed memories</span></div></div><div className="file-table panel-card"><div className="file-table-header"><span>Name</span><span>Type</span><span>Indexed</span><span>Used by</span><span /></div>{[{ name: "Brand handbook.pdf", type: "PDF · 14 pages", indexed: "1 hour ago", used: "4 projects", icon: FileText }, { name: "Atlas customer interviews", type: "DOCX · 38 pages", indexed: "Yesterday", used: "2 projects", icon: Users }, { name: "Q3 performance.xlsx", type: "Spreadsheet · 2.4 MB", indexed: "Aug 14, 2026", used: "Operations", icon: Gauge }, { name: "Launch assets", type: "Folder · 28 files", indexed: "Aug 12, 2026", used: "Atlas launch", icon: Library }].map((file) => { const Icon = file.icon; return <button className="file-row" key={file.name} onClick={() => notify({ kind: "info", text: `${file.name} opened.` })}><span className="file-name"><span className="file-icon"><Icon size={16} /></span><strong>{file.name}</strong></span><span>{file.type}</span><span>{file.indexed}</span><span>{file.used}</span><ChevronRight size={16} /></button>; })}</div></div>; }
 

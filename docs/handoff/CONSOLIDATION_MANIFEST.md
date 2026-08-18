@@ -15,8 +15,8 @@ The supplied handoff documents are preserved under `docs/handoff/source-specs/`.
 
 ## Current upgraded surfaces
 
-The Next.js command center includes dashboard, conversation, agents, projects, tasks, memory, files and knowledge, creative suite, website builder, video studio, providers, activity log, devices, settings, and owner governance surfaces. Dashboard objectives now flow through the existing intelligence API contract for goal creation, planning, capability routing, governed run creation, run details, approval states, verification, completion, and truthful degraded handling.
+The Next.js command center includes dashboard, conversation, agents, projects, tasks, memory, files and knowledge, creative suite, website builder, video studio, voice studio, image lab, music studio, enhance media, edit studio, reshoot studio, providers, activity log, devices, settings, and owner governance surfaces. Dashboard objectives now flow through the existing intelligence API contract for goal creation, planning, capability routing, governed run creation, run details, approval states, verification, completion, and truthful degraded handling. Cinematic multimodal studio briefs use the existing chat/intelligence boundary for planning and preserve explicit approval gates before external rendering, publication, export, or delivery.
 
 ## Verification contract
 
-The frontend must pass type checking, tests, and production build. The backend must pass Python compilation and its test suite. Sensitive actions must remain approval-gated, provider credentials must remain server-side, and the interface must not label a capability as complete when its backend is unavailable.
+The frontend must pass type checking, tests, and production build. Cinematic studio surfaces must expose production stages and provider truth without claiming media was generated when the worker is unavailable. The backend must pass Python compilation and its test suite. Sensitive actions must remain approval-gated, provider credentials must remain server-side, and the interface must not label a capability as complete when its backend is unavailable.
