@@ -1,6 +1,7 @@
-import DavidApp from "../../components/david-app";
+import DavidCommandCenter from "@/components/david-command-center";
 
-export default function Page({ params }: { params: { slug?: string[] } }) {
-  const route = params.slug?.join("/") || "dashboard";
-  return <DavidApp route={route} />;
+export default async function Page({ params }: { params: Promise<{ slug?: string[] }> }) {
+  const resolved = await params;
+  const route = resolved.slug?.join("/") || "dashboard";
+  return <DavidCommandCenter initialRoute={route} />;
 }
