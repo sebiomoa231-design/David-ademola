@@ -489,13 +489,66 @@ function ChatView({ messages, draft, setDraft, working, onSubmit, onPrompt, onNa
 }
 
 function ProjectsView({ onNavigate, notify }: { onNavigate: (route: RouteKey) => void; notify: (toast: Toast) => void }) {
-  const projects = [{ name: "Atlas product launch", type: "Campaign system", progress: 78, status: "Needs approval", color: "red", meta: "12 tasks · 8 assets" }, { name: "Founder operating system", type: "Internal workspace", progress: 46, status: "In motion", color: "blue", meta: "7 tasks · 3 agents" }, { name: "Creator content engine", type: "Content pipeline", progress: 24, status: "Planning", color: "purple", meta: "18 tasks · 0 approvals" }];
-  return <div><PageHeader route="projects" action={<button className="button button-primary" onClick={() => notify({ kind: "success", text: "New project workspace created." })}><Plus size={16} /> New project</button>} /><div className="filter-row"><div className="filter-search"><Search size={16} /><input placeholder="Search projects" /></div><button className="filter-button"><SlidersHorizontal size={15} /> All projects <ChevronRight size={14} /></button></div><div className="project-grid">{projects.map((project) => <button className="project-card panel-card" key={project.name} onClick={() => notify({ kind: "info", text: `${project.name} opened in workspace view.` })}><div className={cx("project-cover", `cover-${project.color}`)}><div className="project-cover-grid" /><span>{project.type}</span><MoreHorizontal size={18} /></div><div className="project-card-body"><div className="project-card-title"><div><h3>{project.name}</h3><p>{project.meta}</p></div><span className={cx("status-tag", project.status === "Needs approval" ? "tag-amber" : project.status === "In motion" ? "tag-green" : "tag-blue")}>{project.status}</span></div><div className="progress-meta"><span>Project progress</span><strong>{project.progress}%</strong></div><div className="progress-track"><span style={{ width: `${project.progress}%` }} /></div><div className="project-footer"><span><Bot size={14} /> 3 agents available</span><ChevronRight size={16} /></div></div></button>)}</div><div className="split-grid section-block"><div className="panel-card padded-card"><SectionHeader eyebrow="WORKFLOW LIBRARY" title="Start from a proven system" icon={Library} /><div className="mini-list">{["Product launch system", "Weekly executive review", "Customer support brain"].map((item) => <button key={item} className="mini-list-row" onClick={() => notify({ kind: "info", text: `${item} template selected.` })}><span className="template-icon"><WandSparkles size={15} /></span><span><strong>{item}</strong><small>Reusable workflow template</small></span><Plus size={15} /></button>)}</div></div><div className="panel-card padded-card"><SectionHeader eyebrow="PROJECT SIGNAL" title="Next recommended action" icon={Sparkles} /><div className="recommendation"><div className="recommendation-icon"><ShieldCheck size={17} /></div><div><strong>Approve the Atlas deployment</strong><p>David has validated the website build and found no blocking issues.</p><button className="text-button" onClick={() => onNavigate("activity")}>Review evidence <ArrowUpRight size={14} /></button></div></div></div></div></div>;
+  const [projects, setProjects] = useState<Array<{ id?: string; name: string; description?: string; status?: string }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    api.projects().then((items) => mounted && setProjects(items)).catch(() => mounted && notify({ kind: "error", text: "Live projects are unavailable. David did not substitute mock project data." })).finally(() => mounted && setLoading(false));
+    return () => { mounted = false; };
+  }, [notify]);
+
+  async function createProject() {
+    const name = window.prompt("Name this David project:");
+    if (!name?.trim() || creating) return;
+    setCreating(true);
+    try {
+      const project = await api.createProject({ name: name.trim(), description: "Created from David OS.", status: "planning" });
+      setProjects((current) => [...current, project]);
+      notify({ kind: "success", text: `Project ${project.name} created in the live workspace.` });
+    } catch {
+      notify({ kind: "error", text: "The project could not be created because the live project service is unavailable." });
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  return <div><PageHeader route="projects" action={<button className="button button-primary" onClick={() => void createProject()} disabled={creating}><Plus size={16} /> {creating ? "Creating..." : "New project"}</button>} /><div className="filter-row"><div className="filter-search"><Search size={16} /><input placeholder="Search projects" /></div><span className="status-tag tag-blue">{loading ? "Loading live projects" : `${projects.length} live project${projects.length === 1 ? "" : "s"}`}</span></div>{!loading && !projects.length ? <div className="panel-card padded-card"><span className="micro-label">NO LIVE PROJECTS</span><p>David found no projects in the connected workspace. Create one to begin.</p></div> : <div className="project-grid">{projects.map((project) => <button className="project-card panel-card" key={project.id || project.name} onClick={() => notify({ kind: "info", text: `${project.name} is selected. Use David to plan its next action.` })}><div className="project-cover cover-blue"><div className="project-cover-grid" /><span>{project.status || "Live project"}</span><MoreHorizontal size={18} /></div><div className="project-card-body"><div className="project-card-title"><div><h3>{project.name}</h3><p>{project.description || "No project description yet."}</p></div><span className="status-tag tag-blue">{project.status || "Active"}</span></div><div className="project-footer"><span><Bot size={14} /> Live workspace record</span><ChevronRight size={16} /></div></div></button>)}</div>}<div className="split-grid section-block"><div className="panel-card padded-card"><SectionHeader eyebrow="WORKFLOW ACTION" title="Let David plan the next move." icon={Target} /><p>Select a project above or open the conversation surface to give David a governed objective.</p><button className="button button-secondary" onClick={() => onNavigate("chat")}>Open conversation <ArrowUpRight size={14} /></button></div><div className="panel-card padded-card"><SectionHeader eyebrow="AGENT LAYER" title="Delegate project work." icon={Bot} /><p>Sub-agent assignments are created through the live orchestrator rather than static project cards.</p><button className="button button-secondary" onClick={() => onNavigate("agents")}>Open sub-agents <ArrowUpRight size={14} /></button></div></div></div>;
 }
 
 function TasksView({ notify }: { notify: (toast: Toast) => void }) {
-  const tasks = [{ title: "Approve Atlas landing page deployment", project: "Atlas product launch", state: "Requires approval", tone: "amber", icon: ShieldCheck }, { title: "Generate three short-form product cuts", project: "Atlas product launch", state: "Running", tone: "red", icon: Video }, { title: "Index customer interview transcripts", project: "Founder operating system", state: "Queued", tone: "blue", icon: Database }, { title: "Prepare weekly business performance brief", project: "Operations", state: "Scheduled for Friday", tone: "green", icon: FileText }];
-  return <div><PageHeader route="tasks" action={<button className="button button-primary" onClick={() => notify({ kind: "success", text: "Task draft created. Add it to a project when ready." })}><Plus size={16} /> Add task</button>} /><div className="task-summary"><div><span className="micro-label">Today</span><strong>14 tasks in motion</strong><p>4 active · 2 waiting · 8 completed</p></div><div className="task-summary-progress"><span style={{ width: "72%" }} /><small>72% weekly completion</small></div></div><div className="task-board"><div className="board-column"><div className="column-heading"><span>Needs approval</span><b>1</b></div>{tasks.slice(0, 1).map((task) => <TaskCard key={task.title} task={task} notify={notify} />)}</div><div className="board-column"><div className="column-heading"><span>In motion</span><b>1</b></div>{tasks.slice(1, 2).map((task) => <TaskCard key={task.title} task={task} notify={notify} />)}</div><div className="board-column"><div className="column-heading"><span>Queued & scheduled</span><b>2</b></div>{tasks.slice(2).map((task) => <TaskCard key={task.title} task={task} notify={notify} />)}</div></div></div>;
+  const [tasks, setTasks] = useState<Array<{ id?: string; title?: string; description?: string; status?: string; priority?: string; project_id?: string }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    api.tasks().then((items) => mounted && setTasks(items)).catch(() => mounted && notify({ kind: "error", text: "Live tasks are unavailable. David did not substitute mock task data." })).finally(() => mounted && setLoading(false));
+    return () => { mounted = false; };
+  }, [notify]);
+
+  async function createTask() {
+    const title = window.prompt("What task should David track?");
+    if (!title?.trim() || creating) return;
+    setCreating(true);
+    try {
+      const task = await api.createTask({ title: title.trim(), description: "Created from David OS.", status: "planned" });
+      setTasks((current) => [...current, task]);
+      notify({ kind: "success", text: `Task ${task.title || title.trim()} created in the live workspace.` });
+    } catch {
+      notify({ kind: "error", text: "The task could not be created because the live task service is unavailable." });
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  const needsApproval = tasks.filter((task) => /approval|blocked|requires/i.test(task.status || ""));
+  const inMotion = tasks.filter((task) => /running|executing|active|progress/i.test(task.status || ""));
+  const queued = tasks.filter((task) => !needsApproval.includes(task) && !inMotion.includes(task));
+  const column = (title: string, items: typeof tasks) => <div className="board-column"><div className="column-heading"><span>{title}</span><b>{items.length}</b></div>{items.map((task) => <TaskCard key={task.id || task.title} task={{ title: task.title || "Untitled task", project: task.project_id || "Workspace", state: task.status || "planned", tone: /approval|blocked/i.test(task.status || "") ? "amber" : /running|executing/i.test(task.status || "") ? "red" : "blue", icon: Target }} notify={notify} />)}{!items.length && <div className="empty-board-state">No live tasks in this state.</div>}</div>;
+
+  return <div><PageHeader route="tasks" action={<button className="button button-primary" onClick={() => void createTask()} disabled={creating}><Plus size={16} /> {creating ? "Creating..." : "Add task"}</button>} /><div className="task-summary"><div><span className="micro-label">LIVE WORKSPACE</span><strong>{loading ? "Loading tasks" : `${tasks.length} tracked task${tasks.length === 1 ? "" : "s"}`}</strong><p>Statuses are loaded from the backend task service.</p></div></div>{loading ? <div className="panel-card padded-card"><span className="micro-label">LOADING LIVE TASKS</span></div> : <div className="task-board">{column("Needs approval", needsApproval)}{column("In motion", inMotion)}{column("Queued & planned", queued)}</div>}</div>;
 }
 
 function TaskCard({ task, notify }: { task: { title: string; project: string; state: string; tone: string; icon: LucideIcon }; notify: (toast: Toast) => void }) { const Icon = task.icon; return <button className="task-card" onClick={() => notify({ kind: task.tone === "amber" ? "info" : "success", text: task.tone === "amber" ? "Approval details opened." : `${task.title} marked for review.` })}><div className={cx("task-icon", `tone-${task.tone}`)}><Icon size={16} /></div><div className="task-card-content"><strong>{task.title}</strong><span>{task.project}</span><div className="task-card-meta"><em className={cx("status-tag", `tag-${task.tone}`)}>{task.state}</em><MoreHorizontal size={15} /></div></div></button>; }
