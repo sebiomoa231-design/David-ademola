@@ -1,0 +1,13 @@
+===== DavidAI-backend-with-voice.zip.part-aa =====
+size=30106992
+ 50 4b 03 04 14 00 00 00 08 00 22 99 06 5d ee 3e
+ 56 c3 2f 00 00 00 32 00 00 00 08 00 1c 00 50 72
+ 2b c8 15 5e 78 82 9f 6a 4a a9 c0 6c 31 ec e3 5f
+ 87 ab 46 ed 50 c6 f9 2c a5 3b df 32 31 5f ce 32
+[/home/ubuntu/upload/DavidAI-backend-with-voice.zip.part-aa]
+  End-of-central-directory signature not found.  Either this file is not
+  a zipfile, or it constitutes one disk of a multi-part archive.  In the
+  latter case the central directory and zipfile comment will be found on
+  the last disk(s) of this archive.
+zipinfo:  cannot find zipfile directory in one of /home/ubuntu/upload/DavidAI-backend-with-voice.zip.part-aa or
+          /home/ubuntu/upload/DavidAI-backend-with-voice.zip.part-aa.zip, and cannot find /home/ubuntu/upload/DavidAI-backend-with-voice.zip.part-aa.ZIP, period.

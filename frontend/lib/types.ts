@@ -26,6 +26,33 @@ export interface ChatResponse {
   conversation_id?: string;
 }
 
+export type AgentRunState = "queued" | "planning" | "waiting" | "executing" | "paused" | "retrying" | "completed" | "failed" | "cancelled";
+
+export interface AgentStep {
+  id: string;
+  title: string;
+  state: AgentRunState;
+  output?: unknown;
+  error?: string | null;
+  attempts?: number;
+  started_at?: string | null;
+  completed_at?: string | null;
+}
+
+export interface AgentRun {
+  id: string;
+  agent_name: string;
+  goal: string;
+  state: AgentRunState;
+  steps: AgentStep[];
+  created_at?: string;
+  updated_at?: string;
+  completed_at?: string | null;
+  logs?: string[];
+  error?: string | null;
+  cancel_requested?: boolean;
+}
+
 export interface MemoryItem {
   id?: string;
   type?: string;

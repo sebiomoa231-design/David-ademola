@@ -1,1 +1,5 @@
-import { CreativeSuite } from "@/components/creative-suite/CreativeSuite"; export default function CreativePage(){return <CreativeSuite/>}
+import DavidCommandCenter from "@/components/david-command-center";
+
+export default function CreativePage() {
+  return <DavidCommandCenter initialRoute="creative" />;
+}

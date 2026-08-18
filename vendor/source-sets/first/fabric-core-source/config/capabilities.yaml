@@ -1,0 +1,122 @@
+version: "1.0"
+capabilities:
+  - id: david-core
+    name: David Core
+    category: intelligence
+    source: vendor/David-ademola-main
+    mode: native
+    keywords: [chat, assistant, david, memory, project, task, planning]
+
+  - id: david-voice-backend
+    name: David Voice Backend
+    category: voice
+    source: vendor/DavidAI-backend-with-voice
+    mode: reference-or-adapter
+    keywords: [voice, tts, speech, ryan]
+
+  - id: creative-backend
+    name: David Creative Backend
+    category: creative
+    source: vendor/david-ai-backend
+    mode: service-or-adapter
+    keywords: [creative, image, video, artwork, music, enhancer, editor]
+
+  - id: multi-agent
+    name: Agent Framework
+    category: orchestration
+    source: vendor/agent-framework-main
+    mode: adapter
+    keywords: [agent, agents, delegation, handoff, multi-agent, orchestration]
+
+  - id: coding
+    name: OpenHands
+    category: coding
+    source: vendor/OpenHands-main
+    mode: service-or-adapter
+    keywords: [code, coding, repository, software, developer, build, debug]
+
+  - id: browser-use
+    name: Browser Use
+    category: browser
+    source: vendor/browser-use-main
+    mode: service-or-adapter
+    keywords: [browse, browser, web, research, navigate, click, website]
+
+  - id: playwright
+    name: Playwright
+    category: browser-automation
+    source: vendor/playwright-main
+    mode: service-or-adapter
+    keywords: [browser, test, screenshot, automation, playwright]
+
+  - id: image
+    name: ComfyUI
+    category: image
+    source: vendor/ComfyUI-master
+    mode: service-or-adapter
+    keywords: [image, artwork, workflow, generation, edit, diffusion]
+
+  - id: video
+    name: Wan2GP
+    category: video
+    source: vendor/Wan2GP-main
+    mode: service-or-adapter
+    keywords: [video, animation, text-to-video, image-to-video, render]
+
+  - id: voice
+    name: Chatterbox
+    category: tts
+    source: vendor/chatterbox-master
+    mode: service-or-adapter
+    keywords: [voice, tts, text-to-speech, speech, cloning]
+
+  - id: stt
+    name: faster-whisper
+    category: speech-to-text
+    source: vendor/faster-whisper-master
+    mode: service-or-adapter
+    keywords: [stt, transcription, speech-to-text, microphone, audio]
+
+  - id: observability
+    name: Langfuse
+    category: observability
+    source: vendor/langfuse-main
+    mode: service-or-adapter
+    keywords: [monitor, trace, evaluation, observability, analytics, eval]
+
+  - id: stateful-agents
+    name: LangGraph
+    category: orchestration
+    source: vendor/langgraph-main
+    mode: library-or-adapter
+    keywords: [stateful, graph, agent, workflow, checkpoint, memory]
+
+  - id: automation
+    name: n8n
+    category: automation
+    source: vendor/n8n-master
+    mode: service-or-adapter
+    keywords: [automation, integration, workflow, webhook, schedule]
+
+  - id: durable-execution
+    name: Temporal
+    category: durable-execution
+    source: vendor/temporal-main
+    mode: service-or-adapter
+    keywords: [durable, retry, workflow, queue, long-running, recovery]
+
+  - id: deployment-coolify
+    name: Coolify
+    category: deployment
+    source: vendor/coolify-main
+    mode: service-or-adapter
+    requires_approval: true
+    keywords: [deploy, hosting, server, application, publish]
+
+  - id: deployment-dokploy
+    name: Dokploy
+    category: deployment
+    source: vendor/dokploy-canary
+    mode: service-or-adapter
+    requires_approval: true
+    keywords: [deploy, hosting, server, application, publish]

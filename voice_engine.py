@@ -3,7 +3,7 @@
 Unified voice engine providing TTS (ElevenLabs) and STT capabilities.
 Uses the British JARVIS-style deep male voice (Voice ID: 5hZv9mAOcmcMt1TxA5Iz).
 
-This replaces the previous Piper TTS (Ryan voice) implementation.
+This is the active ElevenLabs voice implementation for David AI.
 ElevenLabs multilingual v2 model supports both English and Yoruba natively.
 """
 from __future__ import annotations
@@ -43,6 +43,7 @@ class TranscriptionResult:
     language: str
     provider: str
     confidence: float | None = None
+    raw: dict | None = None
 
 
 @dataclass
@@ -62,7 +63,7 @@ class VoiceEngine:
     deep male voice (Voice ID: 5hZv9mAOcmcMt1TxA5Iz) with the multilingual
     v2 model. This supports both English and Yoruba natively.
 
-    Speech-to-text uses ElevenLabs Scribe (scribe_v1) for transcription
+    Speech-to-text uses ElevenLabs Scribe v2 for transcription
     with automatic language detection.
 
     Language handling: AUTO is the default. English and Yoruba are the two
@@ -120,6 +121,12 @@ class VoiceEngine:
         self,
         audio_bytes: bytes,
         language_mode: LanguageMode = LanguageMode.AUTO,
+        filename: str = "audio.wav",
+        tag_audio_events: bool = True,
+        diarize: bool = False,
+        timestamps_granularity: str | None = "word",
+        keyterms: list[str] | None = None,
+        num_speakers: int | None = None,
     ) -> TranscriptionResult:
         """Transcribe audio to text using ElevenLabs Scribe.
 
@@ -136,6 +143,7 @@ class VoiceEngine:
                 language=language_mode.value,
                 provider="none",
                 confidence=None,
+                raw=None,
             )
 
         # Map language mode to ISO code for ElevenLabs
@@ -149,12 +157,19 @@ class VoiceEngine:
             result = await self._elevenlabs_stt.transcribe(
                 audio_bytes=audio_bytes,
                 language_code=language_code,
+                filename=filename,
+                tag_audio_events=tag_audio_events,
+                diarize=diarize,
+                timestamps_granularity=timestamps_granularity,
+                keyterms=keyterms,
+                num_speakers=num_speakers,
             )
             return TranscriptionResult(
                 text=result.get("text", ""),
                 language=result.get("language_code", language_mode.value),
                 provider="elevenlabs",
                 confidence=result.get("confidence"),
+                raw=result,
             )
         except Exception as exc:
             logger.error(f"ElevenLabs STT failed: {exc}")
@@ -163,6 +178,7 @@ class VoiceEngine:
                 language=language_mode.value,
                 provider="elevenlabs",
                 confidence=None,
+                raw=None,
             )
 
     async def synthesize(
@@ -173,7 +189,7 @@ class VoiceEngine:
         """Synthesize text to speech using ElevenLabs.
 
         The multilingual v2 model supports both English and Yoruba natively,
-        so no language-based rejection is needed (unlike the old Piper engine).
+        so no language-based rejection is needed.
 
         Args:
             text: Text to convert to speech.

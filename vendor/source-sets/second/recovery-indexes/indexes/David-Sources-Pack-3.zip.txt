@@ -1,0 +1,11 @@
+===== David-Sources-Pack-3.zip =====
+size=9649347
+ 50 4b 03 04 0a 00 00 00 00 00 31 77 0f 5d 14 9d
+ a1 f7 40 b2 7e 03 40 b2 7e 03 0f 00 1c 00 57 61
+[/home/ubuntu/upload/David-Sources-Pack-3.zip]
+  End-of-central-directory signature not found.  Either this file is not
+  a zipfile, or it constitutes one disk of a multi-part archive.  In the
+  latter case the central directory and zipfile comment will be found on
+  the last disk(s) of this archive.
+zipinfo:  cannot find zipfile directory in one of /home/ubuntu/upload/David-Sources-Pack-3.zip or
+          /home/ubuntu/upload/David-Sources-Pack-3.zip.zip, and cannot find /home/ubuntu/upload/David-Sources-Pack-3.zip.ZIP, period.

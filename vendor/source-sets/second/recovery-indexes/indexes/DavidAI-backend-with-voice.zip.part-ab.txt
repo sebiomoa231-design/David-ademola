@@ -1,0 +1,81 @@
+===== DavidAI-backend-with-voice.zip.part-ab =====
+size=21780558
+ 82 d7 2f 1b e1 e8 cc 1c fc 79 ca 9c fa ca 13 e1
+ 54 ea 11 08 1b 95 09 01 7b da 59 c8 a5 0f 20 de
+ 04 00 00 00 00 04 00 00 00 00 50 4b 05 06 00 00
+ 00 00 49 00 49 00 0a 1a 00 00 2e 3e 4c 06 00 00
+error [/home/ubuntu/upload/DavidAI-backend-with-voice.zip.part-ab]:  missing 83886080 bytes in zipfile
+  (attempting to process anyway)
+Procfile
+main.py
+requirements.txt
+run.sh
+render.yaml
+app/
+app/providers/
+app/providers/ai_router.py
+app/providers/cerebras.py
+app/providers/base.py
+app/providers/__init__.py
+app/providers/sambanova.py
+app/providers/openrouter.py
+app/providers/gemini.py
+app/providers/registry.py
+app/providers/huggingface.py
+app/providers/piper_tts.py
+app/providers/cloudflare.py
+app/providers/groq.py
+app/services/
+app/services/project_service.py
+app/services/auth_service.py
+app/services/__init__.py
+app/services/voice_engine.py
+app/services/agent_engine.py
+app/services/knowledge_engine.py
+app/services/memory_engine.py
+app/services/website_engine.py
+app/services/content_engine.py
+app/services/conversation_engine.py
+app/services/planning_engine.py
+app/services/memory_service.py
+app/__init__.py
+app/api/
+app/api/__init__.py
+app/api/router.py
+app/api/routes/
+app/api/routes/auth.py
+app/api/routes/__init__.py
+app/api/routes/agents.py
+app/api/routes/chat.py
+app/api/routes/settings.py
+app/api/routes/files.py
+app/api/routes/plan.py
+app/api/routes/voice.py
+app/api/routes/memory.py
+app/api/routes/knowledge.py
+app/api/routes/conversations.py
+app/api/routes/website.py
+app/api/routes/projects.py
+app/api/routes/health.py
+app/models_auth.py
+app/models.py
+app/core/
+app/core/storage.py
+app/core/config.py
+app/core/__init__.py
+app/core/exceptions.py
+app/core/security.py
+app/core/logging.py
+voices/
+voices/en_US-ryan-high.onnx
+voices/en_US-ryan-high.onnx.json
+requirements-prod.txt
+Dockerfile
+tests/
+tests/test_memory.py
+tests/test_plan.py
+tests/test_health.py
+tests/__init__.py
+tests/test_agents_voice_knowledge.py
+tests/test_chat.py
+.env.example

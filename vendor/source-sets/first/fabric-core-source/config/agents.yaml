@@ -1,0 +1,23 @@
+agents:
+  - id: david-orchestrator
+    role: master_orchestrator
+    capabilities: [planning, delegation, routing, approvals, verification]
+  - id: research-agent
+    role: research
+    capabilities: [browser-use, playwright]
+  - id: coding-agent
+    role: software_engineering
+    capabilities: [coding, playwright]
+  - id: creative-agent
+    role: creative
+    capabilities: [image, video, voice, stt]
+  - id: marketing-agent
+    role: marketing
+    capabilities: [research, browser-use, creative, website]
+  - id: qa-agent
+    role: quality_assurance
+    capabilities: [playwright, coding, observability]
+  - id: deployment-agent
+    role: deployment
+    capabilities: [deployment-coolify, deployment-dokploy]
+    requires_approval: true

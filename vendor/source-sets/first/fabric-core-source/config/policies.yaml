@@ -1,0 +1,20 @@
+policies:
+  external_side_effects:
+    default: deny
+    approval_required: true
+  deployment:
+    approval_required: true
+  publishing:
+    approval_required: true
+  deletion:
+    approval_required: true
+  purchases:
+    approval_required: true
+  credentials:
+    never_expose_to_model: true
+  user_isolation:
+    required: true
+  audit:
+    record_tool_calls: true
+    record_provider_events: true
+    record_agent_handoffs: true

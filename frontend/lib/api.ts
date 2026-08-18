@@ -1,5 +1,6 @@
 import type {
   Adapter,
+  AgentRun,
   AssetItem,
   BackendHealth,
   Capability,
@@ -86,16 +87,76 @@ export const api = {
   health: () => requestAnyPath<BackendHealth>(["/api/health", "/health"]),
   chat: (message: string, conversationId?: string) =>
     request<ChatResponse>("/api/chat", json({ message, conversation_id: conversationId })),
+  agents: {
+    list: () => request<Array<{ name: string; description: string; capabilities: string[] }>>("/api/agents"),
+    external: () => request<{ agents: Array<{ id: string; label: string; protocol: string; capabilities: string[]; configured: boolean; status: string }> }>("/api/agents/external"),
+    consultExternal: (agentId: string, objective: string, context: Record<string, unknown> = {}) =>
+      request<{ request_id: string; agent_id: string; agent_label: string; protocol: string; status: string; latency_ms: number; text: string; metadata: Record<string, unknown> }>(`/api/agents/external/${encodeURIComponent(agentId)}/consult`, json({ objective, context })),
+    dispatch: (agentName: string, goal: string, background = true) =>
+      request<AgentRun>("/api/agents/dispatch", json({ agent_name: agentName, goal, background })),
+    runs: (limit = 20) => request<AgentRun[]>(`/api/agents/runs?limit=${Math.max(1, Math.min(limit, 100))}`),
+    run: (runId: string) => request<AgentRun>(`/api/agents/runs/${encodeURIComponent(runId)}`),
+    cancel: (runId: string) => request<AgentRun>(`/api/agents/runs/${encodeURIComponent(runId)}/cancel`, { method: "POST" }),
+  },
   voiceStatus: () => request<VoiceStatus>("/api/voice/status"),
   synthesize: (text: string, languageMode = "AUTO") =>
     request<{
-      audio_available: boolean;
-      provider: string;
-      text_fallback: string;
-      reason?: string | null;
       audio_base64?: string | null;
       audio_format?: string;
+      voice_id?: string;
+      model_id?: string;
+      audio_available?: boolean;
+      provider?: string;
+      text_fallback?: string;
+      reason?: string | null;
     }>("/api/voice/synthesize", json({ text, language_mode: languageMode })),
+  transcribe: (audioBase64: string, language?: string, audioFormat = "webm") =>
+    request<{ text: string; language?: string; confidence?: number | null; provider?: string }>(
+      "/api/voice/transcribe",
+      json({ audio_base64: audioBase64, language: language || null, audio_format: audioFormat }),
+    ),
+  voiceCapabilities: () =>
+    request<{ provider: string; sdk_configured: boolean; capabilities: string[] }>("/api/voice/capabilities"),
+  speechEngineStatus: () =>
+    request<{ provider: string; configured: boolean; engine_id?: string | null; public_ws_url?: string | null; websocket_path: string; authentication: string }>(
+      "/api/voice/speech-engine/status",
+    ),
+  voices: (search?: string, pageSize = 20) =>
+    request<{ voices: Array<Record<string, unknown>>; has_more: boolean; next_page_token?: string | null; total_count?: number | null }>(
+      `/api/voice/voices?page_size=${Math.max(1, Math.min(pageSize, 100))}${search ? `&search=${encodeURIComponent(search)}` : ""}`,
+    ),
+  soundEffect: (text: string, options: { durationSeconds?: number; promptInfluence?: number; outputFormat?: string } = {}) =>
+    request<{ audio_base64: string; audio_format: string; provider: string }>(
+      "/api/voice/sound-effects",
+      json({
+        text,
+        duration_seconds: options.durationSeconds,
+        prompt_influence: options.promptInfluence,
+        output_format: options.outputFormat || "mp3_44100_128",
+      }),
+    ),
+  changeVoice: (audioBase64: string, voiceId: string, audioFormat = "webm", options: { modelId?: string; removeBackgroundNoise?: boolean } = {}) =>
+    request<{ audio_base64: string; audio_format: string; voice_id: string; provider: string }>(
+      "/api/voice/voice-changer",
+      json({
+        audio_base64: audioBase64,
+        voice_id: voiceId,
+        audio_format: audioFormat,
+        model_id: options.modelId || "eleven_multilingual_sts_v2",
+        remove_background_noise: options.removeBackgroundNoise ?? false,
+      }),
+    ),
+  transcribeAdvanced: (audioBase64: string, audioFormat = "webm", options: { language?: string; diarize?: boolean; keyterms?: string[] } = {}) =>
+    request<Record<string, unknown>>(
+      "/api/voice/transcribe/advanced",
+      json({
+        audio_base64: audioBase64,
+        audio_format: audioFormat,
+        language: options.language || null,
+        diarize: options.diarize ?? false,
+        keyterms: options.keyterms || [],
+      }),
+    ),
   memories: () => request<MemoryItem[]>("/api/memory"),
   addMemory: (payload: Partial<MemoryItem> & { content: string }) => request<MemoryItem>("/api/memory", json(payload)),
   searchMemories: (query: string) => request<MemoryItem[]>(`/api/memory/search?q=${encodeURIComponent(query)}`),
@@ -139,6 +200,41 @@ export const api = {
     deploy: (serviceId: string, clearCache = false) => request<Record<string, unknown>>(`/api/deployments/render/services/${encodeURIComponent(serviceId)}/deploy?clear_cache=${clearCache ? "true" : "false"}`, { method: "POST" }),
   },
 
+  integrations: {
+    sources: () =>
+      request<{
+        status: string;
+        primary_repository: string;
+        count: number;
+        sources: Array<{
+          id: string;
+          name: string;
+          repository: string;
+          family: string;
+          adapted_capabilities: string[];
+          integration_boundary: string;
+          source_files: string[];
+        }>;
+      }>("/api/integrations/sources"),
+  },
+
+  orchestrator: {
+    process: (message: string, context: Record<string, unknown> = {}) =>
+      request<{
+        text: string;
+        plan_id?: string | null;
+        objective?: string | null;
+        agents_used: string[];
+        providers_used: string[];
+        tasks_completed: number;
+        tasks_failed: number;
+        total_tasks: number;
+        task_details: Array<Record<string, unknown>>;
+      }>("/api/orchestrator/process", json({ message, context, use_multi_agent: true })),
+    status: () => request<Record<string, unknown>>("/api/orchestrator/status"),
+    agents: () => request<{ agents: Array<Record<string, unknown>> }>("/api/orchestrator/agents"),
+    plans: () => request<{ plans: Array<Record<string, unknown>>; total: number }>("/api/orchestrator/plans"),
+  },
   intelligence: {
     health: () => request<Record<string, unknown>>("/api/intelligence/health"),
     readiness: () => request<ReadinessResponse>("/api/intelligence/readiness"),

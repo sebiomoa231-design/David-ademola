@@ -1,0 +1,7 @@
+===== David-Sources-Pack-2-3.zip =====
+size=35576289
+ 50 4b 03 04 0a 00 00 00 00 00 31 77 0f 5d 62 c2
+ 5d 82 3e a7 89 02 3e a7 89 02 13 00 1c 00 70 6c
+warning [/home/ubuntu/upload/David-Sources-Pack-2-3.zip]:  32160690 extra bytes at beginning or within zipfile
+  (attempting to process anyway)
+report.jsonl

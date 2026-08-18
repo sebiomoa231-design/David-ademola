@@ -1,0 +1,9 @@
+6c74a1cca03dcfc161872717d5e6c8108caf50f5e4e2270fc688564cfce3f445  /home/ubuntu/upload/DAVID-AI-FRONTEND-PROMPTS-AND-PLANS(1).zip
+6c74a1cca03dcfc161872717d5e6c8108caf50f5e4e2270fc688564cfce3f445  /home/ubuntu/upload/DAVID-AI-FRONTEND-PROMPTS-AND-PLANS.zip
+da04d085da58649b394457b3ac64a8f7d36dd6f20a3c1b0e1616813f263f2210  /home/ubuntu/upload/David-AI-Complete-Build.zip
+baf00f913915ba0dbabcbb63d269de347f70ece8c9ec85727fee420fb7ccf364  /home/ubuntu/upload/David-AI-Everything-Plans-Full-Handoff.zip
+c47203654b009e402d40ec46ee8f1aa2b9a732dd49923b7eef334f76a02f6ca3  /home/ubuntu/upload/David-AI-Frontend-Architecture-FULL.zip
+fa48f5286b4c4630bbb9216c6f34f935f22b16ac267a0bb1379d262fc6d51dc1  /home/ubuntu/upload/David-AI-Preserved-Repaired-Handoff.zip
+5c3c485ce031704a16e3489f172ea0895519b77121d13b2c443eb5edee817c10  /home/ubuntu/upload/david-ai-complete-handoff.zip
+3a14592539620227903787996619d9fac9311cfc09489c4e8333536cd609d456  /home/ubuntu/upload/david-ai-master-handoff-v2-complete.zip
+45559ad6cb1f716185b76473620ef536b33cbc87cd33e8674cb7e609d67c8ead  /home/ubuntu/upload/David-AI-Cinematic-Multimodal-GitHub-Handoff.zip

@@ -1,0 +1,9 @@
+===== David-Sources-Pack-1.zip =====
+size=26512390
+ 50 4b 03 04 0a 00 00 00 00 00 30 77 0f 5d 10 55
+ 56 28 70 ff 00 00 70 ff 00 00 16 00 1c 00 44 61
+David-ademola-main.zip
+david-ai-backend.zip
+agent-framework-main.zip
+OpenHands-main.zip
+browser-use-main.zip

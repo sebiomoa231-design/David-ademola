@@ -1,1 +1,3 @@
-import {Sidebar} from './Sidebar'; import {Topbar} from './Topbar'; export function AppShell({children}:{children:React.ReactNode}){return <div className="min-h-screen bg-slate-950 text-white"><Sidebar/><main className="lg:pl-72"><Topbar/><div className="mx-auto max-w-[1600px] p-4 md:p-6">{children}</div></main></div>}
+export function AppShell({ children }: { children: React.ReactNode }) {
+  return <div className="min-h-screen bg-ink text-white">{children}</div>;
+}

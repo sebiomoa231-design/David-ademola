@@ -1,0 +1,36 @@
+workflows:
+  goal_execution:
+    stages:
+      - understand
+      - plan
+      - delegate
+      - execute
+      - observe
+      - verify
+      - approve_if_required
+      - complete
+      - learn
+
+  website_launch:
+    stages:
+      - research
+      - positioning
+      - content
+      - design
+      - implementation
+      - browser_qa
+      - deployment_approval
+      - deploy
+      - verify
+
+  marketing_campaign:
+    stages:
+      - research
+      - audience
+      - strategy
+      - copy
+      - creative
+      - distribution_plan
+      - analytics
+      - approval
+      - publish

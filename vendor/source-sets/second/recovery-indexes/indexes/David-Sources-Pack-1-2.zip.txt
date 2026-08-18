@@ -1,0 +1,45 @@
+===== David-Sources-Pack-1-2.zip =====
+size=10981660
+ 50 4b 03 04 0a 00 00 00 00 00 30 77 0f 5d 10 55
+ 56 28 70 ff 00 00 70 ff 00 00 16 00 1c 00 44 61
+warning [/home/ubuntu/upload/David-Sources-Pack-1-2.zip]:  65550 extra bytes at beginning or within zipfile
+  (attempting to process anyway)
+src/
+src/controllers/
+src/controllers/templates.controller.js
+src/controllers/generation.controller.js
+src/controllers/home.controller.js
+src/controllers/models.controller.js
+src/controllers/auth.controller.js
+src/controllers/explore.controller.js
+src/providers/
+src/providers/xaiProvider.js
+src/providers/googleProvider.js
+src/providers/nativeProvider.js
+src/providers/index.js
+src/providers/bytedanceProvider.js
+src/providers/openaiProvider.js
+src/config/
+src/config/db.js
+src/config/modelsRegistry.js
+src/middleware/
+src/middleware/errorHandler.js
+src/middleware/auth.js
+src/models/
+src/models/User.js
+src/models/Creation.js
+src/models/Template.js
+src/data/
+src/data/seed.js
+src/server.js
+src/routes/
+src/routes/models.routes.js
+src/routes/auth.routes.js
+src/routes/templates.routes.js
+src/routes/generation.routes.js
+src/routes/explore.routes.js
+src/routes/home.routes.js
+README.md
+.gitignore
+package.json
+.env.example

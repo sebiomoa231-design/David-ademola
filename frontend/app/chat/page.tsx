@@ -1,1 +1,5 @@
-import { ConversationView } from "@/components/chat/ConversationView"; export default function ChatPage(){return <ConversationView/>}
+import DavidCommandCenter from "@/components/david-command-center";
+
+export default function ChatPage() {
+  return <DavidCommandCenter initialRoute="chat" />;
+}

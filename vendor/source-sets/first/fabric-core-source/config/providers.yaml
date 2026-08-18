@@ -1,0 +1,17 @@
+providers:
+  - id: gemini
+    env_key: GEMINI_API_KEY
+  - id: groq
+    env_key: GROQ_API_KEY
+  - id: openrouter
+    env_key: OPENROUTER_API_KEY
+  - id: cloudflare
+    env_key: CLOUDFLARE_API_KEY
+  - id: cerebras
+    env_key: CEREBRAS_API_KEY
+  - id: sambanova
+    env_key: SAMBANOVA_API_KEY
+  - id: huggingface
+    env_key: HUGGINGFACE_API_KEY
+  - id: openai
+    env_key: OPENAI_API_KEY

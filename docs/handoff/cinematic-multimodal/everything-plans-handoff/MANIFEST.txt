@@ -1,0 +1,10 @@
+DAVID AI — EVERYTHING PLANS FULL HANDOFF
+
+Contents:
+1. Master consolidated roadmap and future-build plan.
+2. Retrieved David AI master prompt documents.
+3. Frontend/Creative/AI Core direction contained in those documents.
+4. Provider, memory, agents, automation, video, website, voice, publishing, security, persistence and deployment plans.
+5. Explicit distinction between planned and verified functionality.
+
+No API keys or secret values are included.

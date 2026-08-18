@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 
-router = APIRouter(prefix="/api/orchestrator", tags=["orchestrator"])
+router = APIRouter(prefix="/orchestrator", tags=["orchestrator"])
 
 
 class OrchestratorRequest(BaseModel):
