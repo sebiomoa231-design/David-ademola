@@ -3,4 +3,4 @@ set -euo pipefail
 
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
-python scripts/download_piper_voice.py
+python -m compileall -q app david_fabric *.py

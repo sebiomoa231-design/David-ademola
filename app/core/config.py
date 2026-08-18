@@ -52,6 +52,12 @@ class Settings(BaseSettings):
     provider_max_retries: int = 1
     provider_health_timeout_seconds: int = 10
 
+    # Agent runtime guardrails. Keep execution bounded and observable in every environment.
+    agent_max_goal_chars: int = 12000
+    agent_max_steps: int = 8
+    agent_max_retries: int = 1
+    agent_history_limit: int = 100
+
     openai_api_key: str = ""
     openai_api_base_url: str = "https://api.openai.com/v1"
     openai_model: str = "gpt-5.3-mini"
@@ -97,6 +103,7 @@ class Settings(BaseSettings):
     elevenlabs_model: str = "eleven_multilingual_v2"
     elevenlabs_stt_model: str = "scribe_v1"
     elevenlabs_voice_id: str = "5hZv9mAOcmcMt1TxA5Iz"
+    elevenlabs_voice_style: str = "British, deep male, JARVIS-style"
 
     runway_api_key: str = ""
     runway_api_base_url: str = "https://api.dev.runwayml.com/v1"
@@ -140,19 +147,6 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("HUGGINGFACE_API_KEY", "Huggingface_key"),
     )
     huggingface_model: str = "openai/gpt-oss-120b:cerebras"
-
-    # Piper TTS. The large ONNX model is intentionally not committed to
-    # GitHub; build.sh downloads it from the official Piper voices repo.
-    piper_executable: str = "piper"
-    piper_voice_model: str = str(PROJECT_ROOT / "voices" / "en_US-ryan-high.onnx")
-    piper_voice_url: str = (
-        "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/"
-        "en/en_US/ryan/high/en_US-ryan-high.onnx"
-    )
-    piper_voice_config_url: str = (
-        "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/"
-        "en/en_US/ryan/high/en_US-ryan-high.onnx.json"
-    )
 
     # Owner configuration. Never put a real password in source control.
     owner_email: str = ""

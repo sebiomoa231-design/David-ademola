@@ -25,13 +25,13 @@ capabilities:
     agent: voice-agent
     skill: speech-synthesis
     tool: voice-router
-    provider: david-voice-backend
+    provider: elevenlabs
     runtime: python-fastapi
     inputs: [text, voice, language]
     outputs: [audio]
     permissions: [read]
     fallbacks: [voice]
-    keywords: [voice, tts, speech, ryan]
+    keywords: [voice, tts, speech, british, jarvis]
 
   - id: creative-backend
     name: David Creative Backend

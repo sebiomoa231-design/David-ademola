@@ -3,7 +3,7 @@
 Unified voice engine providing TTS (ElevenLabs) and STT capabilities.
 Uses the British JARVIS-style deep male voice (Voice ID: 5hZv9mAOcmcMt1TxA5Iz).
 
-This replaces the previous Piper TTS (Ryan voice) implementation.
+This is the active ElevenLabs voice implementation for David AI.
 ElevenLabs multilingual v2 model supports both English and Yoruba natively.
 """
 from __future__ import annotations
@@ -173,7 +173,7 @@ class VoiceEngine:
         """Synthesize text to speech using ElevenLabs.
 
         The multilingual v2 model supports both English and Yoruba natively,
-        so no language-based rejection is needed (unlike the old Piper engine).
+        so no language-based rejection is needed.
 
         Args:
             text: Text to convert to speech.

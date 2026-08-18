@@ -1,5 +1,6 @@
 import type {
   Adapter,
+  AgentRun,
   AssetItem,
   BackendHealth,
   Capability,
@@ -86,6 +87,14 @@ export const api = {
   health: () => requestAnyPath<BackendHealth>(["/api/health", "/health"]),
   chat: (message: string, conversationId?: string) =>
     request<ChatResponse>("/api/chat", json({ message, conversation_id: conversationId })),
+  agents: {
+    list: () => request<Array<{ name: string; description: string; capabilities: string[] }>>("/api/agents"),
+    dispatch: (agentName: string, goal: string, background = true) =>
+      request<AgentRun>("/api/agents/dispatch", json({ agent_name: agentName, goal, background })),
+    runs: (limit = 20) => request<AgentRun[]>(`/api/agents/runs?limit=${Math.max(1, Math.min(limit, 100))}`),
+    run: (runId: string) => request<AgentRun>(`/api/agents/runs/${encodeURIComponent(runId)}`),
+    cancel: (runId: string) => request<AgentRun>(`/api/agents/runs/${encodeURIComponent(runId)}/cancel`, { method: "POST" }),
+  },
   voiceStatus: () => request<VoiceStatus>("/api/voice/status"),
   synthesize: (text: string, languageMode = "AUTO") =>
     request<{

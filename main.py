@@ -14,9 +14,14 @@ settings = get_settings()
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    from agents import manager as agent_manager
+
     log_startup()
-    yield
-    log_shutdown()
+    try:
+        yield
+    finally:
+        await agent_manager.shutdown()
+        log_shutdown()
 
 
 app = FastAPI(
