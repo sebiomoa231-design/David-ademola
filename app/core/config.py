@@ -103,9 +103,11 @@ class Settings(BaseSettings):
     elevenlabs_api_key: str = ""
     elevenlabs_api_base_url: str = "https://api.elevenlabs.io/v1"
     elevenlabs_model: str = "eleven_multilingual_v2"
-    elevenlabs_stt_model: str = "scribe_v1"
+    elevenlabs_stt_model: str = "scribe_v2"
     elevenlabs_voice_id: str = "5hZv9mAOcmcMt1TxA5Iz"
     elevenlabs_voice_style: str = "British, deep male, JARVIS-style"
+    elevenlabs_speech_engine_id: str = ""
+    elevenlabs_speech_engine_public_ws_url: str = ""
 
     runway_api_key: str = ""
     runway_api_base_url: str = "https://api.dev.runwayml.com/v1"

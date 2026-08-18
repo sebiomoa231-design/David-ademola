@@ -1,7 +1,7 @@
 import base64
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.core.config import get_settings
 from app.providers.elevenlabs_tts import ElevenLabsSTTClient, ElevenLabsTTSClient
@@ -45,6 +45,11 @@ class TranscribeRequest(BaseModel):
     audio_base64: str
     language: str | None = None
     audio_format: str = "webm"
+    tag_audio_events: bool = True
+    diarize: bool = False
+    timestamps_granularity: str | None = "word"
+    keyterms: list[str] = Field(default_factory=list, max_length=100)
+    num_speakers: int | None = None
 
 
 @router.get("/status")
@@ -76,7 +81,28 @@ async def transcribe(payload: TranscribeRequest) -> dict[str, object]:
     extension = payload.audio_format.lower().replace("audio/", "").split(";")[0] or "webm"
     if extension not in {"webm", "wav", "mp3", "ogg", "m4a", "mp4"}:
         extension = "webm"
-    result = await engine.transcribe(audio_bytes, language_mode, filename=f"audio.{extension}")
+    result = await engine.transcribe(
+        audio_bytes,
+        language_mode,
+        filename=f"audio.{extension}",
+        tag_audio_events=payload.tag_audio_events,
+        diarize=payload.diarize,
+        timestamps_granularity=payload.timestamps_granularity,
+        keyterms=payload.keyterms,
+        num_speakers=payload.num_speakers,
+    )
     if not result.text and result.provider == "none":
         raise HTTPException(status_code=503, detail="Speech-to-text provider is not configured")
-    return {"text": result.text, "language": result.language, "confidence": result.confidence, "provider": result.provider}
+    response: dict[str, object] = {
+        "text": result.text,
+        "language": result.language,
+        "confidence": result.confidence,
+        "provider": result.provider,
+    }
+    if isinstance(result.raw, dict):
+        response.update({
+            "words": result.raw.get("words", []),
+            "audio_events": result.raw.get("audio_events", []),
+            "language_probability": result.raw.get("language_probability"),
+        })
+    return response

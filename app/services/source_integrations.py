@@ -115,6 +115,91 @@ SOURCE_PACKS: tuple[dict[str, Any], ...] = (
             "src/routes/automations.tsx",
         ],
     },
+    {
+        "id": "elevenlabs-python",
+        "name": "ElevenLabs Python SDK",
+        "repository": "https://github.com/elevenlabs/elevenlabs-python",
+        "family": "Official Python SDK",
+        "adapted_capabilities": [
+            "server-side voice search",
+            "sound-effect generation",
+            "speech-to-speech conversion",
+            "advanced Scribe transcription metadata",
+        ],
+        "integration_boundary": "Only the server-side SDK adapter is used; the ElevenLabs API key remains backend-only.",
+        "source_files": [
+            "src/elevenlabs/client.py",
+            "src/elevenlabs/voices/client.py",
+            "src/elevenlabs/text_to_sound_effects/client.py",
+            "src/elevenlabs/speech_to_speech/client.py",
+            "src/elevenlabs/speech_to_text/client.py",
+        ],
+    },
+    {
+        "id": "elevenlabs-mcp",
+        "name": "ElevenLabs MCP Server",
+        "repository": "https://github.com/elevenlabs/elevenlabs-mcp",
+        "family": "Official MCP capability server",
+        "adapted_capabilities": [
+            "voice capability inventory",
+            "server-side output and credential boundaries",
+            "audio-processing capability mapping",
+        ],
+        "integration_boundary": "Used as a capability reference; the standalone MCP process is not embedded in David's FastAPI runtime.",
+        "source_files": [
+            "elevenlabs_mcp/server.py",
+            "elevenlabs_mcp/model.py",
+            "elevenlabs_mcp/utils.py",
+        ],
+    },
+    {
+        "id": "elevenlabs-skills",
+        "name": "ElevenLabs Skills",
+        "repository": "https://github.com/elevenlabs/skills",
+        "family": "Official capability guidance",
+        "adapted_capabilities": [
+            "TTS streaming and voice settings guidance",
+            "Scribe transcription and realtime guidance",
+            "Speech Engine security boundaries",
+        ],
+        "integration_boundary": "Documentation is adapted into API contracts and validation; the skill runtime is not copied into production.",
+        "source_files": [
+            "text-to-speech/SKILL.md",
+            "speech-to-text/SKILL.md",
+            "speech-engine/SKILL.md",
+        ],
+    },
+    {
+        "id": "elevenlabs-examples",
+        "name": "ElevenLabs Examples",
+        "repository": "https://github.com/elevenlabs/examples",
+        "family": "Official implementation examples",
+        "adapted_capabilities": [
+            "server-side TTS/STT integration patterns",
+            "realtime voice workflow references",
+        ],
+        "integration_boundary": "Examples are reference material only; unrelated demo applications and frontend shells are not copied.",
+        "source_files": [
+            "text-to-speech/python/quickstart/example",
+            "speech-to-text/python/quickstart/example",
+            "speech-engine/nextjs/quickstart/example",
+        ],
+    },
+    {
+        "id": "elevenlabs-client-tooling",
+        "name": "ElevenLabs Client Tooling",
+        "repository": "https://github.com/elevenlabs/cli",
+        "family": "CLI and SDK ecosystem references",
+        "adapted_capabilities": [
+            "integration boundary reference",
+            "developer workflow compatibility",
+        ],
+        "integration_boundary": "CLI, Swift SDK, and monorepo package tooling are reference-only and are not copied into the Python backend.",
+        "source_files": [
+            "https://github.com/elevenlabs/elevenlabs-swift-sdk",
+            "https://github.com/elevenlabs/packages",
+        ],
+    },
 )
 
 

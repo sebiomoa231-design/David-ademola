@@ -43,6 +43,7 @@ class TranscriptionResult:
     language: str
     provider: str
     confidence: float | None = None
+    raw: dict | None = None
 
 
 @dataclass
@@ -62,7 +63,7 @@ class VoiceEngine:
     deep male voice (Voice ID: 5hZv9mAOcmcMt1TxA5Iz) with the multilingual
     v2 model. This supports both English and Yoruba natively.
 
-    Speech-to-text uses ElevenLabs Scribe (scribe_v1) for transcription
+    Speech-to-text uses ElevenLabs Scribe v2 for transcription
     with automatic language detection.
 
     Language handling: AUTO is the default. English and Yoruba are the two
@@ -121,6 +122,11 @@ class VoiceEngine:
         audio_bytes: bytes,
         language_mode: LanguageMode = LanguageMode.AUTO,
         filename: str = "audio.wav",
+        tag_audio_events: bool = True,
+        diarize: bool = False,
+        timestamps_granularity: str | None = "word",
+        keyterms: list[str] | None = None,
+        num_speakers: int | None = None,
     ) -> TranscriptionResult:
         """Transcribe audio to text using ElevenLabs Scribe.
 
@@ -137,6 +143,7 @@ class VoiceEngine:
                 language=language_mode.value,
                 provider="none",
                 confidence=None,
+                raw=None,
             )
 
         # Map language mode to ISO code for ElevenLabs
@@ -151,12 +158,18 @@ class VoiceEngine:
                 audio_bytes=audio_bytes,
                 language_code=language_code,
                 filename=filename,
+                tag_audio_events=tag_audio_events,
+                diarize=diarize,
+                timestamps_granularity=timestamps_granularity,
+                keyterms=keyterms,
+                num_speakers=num_speakers,
             )
             return TranscriptionResult(
                 text=result.get("text", ""),
                 language=result.get("language_code", language_mode.value),
                 provider="elevenlabs",
                 confidence=result.get("confidence"),
+                raw=result,
             )
         except Exception as exc:
             logger.error(f"ElevenLabs STT failed: {exc}")
@@ -165,6 +178,7 @@ class VoiceEngine:
                 language=language_mode.value,
                 provider="elevenlabs",
                 confidence=None,
+                raw=None,
             )
 
     async def synthesize(

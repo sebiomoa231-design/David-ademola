@@ -155,7 +155,7 @@ class ElevenLabsSTTClient:
         base_url: Optional[str] = None,
     ) -> None:
         self.api_key = api_key or ELEVENLABS_API_KEY
-        self.model_id = model_id or os.getenv("ELEVENLABS_STT_MODEL", "scribe_v1")
+        self.model_id = model_id or os.getenv("ELEVENLABS_STT_MODEL", "scribe_v2")
         self.base_url = (base_url or ELEVENLABS_API_BASE).rstrip("/")
 
     def is_configured(self) -> bool:
@@ -167,6 +167,11 @@ class ElevenLabsSTTClient:
         audio_bytes: bytes,
         language_code: Optional[str] = None,
         filename: str = "audio.wav",
+        tag_audio_events: bool = True,
+        diarize: bool = False,
+        timestamps_granularity: Optional[str] = "word",
+        keyterms: Optional[list[str]] = None,
+        num_speakers: Optional[int] = None,
     ) -> dict:
         """Transcribe audio using ElevenLabs Scribe API.
 
@@ -198,9 +203,19 @@ class ElevenLabsSTTClient:
             content_type = "audio/ogg"
 
         files = {"file": (filename, audio_bytes, content_type)}
-        data = {"model_id": self.model_id}
+        data = {
+            "model_id": self.model_id,
+            "tag_audio_events": str(tag_audio_events).lower(),
+            "diarize": str(diarize).lower(),
+        }
         if language_code:
             data["language_code"] = language_code
+        if timestamps_granularity:
+            data["timestamps_granularity"] = timestamps_granularity
+        if keyterms:
+            data["keyterms"] = keyterms
+        if num_speakers is not None:
+            data["num_speakers"] = str(num_speakers)
 
         async with httpx.AsyncClient(timeout=60.0) as client:
             try:
