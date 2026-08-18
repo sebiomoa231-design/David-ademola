@@ -38,12 +38,14 @@ export function writeDavidSettings(settings: DavidSettings): void {
   window.localStorage.setItem(DAVID_SETTINGS_STORAGE_KEY, JSON.stringify(settings));
 }
 
-export type DavidOSState = "idle" | "listening" | "thinking" | "speaking" | "error";
+export type DavidOSState = "idle" | "listening" | "thinking" | "generating_audio" | "speaking" | "success" | "error";
 
 export const davidStateCopy: Record<DavidOSState, { label: string; detail: string; action: string }> = {
   idle: { label: "IDLE / STANDBY", detail: "System is calm and waiting.", action: "NO ACTIVE TASK" },
   listening: { label: "LISTENING", detail: "Microphone active. Listening to user.", action: "VOICE INPUT" },
   thinking: { label: "PROCESSING / THINKING", detail: "Analyzing request and preparing response.", action: "ANALYZING REQUEST" },
-  speaking: { label: "RESPONSE READY", detail: "Answer or result is ready.", action: "RESPONDING" },
+  generating_audio: { label: "GENERATING AUDIO", detail: "Requesting real server-side voice output.", action: "GENERATING AUDIO" },
+  speaking: { label: "SPEAKING", detail: "Playing verified David voice output.", action: "SPEAKING" },
+  success: { label: "SUCCESS / COMPLETE", detail: "Voice output finished successfully.", action: "AUDIO COMPLETE" },
   error: { label: "SYSTEM ALERT", detail: "Voice service needs attention.", action: "CHECK CONNECTION" },
 };

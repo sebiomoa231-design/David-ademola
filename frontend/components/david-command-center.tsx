@@ -394,7 +394,19 @@ export default function DavidCommandCenter({ initialRoute = "dashboard" }: { ini
 
 function VoiceHUD({ voice }: { voice: ReturnType<typeof useVoiceOS> }) {
   const active = voice.state !== "idle";
-  const label = voice.state === "listening" ? "LISTENING" : voice.state === "thinking" ? "PROCESSING" : voice.state === "speaking" ? "SPEAKING" : voice.state === "error" ? "VOICE ERROR" : "STANDBY";
+  const label = voice.state === "listening"
+    ? "LISTENING"
+    : voice.state === "thinking"
+      ? "PROCESSING"
+      : voice.state === "generating_audio"
+        ? "GENERATING AUDIO"
+        : voice.state === "speaking"
+          ? "SPEAKING"
+          : voice.state === "success"
+            ? "SUCCESS"
+            : voice.state === "error"
+              ? "VOICE ERROR"
+              : "STANDBY";
   return (
     <div className={cx("voice-os-hud", `voice-state-${voice.state}`)} data-state={voice.state}>
       <div className="voice-core-mini" style={{ transform: `scale(${1 + voice.volume * 0.22})` }} aria-hidden="true">
@@ -460,14 +472,14 @@ function OperatingSystemView({ voice, connected, preferences, onPreferenceChange
       <div className="os-reference-axis" />
       <div className="os-reference-core" style={{ transform: `translate(-50%, -50%) scale(${1 + voice.volume * 0.18})` }}><span className="os-reference-ticks">{Array.from({ length: 12 }, (_, index) => <i key={index} style={{ transform: `rotate(${index * 30}deg)` }} />)}</span><span className="os-core-orbit os-orbit-a" /><span className="os-core-orbit os-orbit-b" /><span className="os-core-orbit os-orbit-c" /><span className="os-reference-ring ring-one" /><span className="os-reference-ring ring-two" /><span className="os-reference-ring ring-three" /><span className="os-reference-sphere" /><span className="os-core-nucleus" /></div>
       <div className="os-reference-readout"><span>DAVID AI</span><strong>{stateConfig.label}</strong><small>{stateConfig.detail}{preferences.quietMode ? " · QUIET MODE" : ""}</small><em>{voice.activeAction || stateConfig.action}</em></div>
-      {(voice.state === "listening" || voice.state === "speaking") && <div className="os-reference-waveform" aria-label="Voice activity waveform">{waveform.map((height, index) => <i key={index} style={{ height: `${Math.max(4, height * (voice.state === "listening" ? 34 + voice.volume * 42 : 24))}px` }} />)}</div>}
+      {(voice.state === "listening" || voice.state === "generating_audio" || voice.state === "speaking") && <div className="os-reference-waveform" aria-label="Voice activity waveform">{waveform.map((height, index) => <i key={index} style={{ height: `${Math.max(4, height * (voice.state === "listening" ? 34 + voice.volume * 42 : 24 + voice.volume * 46))}px` }} />)}</div>}
       {voice.state === "listening" && <div className="os-video-state-card os-listening-card"><span>MICROPHONE ACTIVE</span><p>{voice.interimTranscript || voice.transcript || "Listening for your command..."}</p></div>}
       {isExecuting && <div className="os-video-state-card os-executing-card"><span>OPENING DAVID WORKSPACE</span><strong>ACTION IN PROGRESS</strong><div><i /></div></div>}
       {voice.response && <div className="os-video-state-card os-response-card"><p>{voice.response}</p><button className="os-card-clear" onClick={voice.clearTranscript}><Trash2 size={13} /> Clear transcript</button></div>}
       {(voice.transcript || voice.interimTranscript) && voice.state !== "listening" && <div className="os-transcript-panel"><span className="micro-label">LIVE TRANSCRIPT</span>{voice.transcript && <p><em>YOU</em> {voice.transcript}</p>}{voice.interimTranscript && !voice.transcript && <p><em>LISTENING</em> {voice.interimTranscript}</p>}<button className="text-button" onClick={voice.clearTranscript}><Trash2 size={13} /> Delete transcript</button></div>}
       <div className="os-reference-bottom"><span>{clock}</span><span>ACTIVE TASK: {voice.activeAction || "NONE"}</span><span>MIC: {micStatus}</span><span>NETWORK: {networkStatus}</span><span>SYSTEM: OPTIMAL</span></div>
     </div>
-    <div className="os-controls"><button className="button button-primary" onClick={voice.state === "speaking" ? voice.cancel : voice.toggle} disabled={voice.state === "thinking"}><Mic size={16} />{voice.state === "listening" ? "Stop & process" : voice.state === "speaking" ? "Stop speaking" : "Talk to David"}</button><button className="button button-secondary" onClick={voice.isPaused ? voice.resume : voice.pause} disabled={!voice.isSpeaking}><Pause size={16} />{voice.isPaused ? "Resume" : "Pause"}</button><button className="button button-secondary" onClick={() => void voice.replay()} disabled={!voice.response}><Play size={16} />Replay</button><button className="button button-secondary" onClick={voice.cancel} disabled={voice.state === "idle"}><X size={16} />Cancel</button><button className="button button-secondary" onClick={() => onNavigate("agents")}><Bot size={16} />Open sub-agents</button><button className="button button-secondary" onClick={() => onNavigate("chat")}><MessageSquare size={16} />Text fallback</button></div>
+    <div className="os-controls"><button className="button button-primary" onClick={voice.state === "speaking" || voice.state === "generating_audio" ? voice.cancel : voice.toggle} disabled={voice.state === "thinking"}><Mic size={16} />{voice.state === "listening" ? "Stop & process" : voice.state === "speaking" || voice.state === "generating_audio" ? "Stop voice output" : "Talk to David"}</button><button className="button button-secondary" onClick={voice.isPaused ? voice.resume : voice.pause} disabled={!voice.isSpeaking}><Pause size={16} />{voice.isPaused ? "Resume" : "Pause"}</button><button className="button button-secondary" onClick={() => void voice.replay()} disabled={!voice.response}><Play size={16} />Replay</button><button className="button button-secondary" onClick={voice.cancel} disabled={voice.state === "idle"}><X size={16} />Cancel</button><button className="button button-secondary" onClick={() => onNavigate("agents")}><Bot size={16} />Open sub-agents</button><button className="button button-secondary" onClick={() => onNavigate("chat")}><MessageSquare size={16} />Text fallback</button></div>
     {voice.error && <div className="os-warning"><span className="status-tag tag-amber">VOICE WARNING</span><span>{voice.error}</span></div>}
     {voice.response && <div className="os-response panel-card"><div><span className="micro-label">RESPONSE READY</span><h2>David has returned a result.</h2><p>{voice.response}</p></div><span className="os-response-mark"><AudioLines size={18} /></span></div>}
   </div>;
