@@ -1,0 +1,1 @@
+ALTER TABLE `david_runs` ADD `planData` text;

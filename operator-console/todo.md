@@ -1,0 +1,76 @@
+# David AI implementation checklist
+
+- [x] Inventory the supplied briefs, source folders, ZIP handoffs, and reference assets.
+- [x] Identify the active project baseline and upgrade it to a backend-capable application.
+- [x] Define a typed adapter for the supplied FastAPI API contract and truthful degraded states.
+- [x] Build the David AI cinematic command center, dashboard, and responsive navigation.
+- [x] Implement chat, operator-run, projects, memory, providers, and creative workspace views.
+- [x] Add a persistent local creative-brief workspace for website, video, image, and music planning while keeping generation unavailable until a backend capability is connected.
+- [x] Add approval, activity, and health visibility without fabricating execution results.
+- [x] Implement a typed David API adapter inside the project based on the supplied contracts.
+- [x] Surface truthful degraded states for unavailable or unreachable FastAPI endpoints.
+- [x] Verify desktop and mobile layouts, save a checkpoint, and deliver implementation notes.
+- [x] Add a live server-side LLM model selection and a David AI system prompt using the supplied British JARVIS-style personality.
+- [x] Create database tables and typed procedures for David memories, projects, tasks, conversations, and agent runs.
+- [x] Implement intelligent chat with conversation context, selected memory context, plan generation, and persistent history.
+- [x] Replace unavailable workspace placeholders with functional memory, project, task, and operator-run controls.
+- [x] Bind the David core state to actual conversation and agent lifecycle events.
+- [x] Add automated tests for agent prompt composition, persistent workspace records, and successful chat behavior.
+- [x] Verify that a validated David AI Operator workspace decision persists the corresponding task record and reports the result in the completed response.
+- [x] Produce and review a multi-panel visual sequence for David AI hub states before resuming implementation.
+- [x] Integrate the approved David AI Reactive Hub State System into the command-center orb, state labels, and lifecycle feedback.
+- [x] Extract and reconcile all reusable requirements, prompts, visuals, and implementation decisions from the referenced David AI and JARVIS tasks.
+- [x] Implement a server-driven run-event state model and stream lifecycle events to the client.
+- [x] Persist ordered operator lifecycle events and drive the hub and execution interface from those authoritative events.
+- [x] Build an Operator Execution Theater that renders ordered persisted lifecycle events for each run.
+- [x] Bind the runs workspace to david_run_events and add tests for event persistence and streamed lifecycle delivery.
+- [x] Recover the exact stopping point and preserved implementation baseline from the specified David AI web-app and Agent Manus handoffs.
+- [x] Continue the working David AI Operator from that recovered handoff baseline without introducing unrelated scope.
+- [x] Add explicit user-selected memory scoping for chat turns rather than blindly injecting recent memories.
+- [x] Generate, persist, and surface a structured plan artifact for multi-step David AI requests.
+- [x] Add tests for persistent conversation retrieval, scoped memory injection, and structured plan generation.
+- [x] Persist the David AI plan artifact as structured data and expose it through the typed run API.
+- [x] Render structured David AI plan steps explicitly in the chat, runs, and execution views.
+- [x] Render the active persisted David AI plan in the Conversation workspace and Operator Execution Theater.
+- [x] Add coverage for structured plan rendering in runs, chat, and execution views.
+- [x] Reframe the product vocabulary, system map, and command-center surfaces as David AI OS rather than a conventional website or web app.
+- [x] Build an AI OS system shell that presents orchestration, memory, plans, actions, and runtime surfaces as operating-system modules.
+- [x] Define backend-ready service connection contracts, required capabilities, and transparent unavailable states for user-provided services.
+- [x] Verify the reframed David AI OS experience at desktop and mobile breakpoints.
+- [x] Inspect the user-provided GitHub repository and Render deployment as the authoritative David AI backend source after receiving the requested integration scope.
+- [x] Inspect the provided GitHub and Render backend for voice input, transcription, speech output, runtime, and provider contracts.
+- [x] Define David AI OS voice interaction states, including listening, transcribing, reasoning, speaking, interrupted, and degraded modes.
+- [x] Implement microphone capture, backend-backed speech-to-text, text-to-speech playback, and hub reactions for David AI OS.
+- [x] Expose clear voice-service readiness, permission, and failure states without misrepresenting unavailable backend capabilities.
+- [x] Audit the user-provided GitHub repository for the real operator runtime, database, API, voice, TTS, STT, and required environment-variable contracts.
+- [x] Reframe all product language, navigation, and system states as David AI Operator rather than an AI agent, website, or conventional app.
+- [x] Configure secure project environment variables for the approved Render backend and user-provided keys without hardcoding secrets.
+- [ ] Connect David AI Operator to the authoritative backend database and persistent data model documented in the GitHub source.
+- [ ] Prepare and execute the authoritative David backend Render deployment, then verify its persistence, policy, task, memory, provider, and audit routes before switching the operator contract.
+- [ ] Commit and push the approved authoritative backend deployment changes to the existing sebiomoa231-design/David-ademola repository without creating a new repository.
+- [ ] Copy the approved David AI Operator integration and deployment handoff files into David-ademola, then commit and push them to the existing GitHub repository.
+- [x] Implement the interactive operator voice surface with microphone permission, STT, speech playback, Kenny voice output, interruption, and reactive system states.
+- [ ] Complete the user-supplied Cinematic JARVIS-Inspired Operating-System build prompt after the David AI Operator runtime and voice layer are functional.
+- [ ] Deploy the audited GitHub backend operating-system, persistence, policy, task, memory, provider, and audit routes to Render before treating those live contracts as available in David AI Operator.
+- [ ] Keep the supplied cinematic interface prompt deferred until the authoritative backend persistence foundation is complete, while applying only verified presentation-layer controls.
+- [x] Remove the hardcoded Render backend fallback and require an explicit server-side David AI Operator backend configuration.
+- [x] Document which secrets remain hosted only on Render and which connection variables belong in the David AI Operator project.
+- [x] Add usable reduced-motion, high-contrast, quiet-mode, accent, and layout controls to the cinematic David AI Operator shell.
+- [x] Add a truthful lower telemetry strip that reflects real time, voice state, selected task/run context, and service health.
+- [x] Add explicit cancelled and degraded voice states, then wire interruption feedback into the David AI Operator hub.
+- [x] Add an explicit reasoning state to the David AI Operator voice/runtime model and bridge it into hub feedback.
+- [x] Analyse the supplied orchestration-interface video and apply only its original, reusable interaction and visual patterns to David AI Operator.
+- [x] Enter and exit the explicit reasoning state during the live conversation lifecycle, with matching hub and voice-surface feedback.
+- [x] Add focused automated coverage for the David AI Operator reasoning-state lifecycle.
+- [x] Exercise the explicit reasoning entry and exit transitions in the David AI Operator voice runtime test.
+- [x] Cover the live David AI Operator request flow entering reasoning, updating hub feedback, and exiting reasoning on completion or failure.
+- [x] Add SSE success and failure integration coverage for the David AI Operator request controller, including reasoning entry, hub feedback, and reasoning exit.
+- [x] Add view-level assertions that persisted plans appear in Conversation, run history, and Operator Execution Theater surfaces.
+- [x] Add transcript management, current-task access, notification access, and safe confirmation flows without representing unavailable external actions as completed.
+- [x] Add persisted current-task access and a clearly labelled local activity-notification surface without claiming an unavailable external notification service.
+- [x] Add focused UI-state coverage for transcript clearing, safe memory removal, current-task access, and local activity-notification access.
+- [x] Add David AI Operator demo-mode handling that is visibly labelled and never presented as a live external capability.
+- [x] Display a persistent demo-mode label in the David AI Operator shell whenever the local presentation preference is enabled.
+- [x] Add focused UI coverage proving the demo-mode label is visible while live external-service readiness remains evidence-based.
+- [x] Add Home-shell integration coverage confirming demo mode displays a persistent label without changing the status-derived external-service signal.
+- [x] Add an integrated Home-shell status-mapping assertion for ready, degraded, and checking external-service states with demo mode enabled.
