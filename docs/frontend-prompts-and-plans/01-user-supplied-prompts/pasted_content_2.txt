@@ -1,0 +1,755 @@
+# DAVID AI — MASTER FRONTEND CONNECTION & INTEGRATION DIRECTIVE
+# CONNECT EXISTING FRONTEND → GITHUB → RENDER BACKEND → SUPABASE
+# NON-DESTRUCTIVE — DO NOT CREATE DUPLICATE INFRASTRUCTURE
+
+You are continuing the EXISTING David AI project.
+
+DO NOT create a new David AI project.
+DO NOT create a new GitHub repository.
+DO NOT create a new Render service.
+DO NOT create a new Supabase project.
+DO NOT replace the existing backend.
+DO NOT replace the existing database.
+DO NOT create duplicate infrastructure.
+
+Your job is to connect and fully integrate the EXISTING David AI frontend with the existing backend, GitHub repository, Render deployment, PostgreSQL database, and Supabase Storage.
+
+==================================================
+1. EXISTING PROJECT LINKS
+==================================================
+
+GITHUB REPOSITORY:
+
+https://github.com/sebioma231-design/David-ademola
+
+EXISTING RENDER BACKEND:
+
+https://david-ademola.onrender.com
+
+RENDER DASHBOARD:
+
+https://dashboard.render.com/
+
+SUPABASE PROJECT:
+
+https://supabase.com/dashboard/project/yvkylmxvikffkyhxqesh
+
+SUPABASE API SETTINGS:
+
+https://supabase.com/dashboard/project/yvkylmxvikffkyhxqesh/settings/api-keys
+
+SUPABASE PROJECT URL:
+
+https://yvkylmxvikffkyhxqesh.supabase.co
+
+SUPABASE STORAGE:
+
+Existing private bucket:
+
+Davidai
+
+SUPABASE SQL EDITOR:
+
+https://supabase.com/dashboard/project/yvkylmxvikffkyhxqesh/sql/new
+
+==================================================
+2. GITHUB — EXISTING REPOSITORY ONLY
+==================================================
+
+Work inside:
+
+https://github.com/sebioma231-design/David-ademola
+
+Inspect the repository first.
+
+Determine:
+
+- current frontend location
+- current backend location
+- frontend framework
+- Next.js version
+- React version
+- API client
+- environment configuration
+- current routes
+- existing components
+- existing deployment configuration
+
+Preserve existing functionality.
+
+Do NOT create another repository.
+
+Do NOT fork the project.
+
+Do NOT create a duplicate application.
+
+All frontend changes must be committed to the existing repository.
+
+==================================================
+3. RENDER — EXISTING BACKEND ONLY
+==================================================
+
+The existing backend URL is:
+
+https://david-ademola.onrender.com
+
+The frontend must use this backend.
+
+Set the frontend public API configuration to:
+
+NEXT_PUBLIC_API_URL=https://david-ademola.onrender.com
+
+Do NOT hardcode this in multiple components.
+
+Use one centralized API configuration.
+
+Verify:
+
+GET https://david-ademola.onrender.com/api/health
+
+Then verify:
+
+GET https://david-ademola.onrender.com/api/library/status
+
+Do NOT create a new Render service.
+
+Do NOT create another backend.
+
+Do NOT change the backend architecture unless absolutely required for frontend integration.
+
+==================================================
+4. SUPABASE — EXISTING PROJECT ONLY
+==================================================
+
+Use the existing Supabase project:
+
+https://supabase.com/dashboard/project/yvkylmxvikffkyhxqesh
+
+Project URL:
+
+https://yvkylmxvikffkyhxqesh.supabase.co
+
+Existing database and Storage infrastructure are already configured.
+
+Existing David AI tables include:
+
+david_projects
+david_tasks
+david_memories
+david_conversations
+david_messages
+david_assets
+david_generations
+david_favorites
+
+Existing private Storage bucket:
+
+Davidai
+
+Do NOT create duplicate tables.
+
+Do NOT create another bucket.
+
+Do NOT create another Supabase project.
+
+==================================================
+5. CRITICAL SECURITY RULE
+==================================================
+
+NEVER put the Supabase secret/service-role key into frontend code.
+
+NEVER place it in:
+
+NEXT_PUBLIC_ variables
+React code
+browser JavaScript
+GitHub
+Dockerfile
+public files
+client-side API requests
+
+The Supabase secret must remain SERVER-SIDE inside the David AI backend/Render environment.
+
+The frontend should communicate with:
+
+FRONTEND
+   ↓
+DAVID AI BACKEND
+   ↓
+SUPABASE
+
+NOT:
+
+FRONTEND
+   ↓
+SUPABASE SERVICE ROLE KEY
+
+==================================================
+6. FRONTEND → BACKEND
+==================================================
+
+Connect the frontend to:
+
+https://david-ademola.onrender.com
+
+Use the existing backend API wherever available.
+
+Inspect the backend before creating new frontend API calls.
+
+Existing API functionality includes:
+
+/api/health
+/api/chat
+/api/memory
+/api/projects
+/api/projects/tasks
+/api/website/generate
+/api/library/status
+
+Also inspect the backend for:
+
+- asset upload
+- asset listing
+- signed URLs
+- generation history
+- favorites
+- project assets
+- conversations
+- memories
+- tasks
+- Storage operations
+
+Reuse existing APIs.
+
+Do NOT invent API response formats.
+
+==================================================
+7. FRONTEND → DATABASE
+==================================================
+
+The frontend should NOT directly manipulate the private PostgreSQL database.
+
+The correct architecture is:
+
+David AI Frontend
+        ↓
+Render FastAPI Backend
+        ↓
+Supabase PostgreSQL
+        ↓
+Supabase Storage
+
+When the frontend creates a project:
+
+Frontend
+→ Backend
+→ david_projects
+
+When the frontend saves memory:
+
+Frontend
+→ Backend
+→ david_memories
+
+When the frontend creates a conversation:
+
+Frontend
+→ Backend
+→ david_conversations
+→ david_messages
+
+When an asset is generated:
+
+Frontend
+→ Backend
+→ AI provider
+→ Supabase Storage
+→ david_assets
+→ david_generations
+
+==================================================
+8. LIBRARY INTEGRATION
+==================================================
+
+Connect the frontend Library to the existing David AI backend.
+
+The Library must show persistent assets from Supabase.
+
+Support:
+
+Images
+Videos
+Audio
+Voice
+Artwork
+Websites
+Documents
+Other supported assets
+
+Support:
+
+- search
+- filtering
+- favorites
+- project assignment
+- preview
+- download
+- rename
+- delete
+- generation history
+
+Private Storage objects must be displayed using backend-generated signed URLs.
+
+Do NOT make the Davidai bucket public simply to make the frontend work.
+
+==================================================
+9. PROJECT INTEGRATION
+==================================================
+
+Connect the frontend Projects section to the existing backend.
+
+Projects must persist.
+
+Each project can contain:
+
+- conversations
+- memories
+- tasks
+- images
+- videos
+- audio
+- artwork
+- websites
+- documents
+- generated assets
+
+When a user selects a project before generating content, associate the resulting asset with that project whenever the backend supports it.
+
+==================================================
+10. MEMORY INTEGRATION
+==================================================
+
+Connect the frontend Memory interface to the existing backend.
+
+Memory must persist through:
+
+david_memories
+
+Support:
+
+- viewing memories
+- searching memories
+- categories
+- importance where available
+- confidence where available
+- deleting/forgetting memories
+
+Do not expose database credentials.
+
+==================================================
+11. CHAT INTEGRATION
+==================================================
+
+Connect the David AI Chat interface to:
+
+https://david-ademola.onrender.com/api/chat
+
+Chat must use the real backend.
+
+Preserve conversation history.
+
+Where supported, connect conversations to:
+
+david_conversations
+david_messages
+
+Generated assets should be linked to the appropriate conversation/project when supported.
+
+==================================================
+12. CREATIVE SUITE INTEGRATION
+==================================================
+
+Connect the frontend Creative Suite to the backend.
+
+Tools include:
+
+Image
+Video
+Music
+Voice
+Artwork
+Enhancer
+Editor
+Reshoot
+
+IMPORTANT:
+
+Do not pretend a model is working if the backend/provider is not actually connected.
+
+For each tool:
+
+1. inspect available backend functionality
+2. connect to the real endpoint
+3. test the request
+4. display loading state
+5. display result
+6. persist result where supported
+7. display result in Library
+8. associate with project where supported
+
+If a specific AI provider/model is not yet implemented, report exactly which backend capability is missing instead of fabricating a successful result.
+
+==================================================
+13. WEBSITE GENERATION
+==================================================
+
+Connect the existing frontend website generation interface to:
+
+/api/website/generate
+
+Generated websites must be tracked according to the existing backend architecture.
+
+If website files/assets are supported by the backend, ensure they can be persisted and displayed in the Library/Projects area.
+
+==================================================
+14. ENVIRONMENT VARIABLES
+==================================================
+
+Frontend should use only safe public variables.
+
+Example:
+
+NEXT_PUBLIC_API_URL=https://david-ademola.onrender.com
+
+Do NOT put:
+
+SUPABASE_SERVICE_ROLE_KEY
+SUPABASE_SECRET_KEY
+RENDER_API_KEY
+AI_PROVIDER_SECRET_KEYS
+
+into frontend environment variables.
+
+Backend-only secrets must remain on Render.
+
+==================================================
+15. RENDER ENVIRONMENT
+==================================================
+
+Inspect the existing Render service.
+
+Do not create a new service.
+
+Confirm the existing backend has the required server-side configuration for:
+
+SUPABASE_URL
+SUPABASE_SERVICE_ROLE_KEY
+SUPABASE_PERSISTENCE_ENABLED
+CORS_ORIGINS
+
+Do not print secret values.
+
+Only report whether variables exist/configuration is valid.
+
+==================================================
+16. CORS
+==================================================
+
+Configure the existing backend CORS allowlist so the deployed David AI frontend can communicate with:
+
+https://david-ademola.onrender.com
+
+and the actual deployed frontend domain.
+
+Do not use:
+
+allow_origins=["*"]
+
+if credentials/security require a restricted allowlist.
+
+Preserve the existing security architecture.
+
+==================================================
+17. CONNECTION TEST
+==================================================
+
+After connecting everything, test in this order:
+
+TEST 1:
+
+GET:
+
+https://david-ademola.onrender.com/api/health
+
+Expected:
+
+HTTP 200
+
+TEST 2:
+
+GET:
+
+https://david-ademola.onrender.com/api/library/status
+
+Expected:
+
+configured=true
+database_enabled=true
+migration_required=false
+
+TEST 3:
+
+Frontend → Backend chat
+
+TEST 4:
+
+Create/retrieve project
+
+TEST 5:
+
+Create/retrieve memory
+
+TEST 6:
+
+Create/retrieve task
+
+TEST 7:
+
+Upload asset
+
+TEST 8:
+
+Retrieve/display asset through signed URL
+
+TEST 9:
+
+Favorite asset
+
+TEST 10:
+
+Retrieve Library
+
+TEST 11:
+
+Generate supported content
+
+TEST 12:
+
+Confirm generated asset appears in Library
+
+==================================================
+18. DO NOT BREAK SUPABASE SECURITY
+==================================================
+
+The Supabase tables currently use server-side access controls.
+
+Preserve:
+
+RLS
+private Storage
+server-side service-role access
+
+Do NOT disable RLS.
+
+Do NOT make Storage public.
+
+Do NOT expose the service-role key.
+
+==================================================
+19. FRONTEND EXPERIENCE
+==================================================
+
+The frontend should feel like:
+
+DAVID AI
+Personal AI Operating System
++
+AI Command Center
++
+Creative Studio
++
+Persistent Memory
++
+Project Workspace
++
+Universal Asset Library
+
+Maintain the existing David AI visual identity:
+
+- futuristic
+- premium
+- deep blue
+- dark
+- masculine
+- sharp
+- intelligent
+- clean
+- responsive
+
+==================================================
+20. NO DUPLICATION
+==================================================
+
+Before creating anything:
+
+SEARCH THE EXISTING REPOSITORY.
+
+If an API client already exists:
+
+USE IT.
+
+If a Library already exists:
+
+UPGRADE IT.
+
+If a Chat component already exists:
+
+UPGRADE IT.
+
+If a Project component exists:
+
+UPGRADE IT.
+
+If a Memory component exists:
+
+UPGRADE IT.
+
+If a backend endpoint already exists:
+
+USE IT.
+
+Do not create:
+
+api2
+backend2
+library2
+chat2
+supabase2
+render2
+
+==================================================
+21. GITHUB WORKFLOW
+==================================================
+
+After implementation:
+
+Run:
+
+TypeScript check
+Lint
+Production build
+Existing tests
+
+Fix errors.
+
+Then:
+
+git status
+
+Confirm no unintended files/secrets are present.
+
+Commit changes.
+
+Push to the existing David AI GitHub repository:
+
+https://github.com/sebioma231-design/David-ademola
+
+Do NOT force push.
+
+Do NOT delete unrelated commits.
+
+==================================================
+22. FINAL ARCHITECTURE
+==================================================
+
+The finished system must operate like this:
+
+                  DAVID AI
+                     │
+                     ▼
+                FRONTEND
+                     │
+                     ▼
+       https://david-ademola.onrender.com
+                     │
+             FASTAPI BACKEND
+                     │
+          ┌──────────┴──────────┐
+          ▼                     ▼
+    AI PROVIDERS             SUPABASE
+                                  │
+                    ┌─────────────┴─────────────┐
+                    ▼                           ▼
+              PostgreSQL                    Storage
+                    │                           │
+             Memories                      Images
+             Projects                      Videos
+             Tasks                         Audio
+             Conversations                 Voice
+             Messages                      Websites
+             Generations                   Artwork
+             Favorites                     Documents
+                    │                           │
+                    └─────────────┬─────────────┘
+                                  ▼
+                             DAVID LIBRARY
+
+==================================================
+23. FINAL COMMAND
+==================================================
+
+START NOW.
+
+First inspect the existing David AI repository.
+
+Then connect the EXISTING frontend to the EXISTING Render backend.
+
+Then verify the EXISTING Supabase database and private Storage integration through the backend.
+
+Then connect Chat, Projects, Memory, Library, Tasks, Website Generation, and all supported Creative Suite functionality.
+
+Do not create duplicate infrastructure.
+
+Do not expose secrets.
+
+Do not rebuild the application.
+
+Do not stop at a mockup.
+
+Use the existing GitHub repository.
+
+Use the existing Render service.
+
+Use the existing Supabase project.
+
+Use the existing database.
+
+Use the existing Davidai Storage bucket.
+
+Make the frontend and backend operate as ONE David AI system.
+
+Test everything.
+
+Commit everything.
+
+Push everything to the EXISTING GitHub repository.
+
+At the end, provide a complete report showing:
+
+- GitHub connection
+- Render connection
+- Supabase connection
+- database connection
+- Storage connection
+- frontend/backend connection
+- API tests
+- Library tests
+- Project tests
+- Memory tests
+- Chat tests
+- Creative Suite tests
+- TypeScript result
+- production build result
+- commit hash
+- push status
+- remaining blockers

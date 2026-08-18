@@ -1,0 +1,1 @@
+export type TaskStatus='queued'|'planned'|'authorized'|'running'|'waiting'|'validating'|'succeeded'|'failed'|'cancelled'|'blocked'|'requires_approval'; export type ProviderState='configured'|'unconfigured'|'healthy'|'degraded'|'unavailable'|'invalid'|'expired';

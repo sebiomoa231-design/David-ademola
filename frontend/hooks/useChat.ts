@@ -1,0 +1,1 @@
+import{useState}from'react';import{processAIRequest}from'@/lib/api/aiCore';export function useChat(){const[loading,setLoading]=useState(false);async function send(message:string){setLoading(true);try{return await processAIRequest(message)}finally{setLoading(false)}}return{send,loading}}

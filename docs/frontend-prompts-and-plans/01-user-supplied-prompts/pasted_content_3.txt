@@ -1,0 +1,2213 @@
+============================================================
+
+DAVID AI — PHASE 5
+
+ADVANCED INTELLIGENCE, AUTONOMY, LEARNING,
+
+SELF-IMPROVING EXECUTION & PERSONAL AI OPERATING SYSTEM
+
+============================================================
+
+STATUS
+
+PHASE 5 — ADVANCED INTELLIGENCE / AUTONOMY IMPLEMENTATION
+
+This phase follows the previous David AI phases covering:
+
+- backend architecture;
+- Intelligence Fabric;
+- multi-agent architecture;
+- frontend Command Center;
+- production execution;
+- integrations;
+- security;
+- observability;
+- verification;
+- deployment preparation.
+
+Phase 5 must NOT rebuild the system from scratch.
+
+Phase 5 must build directly on the current David AI architecture.
+
+The objective is to make David AI substantially more intelligent,
+adaptive, autonomous, useful, and dependable while preserving safety,
+user control, and the existing production architecture.
+
+============================================================
+
+1. PRIMARY OBJECTIVE
+   ============================================================
+
+Transform David AI from a production-capable multi-agent system into a
+genuinely advanced PERSONAL AI OPERATING SYSTEM.
+
+David should be able to:
+
+- understand complex intentions;
+- remember relevant context;
+- reason across projects;
+- plan long-running objectives;
+- adapt plans when reality changes;
+- delegate work intelligently;
+- coordinate specialist agents;
+- reuse successful workflows;
+- learn from completed tasks;
+- identify recurring patterns;
+- recommend next actions;
+- maintain continuity across sessions;
+- monitor long-running work;
+- recover from appropriate failures;
+- improve task strategies;
+- use tools intelligently;
+- distinguish facts from assumptions;
+- recognize uncertainty;
+- ask for clarification only when necessary;
+- know when to continue autonomously;
+- know when to pause for approval;
+- know when a task is blocked;
+- explain what it is doing;
+- explain why it chose an approach;
+- preserve user intent;
+- maintain project-level context.
+
+The goal is not uncontrolled autonomy.
+
+The goal is:
+
+HIGH CAPABILITY
++
+PERSISTENT CONTEXT
++
+ADAPTIVE PLANNING
++
+MULTI-AGENT COORDINATION
++
+SAFE AUTONOMY
++
+VERIFICATION
++
+LEARNING
++
+HUMAN CONTROL.
+
+============================================================
+2. ADVANCED PERSONAL AI MODEL
+
+David should operate using these conceptual layers:
+
+IDENTITY
+
+David knows what system it is and what responsibilities it has.
+
+CONTEXT
+
+David knows the current user, project, goal, task, environment, and
+relevant history.
+
+MEMORY
+
+David can retrieve durable information.
+
+KNOWLEDGE
+
+David can access project and research information.
+
+REASONING
+
+David can analyze problems and choose approaches.
+
+PLANNING
+
+David can create and update plans.
+
+DELEGATION
+
+David can distribute work to appropriate agents.
+
+EXECUTION
+
+David can use tools and services.
+
+OBSERVATION
+
+David can see what happened.
+
+VERIFICATION
+
+David can determine whether the result is acceptable.
+
+LEARNING
+
+David can extract useful patterns from results.
+
+POLICY
+
+David can determine what actions are allowed.
+
+APPROVAL
+
+David can ask the user before consequential actions.
+
+REPORTING
+
+David can explain the actual result.
+
+============================================================
+3. CONTINUOUS CONTEXT
+
+David must stop behaving as though every conversation begins from zero.
+
+Where authorized, maintain continuity between:
+
+- sessions;
+- conversations;
+- projects;
+- goals;
+- tasks;
+- decisions;
+- artifacts;
+- research;
+- preferences;
+- completed workflows;
+- failures;
+- successful approaches.
+
+However, do NOT load the entire historical database into every prompt.
+
+Build intelligent context selection.
+
+For each task, determine:
+
+WHAT INFORMATION IS RELEVANT?
+
+WHAT INFORMATION IS RECENT?
+
+WHAT INFORMATION IS IMPORTANT?
+
+WHAT INFORMATION IS PROJECT-SPECIFIC?
+
+WHAT INFORMATION IS PRIVATE AND SHOULD NOT BE EXPOSED?
+
+Only pass relevant authorized context to the selected agent/tool.
+
+============================================================
+4. CONTEXT HIERARCHY
+
+Create a context hierarchy such as:
+
+SYSTEM CONTEXT
+↓
+USER CONTEXT
+↓
+PROJECT CONTEXT
+↓
+GOAL CONTEXT
+↓
+TASK CONTEXT
+↓
+AGENT CONTEXT
+↓
+TOOL CONTEXT
+↓
+CURRENT EXECUTION STATE
+
+Each lower level should inherit only what it needs.
+
+Do not allow irrelevant project information to leak into unrelated
+tasks.
+
+============================================================
+5. ADVANCED MEMORY
+
+Improve memory beyond simple storage.
+
+Support:
+
+EPISODIC MEMORY
+What happened during previous tasks.
+
+SEMANTIC MEMORY
+Stable knowledge and facts.
+
+PREFERENCE MEMORY
+How the user prefers David to behave.
+
+PROJECT MEMORY
+Facts specific to a project.
+
+WORKFLOW MEMORY
+Successful procedures.
+
+DECISION MEMORY
+Important choices previously made.
+
+FAILURE MEMORY
+Known problems and approaches that failed.
+
+ARTIFACT MEMORY
+Relationships between generated artifacts.
+
+Do not automatically store every conversation.
+
+Use relevance, importance, confidence, and scope.
+
+============================================================
+6. MEMORY RECALL
+
+When a user says:
+
+"Continue the website we worked on."
+
+David should identify:
+
+- which project;
+- which website;
+- relevant previous run;
+- relevant artifacts;
+- latest version;
+- unresolved tasks;
+- decisions;
+- user preferences.
+
+When a user says:
+
+"Use the same style as the last campaign."
+
+David should retrieve the appropriate campaign context.
+
+Do not make the user repeatedly explain information already available.
+
+============================================================
+7. MEMORY SAFETY
+
+Memory must respect:
+
+- user ownership;
+- project scope;
+- privacy;
+- permissions;
+- deletion;
+- retention;
+- sensitive information controls.
+
+A deleted memory must not continue appearing as if it were still active.
+
+============================================================
+8. LONG-RUNNING GOALS
+
+David should support goals that span:
+
+hours;
+days;
+weeks;
+or longer.
+
+Examples:
+
+"Build my company website."
+
+"Manage the launch campaign."
+
+"Monitor campaign performance."
+
+"Continue improving the website."
+
+"Keep researching competitors."
+
+A long-running goal should have:
+
+- status;
+- milestones;
+- dependencies;
+- schedules;
+- active runs;
+- completed runs;
+- blockers;
+- next actions;
+- artifacts;
+- history.
+
+============================================================
+9. PLAN ADAPTATION
+
+Plans must not be static.
+
+If reality changes, David should be able to adapt.
+
+Example:
+
+Original plan:
+
+Research
+→ Website
+→ Video
+→ Deployment
+
+If the video service becomes unavailable:
+
+Research
+→ Website
+→ Alternative media workflow
+→ Deployment
+
+David should preserve completed work rather than restarting everything.
+
+When replanning, show:
+
+WHAT CHANGED
+
+WHY
+
+WHAT REMAINS VALID
+
+WHAT IS BEING REPLACED
+
+============================================================
+10. AUTONOMOUS NEXT-ACTION RECOMMENDATIONS
+
+After completing a task, David should be able to determine:
+
+"What is the most useful next action?"
+
+Example:
+
+Website completed.
+
+David may recommend:
+
+- run SEO audit;
+- test mobile;
+- add analytics;
+- create launch campaign;
+- prepare deployment;
+- create promotional video.
+
+Recommendations must be based on:
+
+- goal;
+- project state;
+- dependencies;
+- user intent;
+- available capabilities.
+
+Do not automatically execute recommendations unless policy permits it.
+
+============================================================
+11. PROACTIVE DAVID
+
+Where the user has explicitly enabled appropriate automation,
+David may monitor projects and surface relevant events.
+
+Example:
+
+"Your website build failed."
+
+"Your campaign asset is ready."
+
+"Your scheduled workflow is due."
+
+"Your provider is unavailable."
+
+"Your deployment health check failed."
+
+Do not generate meaningless notifications.
+
+============================================================
+12. SMART TASK PRIORITIZATION
+
+David should be able to rank tasks based on:
+
+- user priority;
+- deadline;
+- dependency;
+- importance;
+- urgency;
+- resource availability;
+- cost;
+- risk;
+- expected value.
+
+Do not let an unimportant task block a critical independent task.
+
+============================================================
+13. DYNAMIC RESOURCE SELECTION
+
+For a given task, David should consider:
+
+- best agent;
+- best skill;
+- best tool;
+- best provider;
+- best worker;
+- current availability;
+- cost;
+- latency;
+- risk;
+- historical performance.
+
+Do not always choose the same model or provider.
+
+Use evidence from prior performance where available.
+
+============================================================
+14. AGENT PERFORMANCE LEARNING
+
+Track useful aggregate information about agent execution.
+
+For example:
+
+- success rate;
+- common failure types;
+- average duration;
+- tool failure frequency;
+- verification score;
+- fallback frequency.
+
+Use this information to improve future selection.
+
+Do not automatically alter production behavior from one anomalous run.
+
+Use controlled thresholds.
+
+============================================================
+15. PROVIDER PERFORMANCE LEARNING
+
+Where supported, track:
+
+- response latency;
+- success rate;
+- reliability;
+- cost;
+- capability quality;
+- timeout rate;
+- quota errors;
+- failure classes.
+
+Use this to improve routing decisions.
+
+Do not infer unsupported quality claims.
+
+============================================================
+16. TOOL PERFORMANCE LEARNING
+
+Track tool reliability.
+
+Example:
+
+Browser tool:
+
+success rate
+timeout rate
+average duration
+
+Video worker:
+
+render success
+failure rate
+average duration
+
+Use this information carefully.
+
+============================================================
+17. WORKFLOW LEARNING
+
+David should remember successful workflow structures.
+
+Example:
+
+Successful launch workflow:
+
+Research
+→ Positioning
+→ Website
+→ Creative
+→ QA
+→ Approval
+→ Deployment
+
+When a similar goal appears later, David should be able to recommend
+or reuse a known-good workflow.
+
+Do not silently rewrite production workflows.
+
+Version reusable workflows.
+
+============================================================
+18. TEMPLATE WORKFLOWS
+
+Create reusable workflow templates.
+
+Examples:
+
+PRODUCT_LAUNCH
+
+WEBSITE_BUILD
+
+MARKETING_CAMPAIGN
+
+COMPETITOR_RESEARCH
+
+SEO_AUDIT
+
+CONTENT_CAMPAIGN
+
+VIDEO_PRODUCTION
+
+SOCIAL_MEDIA_CAMPAIGN
+
+WEBSITE_DEPLOYMENT
+
+PROJECT_RESEARCH
+
+The user should be able to start from a template and customize it.
+
+============================================================
+19. PLAN QUALITY IMPROVEMENT
+
+Create a feedback loop:
+
+PLAN
+
+→ EXECUTE
+
+→ VERIFY
+
+→ MEASURE
+
+→ LEARN
+
+→ IMPROVE FUTURE PLAN.
+
+Do not modify existing workflows merely because a single result was
+different.
+
+Require evidence.
+
+============================================================
+20. SELF-CRITIC / REVIEW AGENTS
+
+Introduce specialized review/critic capabilities where useful.
+
+Examples:
+
+- Plan Reviewer;
+- Research Reviewer;
+- Code Reviewer;
+- Website QA;
+- Marketing Reviewer;
+- Content Reviewer;
+- Security Reviewer.
+
+A reviewer should inspect results against defined criteria.
+
+Do not create unnecessary model calls for simple tasks.
+
+============================================================
+21. OUTPUT QUALITY CONTROL
+
+Before finalizing important outputs, David should be able to ask:
+
+Did we satisfy the requested requirements?
+
+Are required artifacts present?
+
+Are there errors?
+
+Are assumptions clearly identified?
+
+Does the result meet validation criteria?
+
+If not:
+
+revise;
+retry;
+delegate;
+or request user input.
+
+============================================================
+22. UNCERTAINTY MANAGEMENT
+
+David must distinguish:
+
+KNOWN
+
+INFERRED
+
+UNCERTAIN
+
+UNKNOWN
+
+UNVERIFIED
+
+UNAVAILABLE.
+
+Do not present guesses as facts.
+
+For important decisions, communicate uncertainty.
+
+============================================================
+23. CLARIFICATION ENGINE
+
+David should ask questions only when necessary.
+
+If a request is sufficiently clear:
+
+continue.
+
+If missing information materially affects execution:
+
+ask.
+
+Example:
+
+User:
+"Deploy the website."
+
+If there is no configured deployment target:
+
+ask:
+
+"Which deployment target should I use?"
+
+Do not ask unnecessary questions when the answer is already available in
+authorized project context.
+
+============================================================
+24. USER PREFERENCES
+
+Preserve user preferences where appropriate.
+
+Examples:
+
+- preferred writing style;
+- preferred voice;
+- preferred visual identity;
+- preferred providers;
+- preferred deployment target;
+- preferred approval behavior.
+
+Do not override explicit current instructions with old preferences.
+
+Current user instructions take precedence.
+
+============================================================
+25. MULTI-STEP REASONING CONTROL
+
+Do not expose private chain-of-thought.
+
+Expose useful summaries instead:
+
+PLAN
+
+REASON FOR CHOICE
+
+CURRENT STEP
+
+RESULT
+
+NEXT ACTION
+
+If the user asks "why did you choose this tool?", explain the relevant
+operational reason without revealing hidden chain-of-thought.
+
+============================================================
+26. ADVANCED DELEGATION
+
+David should be able to decide:
+
+"This task is too broad for one agent."
+
+Then break it into:
+
+Agent A
+Agent B
+Agent C
+Agent D.
+
+Agents should be able to work:
+
+- sequentially;
+- in parallel;
+- conditionally;
+- with dependencies.
+
+============================================================
+27. CONDITIONAL WORKFLOWS
+
+Support conditions.
+
+Example:
+
+If research confidence is high:
+continue.
+
+If research confidence is low:
+perform additional research.
+
+If website passes QA:
+prepare deployment.
+
+If website fails:
+send to Coding Agent.
+
+If video worker unavailable:
+use compatible fallback.
+
+This should be explicit workflow logic.
+
+============================================================
+28. HUMAN-IN-THE-LOOP
+
+David should know when human judgment is valuable.
+
+Examples:
+
+- ambiguous strategy;
+- high-risk deployment;
+- destructive operation;
+- financial decision;
+- legal-sensitive action;
+- uncertain external instruction.
+
+The system should pause and ask.
+
+============================================================
+29. SAFE AUTONOMY LEVELS
+
+Implement configurable autonomy levels.
+
+For example:
+
+LEVEL 0 — ASSIST
+
+David suggests.
+
+LEVEL 1 — EXECUTE SAFE INTERNAL TASKS
+
+David may perform low-risk tasks automatically.
+
+LEVEL 2 — MULTI-STEP EXECUTION
+
+David may coordinate multiple low-risk operations.
+
+LEVEL 3 — SUPERVISED EXTERNAL ACTIONS
+
+David prepares external actions but requires approval.
+
+LEVEL 4 — USER-CONFIGURED AUTOMATION
+
+David may execute explicitly authorized recurring workflows.
+
+Do not implement unrestricted autonomy.
+
+============================================================
+30. ACTION POLICIES
+
+Policies should define:
+
+- what David can do;
+- what agents can do;
+- what tools can do;
+- what requires approval;
+- what is prohibited.
+
+Policies should be versioned.
+
+============================================================
+31. SCHEDULED PERSONAL ASSISTANT
+
+Where enabled, David should support useful scheduled actions.
+
+Examples:
+
+"Every Monday, summarize my project status."
+
+"Every morning, check the campaign."
+
+"Every week, research competitors."
+
+"Monitor my deployment and alert me if it fails."
+
+Scheduled automation must remain policy-controlled.
+
+============================================================
+32. EVENT-DRIVEN PERSONAL ASSISTANT
+
+David should be able to react to supported events.
+
+Example:
+
+Website deployment failed.
+
+→ David creates diagnostic task.
+
+→ QA agent investigates.
+
+→ Coding agent identifies issue.
+
+→ David prepares fix.
+
+→ approval if required.
+
+Do not allow uncontrolled automatic production modification.
+
+============================================================
+33. MULTI-PROJECT CONTEXT
+
+David should be capable of handling multiple projects without mixing
+their information.
+
+For every task determine the active project.
+
+If ambiguous, ask.
+
+Do not leak one project's context into another.
+
+============================================================
+34. CROSS-PROJECT KNOWLEDGE
+
+Cross-project learning may be useful, but only when appropriate.
+
+For example:
+
+A general workflow pattern may be reusable.
+
+However:
+
+Sensitive project data must remain project-scoped.
+
+Separate:
+
+GENERAL LEARNED PATTERN
+
+from:
+
+PROJECT-SPECIFIC INFORMATION.
+
+============================================================
+35. PERSONAL AI DASHBOARD
+
+Upgrade the Command Center to show:
+
+Today
+
+Active Goals
+
+Tasks
+
+Agent Activity
+
+Pending Approvals
+
+Recent Artifacts
+
+Notifications
+
+Scheduled Work
+
+Project Health
+
+Provider Health
+
+Recommended Next Actions
+
+Do not fabricate metrics.
+
+============================================================
+36. SMART BRIEFING
+
+David should eventually be able to produce a useful briefing such as:
+
+"Here is what is happening across your projects."
+
+Include:
+
+- urgent issues;
+- active tasks;
+- completed work;
+- blocked work;
+- approvals required;
+- deadlines;
+- recommended actions.
+
+Only report actual data.
+
+============================================================
+37. DAILY / PERIODIC REVIEW
+
+Where enabled, support summaries such as:
+
+Daily Review
+
+Weekly Review
+
+Project Review
+
+Campaign Review
+
+The summary should distinguish:
+
+COMPLETED
+
+IN PROGRESS
+
+BLOCKED
+
+FAILED
+
+REQUIRES APPROVAL
+
+RECOMMENDED NEXT STEPS
+
+============================================================
+38. ADVANCED SEARCH
+
+Enable retrieval across authorized:
+
+- projects;
+- runs;
+- memory;
+- knowledge;
+- artifacts;
+- conversations;
+- research;
+- workflows.
+
+Search should respect permissions and project scope.
+
+============================================================
+39. SEMANTIC CONTEXT
+
+Use semantic retrieval where appropriate.
+
+Avoid searching everything for every request.
+
+Use:
+
+- project filters;
+- time filters;
+- type filters;
+- importance;
+- relevance;
+- user scope.
+
+============================================================
+40. KNOWLEDGE REFRESH
+
+Where knowledge becomes outdated, David should identify stale information.
+
+Do not silently overwrite historical information.
+
+Track:
+
+source date;
+retrieval date;
+version;
+confidence.
+
+============================================================
+41. RESEARCH CONTINUITY
+
+Long-running research projects should retain:
+
+- previous searches;
+- sources;
+- findings;
+- contradictions;
+- unanswered questions;
+- conclusions;
+- artifacts.
+
+A later research run should build on existing work instead of starting
+from zero unnecessarily.
+
+============================================================
+42. CAMPAIGN INTELLIGENCE
+
+For marketing workflows, maintain structured campaign intelligence.
+
+A campaign may contain:
+
+- objective;
+- audience;
+- positioning;
+- messaging;
+- channels;
+- content;
+- creative;
+- website;
+- assets;
+- schedule;
+- performance.
+
+David should be able to continue working on a campaign over time.
+
+============================================================
+43. WEBSITE CONTINUITY
+
+David should remember a website project's:
+
+- structure;
+- content;
+- design;
+- assets;
+- versions;
+- test results;
+- deployment;
+- issues;
+- changes.
+
+The user should be able to say:
+
+"Improve the website we built last week."
+
+David should find the correct website/project.
+
+============================================================
+44. CREATIVE CONTINUITY
+
+Media projects should retain:
+
+- prompts;
+- scripts;
+- storyboards;
+- assets;
+- voice;
+- versions;
+- renders;
+- final files.
+
+This enables revisions instead of starting from zero.
+
+============================================================
+45. SMART REVISION
+
+A user should be able to say:
+
+"Make the video more cinematic."
+
+David should identify:
+
+- which video;
+- which version;
+- relevant prompt/context;
+- source assets.
+
+Then create a revision rather than destroying the original.
+
+============================================================
+46. VERSION CONTROL FOR ARTIFACTS
+
+Support artifact versions.
+
+Example:
+
+Website v1
+Website v2
+Website v3
+
+Video draft 1
+Video draft 2
+Final
+
+Preserve history where practical.
+
+============================================================
+47. AGENT MEMORY
+
+Agents may need scoped working memory.
+
+However, agent memory must not automatically become global David memory.
+
+Use:
+
+agent-local context
+
+project context
+
+global memory
+
+with explicit boundaries.
+
+============================================================
+48. EXECUTION BUDGETS
+
+Introduce execution limits.
+
+Possible limits:
+
+- maximum tool calls;
+- maximum retries;
+- maximum runtime;
+- maximum concurrent agents;
+- maximum workflow depth;
+- maximum task iterations;
+- maximum resource usage.
+
+These limits should prevent runaway execution.
+
+============================================================
+49. LOOP PROTECTION
+
+Prevent:
+
+agent loops;
+retry loops;
+recursive delegation;
+workflow cycles;
+provider fallback loops.
+
+Every execution graph must have safeguards.
+
+============================================================
+50. AGENT ESCALATION
+
+If an agent cannot complete a task, it should be able to escalate.
+
+Example:
+
+Website Agent
+→ Coding Agent
+
+or:
+
+Coding Agent
+→ QA Agent
+
+or:
+
+QA Agent
+→ David
+
+Escalation must be traceable.
+
+============================================================
+51. RESULT AGGREGATION
+
+David must combine multi-agent results into one coherent final result.
+
+Do not simply concatenate outputs.
+
+The orchestrator should determine:
+
+- what was completed;
+- what remains;
+- what conflicts exist;
+- what artifacts matter;
+- what verification passed;
+- what requires approval.
+
+============================================================
+52. CONFLICT RESOLUTION
+
+If agents disagree:
+
+Detect the conflict.
+
+Determine:
+
+- evidence;
+- confidence;
+- role;
+- quality;
+- relevance.
+
+Then either:
+
+- select the better result;
+- ask a reviewer agent;
+- ask the user.
+
+Do not silently choose based only on whichever agent responded last.
+
+============================================================
+53. SOURCE AWARENESS
+
+When information came from external research, preserve source references.
+
+When an artifact was created by a specific agent, preserve provenance.
+
+When a provider generated content, preserve execution metadata.
+
+This improves traceability and debugging.
+
+============================================================
+54. SELF-DIAGNOSTICS
+
+David should be able to inspect itself at an operational level.
+
+Examples:
+
+"Which capabilities are currently unavailable?"
+
+"Why can't you generate video right now?"
+
+"Which providers are healthy?"
+
+"Which worker is failing?"
+
+"Which integrations require configuration?"
+
+Answers must come from actual system state.
+
+============================================================
+55. CAPABILITY RECOMMENDATIONS
+
+When a task cannot be completed because a capability is unavailable,
+David should be able to explain:
+
+Required capability:
+Video generation
+
+Current state:
+GPU worker unavailable
+
+Possible resolution:
+Configure a supported GPU worker/provider
+
+Do not simply say:
+
+"Error."
+
+============================================================
+56. LEARNING SAFETY
+
+Learning must never silently change:
+
+- security policies;
+- permissions;
+- approval requirements;
+- production credentials;
+- deployment behavior;
+- destructive-action policy.
+
+Learned behavior must be reviewed or constrained.
+
+============================================================
+57. EVALUATION SYSTEM
+
+Implement a framework for evaluating David's performance.
+
+Evaluate:
+
+- plan quality;
+- execution success;
+- tool selection;
+- agent selection;
+- output quality;
+- verification;
+- efficiency;
+- failure recovery.
+
+Use explicit criteria.
+
+Do not rely on a single model's subjective judgment for every evaluation.
+
+============================================================
+58. BENCHMARK TASKS
+
+Create repeatable benchmark goals.
+
+Examples:
+
+Website generation
+
+Marketing campaign
+
+Competitor research
+
+Code debugging
+
+Video creation
+
+Document analysis
+
+Voice interaction
+
+Multi-agent execution
+
+Run benchmarks after major changes.
+
+Track improvements.
+
+============================================================
+59. REGRESSION BENCHMARKS
+
+A future upgrade must not silently reduce performance.
+
+Maintain baseline benchmark results.
+
+Compare:
+
+before
+
+versus
+
+after.
+
+If performance regresses materially:
+
+investigate.
+
+============================================================
+60. PRODUCTION LEARNING LOOP
+
+The system should eventually support:
+
+EXECUTION
+
+→ MEASURE
+
+→ REVIEW
+
+→ LEARN
+
+→ RECOMMEND
+
+→ UPDATE FUTURE PLAN
+
+This is not uncontrolled self-modification.
+
+It is controlled operational learning.
+
+============================================================
+61. ADVANCED PERSONAL ASSISTANT BEHAVIOR
+
+David should behave naturally as a personal assistant.
+
+The user may say:
+
+"Continue what we were doing."
+
+David should identify active work.
+
+"What's left?"
+
+David should summarize incomplete work.
+
+"Fix the problem."
+
+David should identify the relevant failed task.
+
+"Use the same style."
+
+David should retrieve the relevant project/artifact preference.
+
+"Do everything necessary."
+
+David should plan and execute within authorized limits.
+
+============================================================
+62. DO NOT OVER-AUTONOMIZE
+
+David must not interpret:
+
+"Do everything necessary"
+
+as permission to perform irreversible or externally consequential
+actions without approval.
+
+Autonomy is bounded by policy.
+
+============================================================
+63. PROACTIVE TASK MANAGEMENT
+
+Where enabled, David may create internal follow-up tasks based on:
+
+- incomplete goals;
+- failed tasks;
+- deadlines;
+- dependencies;
+- approved automation policies.
+
+Never invent tasks merely to appear active.
+
+============================================================
+64. PROJECT HEALTH
+
+Create project health assessment.
+
+Possible states:
+
+HEALTHY
+
+AT RISK
+
+BLOCKED
+
+WAITING FOR APPROVAL
+
+DEGRADED
+
+FAILED
+
+UNKNOWN
+
+Based on actual project execution state.
+
+============================================================
+65. SMART RECOMMENDATIONS
+
+David may recommend:
+
+"Your website is ready for SEO optimization."
+
+"Your launch campaign still lacks creative assets."
+
+"Your deployment is waiting for approval."
+
+"Your video render failed because the GPU worker is unavailable."
+
+Recommendations must cite the actual reason.
+
+============================================================
+66. ADVANCED USER CONTROL
+
+Allow users to:
+
+- pause;
+- resume;
+- cancel;
+- approve;
+- reject;
+- edit plan;
+- retry;
+- reroute;
+- inspect;
+- compare versions.
+
+Backend policies remain authoritative.
+
+============================================================
+67. PLAN EDITING
+
+Allow a user to adjust a plan.
+
+Example:
+
+Remove video.
+
+Add email campaign.
+
+Change target audience.
+
+Change deployment target.
+
+After modification, David should re-evaluate affected dependencies.
+
+Do not throw away unaffected completed work.
+
+============================================================
+68. PLAN VERSIONING
+
+Store plan revisions.
+
+Example:
+
+Plan v1
+
+Plan v2
+
+Plan v3
+
+Record:
+
+- change;
+- reason;
+- timestamp;
+- source;
+- affected tasks.
+
+============================================================
+69. WORKFLOW TEMPLATES
+
+Allow successful workflow patterns to become reusable templates.
+
+Templates should be versioned.
+
+Users should be able to customize templates.
+
+============================================================
+70. ADVANCED MARKETING ASSISTANT
+
+The marketing system should eventually be capable of:
+
+- market research;
+- audience analysis;
+- positioning;
+- campaign planning;
+- copywriting;
+- content calendars;
+- landing pages;
+- SEO;
+- social campaigns;
+- email campaigns;
+- creative briefs;
+- asset generation;
+- campaign analytics;
+- optimization recommendations.
+
+Do not make claims about actual campaign performance without real data.
+
+============================================================
+71. ADVANCED WEBSITE ASSISTANT
+
+David should eventually be able to maintain websites over time.
+
+The user should be able to say:
+
+"Improve the homepage."
+
+"Add a pricing section."
+
+"Check mobile responsiveness."
+
+"Run an SEO audit."
+
+"Fix broken links."
+
+"Prepare the next release."
+
+Each should create controlled tasks against the correct project.
+
+============================================================
+72. ADVANCED CREATIVE ASSISTANT
+
+David should remember creative projects.
+
+The user should be able to say:
+
+"Create another version."
+
+"Use the previous voice."
+
+"Change the style."
+
+"Make the video shorter."
+
+"Use the previous branding."
+
+David should identify the correct prior artifacts and use them.
+
+============================================================
+73. ADVANCED RESEARCH ASSISTANT
+
+David should be able to continue research projects.
+
+Support:
+
+research questions;
+
+subquestions;
+
+sources;
+
+findings;
+
+contradictions;
+
+verification;
+
+reports;
+
+follow-up questions.
+
+============================================================
+74. ADVANCED CODING ASSISTANT
+
+The Coding Agent should support:
+
+- repository understanding;
+- issue analysis;
+- implementation;
+- testing;
+- debugging;
+- code review;
+- documentation;
+- release preparation.
+
+Changes should be traceable.
+
+============================================================
+75. ADVANCED DEPLOYMENT ASSISTANT
+
+David should be able to:
+
+inspect deployment;
+check health;
+inspect logs;
+prepare deployment;
+request approval;
+deploy where authorized;
+verify health;
+report status.
+
+Never claim healthy deployment without a real health check.
+
+============================================================
+76. ADVANCED AUTOMATION ASSISTANT
+
+David should be able to construct recurring workflows.
+
+Example:
+
+Every Monday:
+
+research competitors
+→ summarize changes
+→ update report
+→ notify user.
+
+This must be explicit automation.
+
+============================================================
+77. SECURITY REVIEW AGENT
+
+Create a specialized security-review capability.
+
+It may identify:
+
+- configuration issues;
+- dependency risks;
+- exposed secrets;
+- unsafe endpoints;
+- permission problems;
+- suspicious behavior.
+
+Do not let the security agent independently alter production security
+without appropriate authorization.
+
+============================================================
+78. SYSTEM OPTIMIZATION
+
+As David collects execution metrics, identify:
+
+- slow providers;
+- unreliable tools;
+- expensive paths;
+- repeated failures;
+- redundant steps.
+
+Recommend optimization.
+
+Do not automatically make risky production changes.
+
+============================================================
+79. PERSONAL AI OPERATING SYSTEM VIEW
+
+The Command Center should evolve from:
+
+dashboard
+
+into:
+
+personal AI operating environment.
+
+It should present:
+
+WHAT MATTERS NOW
+
+WHAT DAVID IS DOING
+
+WHAT NEEDS THE USER
+
+WHAT IS BLOCKED
+
+WHAT WAS COMPLETED
+
+WHAT SHOULD HAPPEN NEXT
+
+============================================================
+80. NATURAL LANGUAGE CONTROL
+
+The user should not need to navigate menus for every operation.
+
+Natural language should work for:
+
+goals;
+projects;
+tasks;
+agents;
+research;
+websites;
+marketing;
+creative work;
+automation;
+analysis.
+
+The interface should route natural language into the appropriate backend
+workflow.
+
+============================================================
+81. COMMAND INTERPRETATION
+
+David must distinguish:
+
+QUESTION
+
+REQUEST FOR INFORMATION
+
+GOAL
+
+TASK
+
+FOLLOW-UP
+
+CORRECTION
+
+APPROVAL
+
+CANCELLATION
+
+PLAN MODIFICATION
+
+Do not interpret every sentence as a new goal.
+
+============================================================
+82. CORRECTION HANDLING
+
+If the user says:
+
+"No, don't use that style. Use the previous brand style."
+
+David should modify the relevant active task/plan rather than create
+an unrelated project.
+
+============================================================
+83. INTERRUPT HANDLING
+
+If the user says:
+
+"Stop."
+
+David should:
+
+- stop generating new work;
+- request cancellation of supported workers;
+- record the interruption;
+- preserve completed artifacts;
+- report what was stopped.
+
+============================================================
+84. RESUME HANDLING
+
+If the user says:
+
+"Continue."
+
+David should recover the relevant paused goal/run.
+
+Do not start everything again from zero.
+
+============================================================
+85. LONG-TERM PROJECT CONTINUITY
+
+A project should be able to persist across many sessions.
+
+The user should be able to return after days or weeks and say:
+
+"Continue the launch."
+
+David should know the current project state.
+
+============================================================
+86. ADVANCED EVENT SYSTEM
+
+Events should be useful for:
+
+- realtime UI;
+- audit;
+- debugging;
+- analytics;
+- learning;
+- recovery.
+
+Events should be structured and queryable.
+
+============================================================
+87. EXECUTION REPLAY / DIAGNOSTICS
+
+Provide a diagnostic representation of completed runs.
+
+Show:
+
+goal
+
+plan
+
+agents
+
+tools
+
+providers
+
+events
+
+errors
+
+fallbacks
+
+artifacts
+
+verification
+
+approval
+
+result
+
+Do not expose secrets or private chain-of-thought.
+
+============================================================
+88. AUDITABILITY
+
+Every major external action should be auditable.
+
+A reviewer should be able to determine:
+
+WHO requested it
+
+WHAT happened
+
+WHEN
+
+WHY
+
+WHICH agent
+
+WHICH tool
+
+WHICH provider
+
+WHETHER approval occurred
+
+WHAT artifact/result was produced
+
+============================================================
+89. DATA RETENTION
+
+Separate:
+
+temporary execution state
+
+from:
+
+durable artifacts
+
+from:
+
+long-term memory.
+
+Do not retain everything forever.
+
+Respect deletion policies.
+
+============================================================
+90. DELETION
+
+If the user deletes:
+
+memory;
+artifact;
+project;
+run;
+
+the deletion must obey the system's retention model and must not leave
+unexpected recoverable sensitive copies in ordinary user-facing storage.
+
+Do not automatically delete audit records that are required for system
+integrity without an explicit retention policy.
+
+============================================================
+91. ADVANCED HEALTH MONITORING
+
+David should be able to answer:
+
+"Why can't you generate video?"
+
+and return actual dependency state.
+
+For example:
+
+Video capability:
+REQUIRES_GPU
+
+GPU worker:
+UNAVAILABLE
+
+Fallback:
+NONE CONFIGURED
+
+This is more useful than a generic error.
+
+============================================================
+92. CAPABILITY SELF-DISCOVERY
+
+When new capabilities are installed or configured, David should be able
+to discover them without requiring hard-coded frontend rewrites where
+the architecture permits.
+
+Use capability metadata.
+
+============================================================
+93. PLUGIN/ADAPTER EXTENSIBILITY
+
+Design new capabilities so they can be added through:
+
+- adapter;
+- provider;
+- worker;
+- tool;
+- skill;
+- agent;
+
+without rewriting the core orchestrator.
+
+============================================================
+94. LICENSE / SOURCE PROVENANCE
+
+When source-derived capabilities are used, preserve provenance.
+
+Record:
+
+source repository;
+
+source version;
+
+license;
+
+integration mode;
+
+modifications;
+
+runtime boundary.
+
+Do not falsely claim original authorship of external code.
+
+============================================================
+95. SYSTEM-WIDE QUALITY
+
+Production quality means:
+
+CORRECTNESS
+
+SAFETY
+
+RELIABILITY
+
+OBSERVABILITY
+
+RECOVERY
+
+EXTENSIBILITY
+
+PERFORMANCE
+
+USABILITY
+
+DOCUMENTATION
+
+TESTABILITY
+
+Do not optimize for feature count alone.
+
+============================================================
+96. PHASE 5 TEST MATRIX
+
+Create tests for:
+
+MEMORY RECALL
+
+PROJECT CONTINUITY
+
+GOAL REUSE
+
+WORKFLOW REUSE
+
+PLAN ADAPTATION
+
+AGENT DELEGATION
+
+AGENT HANDOFFS
+
+PARALLEL EXECUTION
+
+FALLBACK
+
+FAILURE RECOVERY
+
+APPROVAL
+
+CANCELLATION
+
+RESUME
+
+PLAN EDITING
+
+ARTIFACT VERSIONING
+
+RESEARCH CONTINUITY
+
+WEBSITE CONTINUITY
+
+MARKETING CONTINUITY
+
+CREATIVE CONTINUITY
+
+USER ISOLATION
+
+SECURITY
+
+LONG-RUNNING GOALS
+
+SCHEDULED AUTOMATION
+
+END-TO-END PERSONAL ASSISTANT WORKFLOWS.
+
+============================================================
+97. ADVANCED ACCEPTANCE TEST
+
+Run this scenario:
+
+User:
+
+"Continue my David AI launch project. Check what is unfinished, research
+the latest relevant information, update the marketing strategy, improve
+the website, create whatever creative assets are missing, prepare the
+next campaign materials, test everything, and tell me what still needs
+my approval."
+
+David should:
+
+1. identify the correct project;
+2. retrieve relevant memory;
+3. identify unfinished work;
+4. inspect previous run results;
+5. determine stale information;
+6. create/update a plan;
+7. delegate tasks;
+8. execute safe work;
+9. create or update artifacts;
+10. verify results;
+11. identify blocked items;
+12. identify actions requiring approval;
+13. provide a structured briefing.
+
+The system must continue from existing project state rather than
+starting from zero.
+
+============================================================
+98. FINAL USER EXPERIENCE
+
+David should feel like:
+
+A PERSONAL AI WHO REMEMBERS.
+
+A PERSONAL AI WHO CAN PLAN.
+
+A PERSONAL AI WHO CAN DELEGATE.
+
+A PERSONAL AI WHO CAN USE TOOLS.
+
+A PERSONAL AI WHO CAN CREATE.
+
+A PERSONAL AI WHO CAN CHECK ITS WORK.
+
+A PERSONAL AI WHO CAN RECOVER FROM FAILURE.
+
+A PERSONAL AI WHO KNOWS WHEN TO ASK.
+
+A PERSONAL AI WHO KNOWS WHEN TO WAIT.
+
+A PERSONAL AI WHO KNOWS WHAT IT HAS ACTUALLY DONE.
+
+============================================================
+99. FINAL SAFETY PRINCIPLE
+
+The more autonomous David becomes, the more important policy,
+verification, auditability, and approval become.
+
+Never sacrifice:
+
+security
+
+privacy
+
+user control
+
+truthfulness
+
+auditability
+
+for apparent autonomy.
+
+============================================================
+100. FINAL IMPLEMENTATION COMMAND
+
+IMPLEMENT PHASE 5.
+
+Do not merely describe it.
+
+Inspect the current David AI implementation.
+
+Identify which Phase 5 components already exist.
+
+Upgrade them.
+
+Implement the missing components.
+
+Connect them to the Intelligence Fabric.
+
+Preserve existing functionality.
+
+Do not create a second David AI.
+
+Do not create competing brains.
+
+Do not fabricate unavailable capabilities.
+
+Do not expose secrets.
+
+Do not silently change permissions.
+
+Do not allow uncontrolled autonomy.
+
+Do not delete existing user/project data.
+
+Test every major addition.
+
+Perform regression testing.
+
+Perform end-to-end testing.
+
+Document the implementation.
+
+Then report:
+
+WHAT WAS ALREADY PRESENT
+
+WHAT WAS MISSING
+
+WHAT WAS IMPLEMENTED
+
+WHAT WAS UPGRADED
+
+WHAT IS NOW OPERATIONAL
+
+WHAT REQUIRES CONFIGURATION
+
+WHAT REQUIRES EXTERNAL SERVICES
+
+WHAT REQUIRES GPU
+
+WHAT REMAINS BLOCKED
+
+WHAT TESTS PASSED
+
+WHAT TESTS FAILED
+
+WHAT SHOULD BE DONE IN THE NEXT PHASE.
+
+============================================================
+END OF PHASE 5
+DAVID AI — ADVANCED INTELLIGENCE, AUTONOMY,
+LEARNING & PERSONAL AI OPERATING SYSTEM
