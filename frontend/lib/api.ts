@@ -89,6 +89,9 @@ export const api = {
     request<ChatResponse>("/api/chat", json({ message, conversation_id: conversationId })),
   agents: {
     list: () => request<Array<{ name: string; description: string; capabilities: string[] }>>("/api/agents"),
+    external: () => request<{ agents: Array<{ id: string; label: string; protocol: string; capabilities: string[]; configured: boolean; status: string }> }>("/api/agents/external"),
+    consultExternal: (agentId: string, objective: string, context: Record<string, unknown> = {}) =>
+      request<{ request_id: string; agent_id: string; agent_label: string; protocol: string; status: string; latency_ms: number; text: string; metadata: Record<string, unknown> }>(`/api/agents/external/${encodeURIComponent(agentId)}/consult`, json({ objective, context })),
     dispatch: (agentName: string, goal: string, background = true) =>
       request<AgentRun>("/api/agents/dispatch", json({ agent_name: agentName, goal, background })),
     runs: (limit = 20) => request<AgentRun[]>(`/api/agents/runs?limit=${Math.max(1, Math.min(limit, 100))}`),

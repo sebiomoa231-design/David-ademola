@@ -7,10 +7,13 @@ from pydantic import BaseModel, Field
 
 from app.core.config import get_settings
 from app.services.agent_engine import AgentManager
+from app.services.external_agents import ExternalAgentError, ExternalAgentRegistry
 
 
 router = APIRouter(prefix="/agents", tags=["agents"])
-manager = AgentManager(get_settings())
+settings = get_settings()
+manager = AgentManager(settings)
+external_agents = ExternalAgentRegistry(settings)
 
 
 class DispatchRequest(BaseModel):
@@ -59,3 +62,23 @@ def cancel_run(run_id: str) -> dict[str, Any]:
     if not run:
         raise HTTPException(status_code=404, detail="Run not found")
     return _run_payload(run)
+
+
+class ExternalConsultRequest(BaseModel):
+    objective: str = Field(min_length=1, max_length=12_000)
+    context: dict[str, Any] = Field(default_factory=dict)
+
+
+@router.get("/external")
+def list_external_agents() -> dict[str, Any]:
+    """List redacted metadata for explicitly configured external agents."""
+    return {"agents": external_agents.list()}
+
+
+@router.post("/external/{agent_id}/consult")
+async def consult_external_agent(agent_id: str, payload: ExternalConsultRequest) -> dict[str, Any]:
+    """Consult one allowlisted external agent and return a traceable result."""
+    try:
+        return await external_agents.consult(agent_id, payload.objective, payload.context)
+    except ExternalAgentError as exc:
+        raise HTTPException(status_code=exc.status_code, detail={"code": exc.code, "message": str(exc)}) from exc

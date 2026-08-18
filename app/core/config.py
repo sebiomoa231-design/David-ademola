@@ -57,6 +57,8 @@ class Settings(BaseSettings):
     agent_max_steps: int = 8
     agent_max_retries: int = 1
     agent_history_limit: int = 100
+    external_agents_json: str = ""
+    external_agent_timeout_seconds: int = 30
 
     openai_api_key: str = ""
     openai_api_base_url: str = "https://api.openai.com/v1"

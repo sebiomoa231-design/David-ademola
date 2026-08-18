@@ -561,16 +561,18 @@ function TaskCard({ task, notify }: { task: { title: string; project: string; st
 
 function AgentsView({ notify }: { notify: (toast: Toast) => void }) {
   const [agents, setAgents] = useState<Array<Record<string, unknown>>>([]);
+  const [externalAgents, setExternalAgents] = useState<Array<{ id: string; label: string; protocol: string; capabilities: string[]; configured: boolean; status: string }>>([]);
   const [objective, setObjective] = useState("Review the current David operating system and recommend the next safe improvement.");
   const [loading, setLoading] = useState(true);
+  const [externalLoading, setExternalLoading] = useState(true);
   const [dispatching, setDispatching] = useState(false);
+  const [consulting, setConsulting] = useState<string | null>(null);
+  const [externalResult, setExternalResult] = useState<{ agentLabel: string; text: string; requestId: string; latencyMs: number } | null>(null);
 
   useEffect(() => {
     let mounted = true;
-    api.orchestrator.agents()
-      .then((payload) => mounted && setAgents(payload.agents || []))
-      .catch(() => mounted && notify({ kind: "error", text: "The live sub-agent registry is unavailable." }))
-      .finally(() => mounted && setLoading(false));
+    api.orchestrator.agents().then((payload) => mounted && setAgents(payload.agents || [])).catch(() => mounted && notify({ kind: "error", text: "The live internal sub-agent registry is unavailable." })).finally(() => mounted && setLoading(false));
+    api.agents.external().then((payload) => mounted && setExternalAgents(payload.agents || [])).catch(() => mounted && notify({ kind: "error", text: "The external-agent registry is unavailable." })).finally(() => mounted && setExternalLoading(false));
     return () => { mounted = false; };
   }, [notify]);
 
@@ -580,22 +582,32 @@ function AgentsView({ notify }: { notify: (toast: Toast) => void }) {
     setDispatching(true);
     try {
       const result = await api.orchestrator.process(text, { source: "agent_registry", requested_by: "owner" });
-      notify({ kind: "success", text: `David completed the orchestration with ${result.tasks_completed}/${result.total_tasks} sub-agent task${result.total_tasks === 1 ? "" : "s"}.` });
+      notify({ kind: "success", text: `David completed the orchestration with ${result.tasks_completed}/${result.total_tasks} internal sub-agent task${result.total_tasks === 1 ? "" : "s"}.` });
     } catch {
-      notify({ kind: "error", text: "David could not dispatch this objective through the live orchestrator." });
+      notify({ kind: "error", text: "David could not dispatch this objective through the live internal orchestrator." });
     } finally {
       setDispatching(false);
     }
   }
 
-  return <div>
-    <PageHeader route="agents" action={<button className="button button-primary" onClick={dispatchObjective} disabled={dispatching}><Play size={16} /> {dispatching ? "Delegating..." : "Assign objective"}</button>} />
-    <div className="agent-banner panel-card"><div className="agent-banner-icon"><Bot size={25} /></div><div><div className="eyebrow-pill">LIVE MULTI-AGENT ORCHESTRATION</div><h2>David assigns duties to governed specialists.</h2><p>Each sub-agent receives a bounded objective, operates inside David's policy, and returns evidence to the main operating system.</p></div><div className="agent-flow"><span>Objective</span><ChevronRight size={15} /><span>Route</span><ChevronRight size={15} /><span>Sub-agents</span><ChevronRight size={15} /><span>Result</span></div></div>
-    <div className="panel-card agent-dispatch-panel"><div><div className="micro-label">ASSIGN A DUTY</div><h2>Give David one outcome to coordinate.</h2></div><textarea value={objective} onChange={(event) => setObjective(event.target.value)} rows={3} placeholder="Describe the outcome you want David and the specialist agents to deliver..." /><div className="agent-dispatch-footer"><span><ShieldCheck size={14} /> High-impact actions remain behind approval gates.</span><button className="button button-primary" onClick={dispatchObjective} disabled={!objective.trim() || dispatching}><Send size={14} /> {dispatching ? "Working..." : "Run through David"}</button></div></div>
-    {loading ? <div className="panel-card padded-card"><span className="micro-label">LOADING SUB-AGENTS</span></div> : <div className="agent-grid">{agents.map((agent) => { const role = String(agent.role || "agent"); const name = String(agent.name || role.replaceAll("_", " ")); const busy = Boolean(agent.is_busy); return <button className="panel-card agent-card" key={role} onClick={() => { setObjective(`Assign the ${name} to ${objective}`); notify({ kind: "info", text: `${name} selected for the next objective.` }); }}><div className="agent-card-top"><div className="agent-icon tone-blue"><Bot size={20} /></div><span className={cx("status-tag", busy ? "tag-red" : "tag-green")}>{busy ? "Working" : "Available"}</span></div><h3>{name}</h3><p className="agent-role">{String(agent.role || "specialist")}</p><p className="agent-detail">{busy ? "Currently processing a governed sub-task." : "Ready to receive a bounded duty from David."}</p><div className="agent-card-footer"><span>{String(agent.completed_tasks || 0)} completed · {String(agent.active_tasks || 0)} active</span><ArrowUpRight size={16} /></div></button>; })}</div>}
-  </div>;
-}
+  async function consultExternal(agent: { id: string; label: string; configured: boolean }) {
+    const text = objective.trim();
+    if (!text || consulting || !agent.configured) return;
+    setConsulting(agent.id);
+    setExternalResult(null);
+    try {
+      const result = await api.agents.consultExternal(agent.id, text, { source: "david_agents", requested_by: "owner" });
+      setExternalResult({ agentLabel: result.agent_label, text: result.text, requestId: result.request_id, latencyMs: result.latency_ms });
+      notify({ kind: "success", text: `${agent.label} returned a traceable consultation result.` });
+    } catch {
+      notify({ kind: "error", text: `${agent.label} could not be consulted. David kept the external request truthful and did not mark it complete.` });
+    } finally {
+      setConsulting(null);
+    }
+  }
 
+  return <div><PageHeader route="agents" action={<button className="button button-primary" onClick={dispatchObjective} disabled={dispatching}><Play size={16} /> {dispatching ? "Delegating..." : "Assign internal objective"}</button>} /><div className="agent-banner panel-card"><div className="agent-banner-icon"><Bot size={25} /></div><div><div className="eyebrow-pill">LIVE AGENT INTEROPERABILITY</div><h2>David can coordinate internal and authorized external agents.</h2><p>Internal specialists run inside David’s orchestrator. External agents are allowlisted on the server, receive structured objectives, and return traceable results without exposing credentials to the browser.</p></div><div className="agent-flow"><span>Objective</span><ChevronRight size={15} /><span>Route</span><ChevronRight size={15} /><span>Agents</span><ChevronRight size={15} /><span>Evidence</span></div></div><div className="panel-card agent-dispatch-panel"><div><div className="micro-label">CONSULTATION OBJECTIVE</div><h2>Give David one outcome to coordinate.</h2></div><textarea value={objective} onChange={(event) => setObjective(event.target.value)} rows={3} placeholder="Describe the outcome you want David and the connected agents to deliver..." /><div className="agent-dispatch-footer"><span><ShieldCheck size={14} /> Sensitive external actions remain behind server policy and approval.</span><button className="button button-primary" onClick={dispatchObjective} disabled={!objective.trim() || dispatching}><Send size={14} /> {dispatching ? "Working..." : "Run internal agents"}</button></div></div><section className="agent-section"><div className="section-header"><div className="section-heading"><span className="section-icon"><Bot size={16} /></span><div><div className="micro-label">INTERNAL SPECIALISTS</div><h2>David’s governed sub-agents</h2></div></div></div>{loading ? <div className="panel-card padded-card"><span className="micro-label">LOADING INTERNAL AGENTS</span></div> : <div className="agent-grid">{agents.map((agent) => { const role = String(agent.role || "agent"); const name = String(agent.name || role.replaceAll("_", " ")); const busy = Boolean(agent.is_busy); return <button className="panel-card agent-card" key={role} onClick={() => { setObjective(`Assign the ${name} to ${objective}`); notify({ kind: "info", text: `${name} selected for the next internal objective.` }); }}><div className="agent-card-top"><div className="agent-icon tone-blue"><Bot size={20} /></div><span className={cx("status-tag", busy ? "tag-red" : "tag-green")}>{busy ? "Working" : "Available"}</span></div><h3>{name}</h3><p className="agent-role">{String(agent.role || "specialist")}</p><p className="agent-detail">{busy ? "Currently processing a governed sub-task." : "Ready to receive a bounded duty from David."}</p><div className="agent-card-footer"><span>{String(agent.completed_tasks || 0)} completed · {String(agent.active_tasks || 0)} active</span><ArrowUpRight size={16} /></div></button>; })}</div>}</section><section className="agent-section"><div className="section-header"><div className="section-heading"><span className="section-icon"><Globe2 size={16} /></span><div><div className="micro-label">EXTERNAL AGENT BRIDGE</div><h2>Authorized external agents</h2></div></div><span className="status-tag tag-blue">Server-side credentials</span></div>{externalLoading ? <div className="panel-card padded-card"><span className="micro-label">LOADING EXTERNAL REGISTRY</span></div> : !externalAgents.length ? <div className="panel-card padded-card"><span className="micro-label">NO EXTERNAL AGENTS CONFIGURED</span><p>Configure an HTTPS agent entry through the server environment. David will not invent or discover external agents automatically.</p></div> : <div className="external-agent-grid">{externalAgents.map((agent) => <article className="panel-card external-agent-card" key={agent.id}><div className="agent-card-top"><div className="agent-icon tone-purple"><Globe2 size={20} /></div><span className={cx("status-tag", agent.configured ? "tag-green" : "tag-blue")}>{agent.configured ? "Configured" : "Not configured"}</span></div><h3>{agent.label}</h3><p>{agent.protocol} · {agent.capabilities.join(" · ") || "No capabilities declared"}</p><button className="button button-secondary wide-button" onClick={() => void consultExternal(agent)} disabled={!agent.configured || consulting !== null || !objective.trim()}>{consulting === agent.id ? "Consulting..." : agent.configured ? "Consult external agent" : "Configure on server"}<ArrowUpRight size={14} /></button></article>)}</div>}{externalResult && <div className="panel-card external-result" role="status" aria-live="polite"><span className="micro-label">EXTERNAL CONSULTATION RESULT</span><h3>{externalResult.agentLabel}</h3><p>{externalResult.text}</p><small>Request {externalResult.requestId} · {externalResult.latencyMs} ms · returned by the external agent bridge</small></div>}</section></div>;
+}
 function MemoryView({ notify }: { notify: (toast: Toast) => void }) {
   const [memories, setMemories] = useState<Array<{ id?: string; type?: string; content: string; confidence?: number; importance?: number; source?: string; tags?: string[] }>>([]);
   const [query, setQuery] = useState("");
