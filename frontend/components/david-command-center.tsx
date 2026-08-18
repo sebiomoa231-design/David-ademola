@@ -438,7 +438,8 @@ function OperatingSystemView({ voice, connected, onNavigate }: { voice: ReturnTy
   const micStatus = voice.state === "listening" ? "ON" : "OFF";
   const networkStatus = connected ? "ONLINE" : "OFFLINE";
   const waveform = [0.2, 0.42, 0.7, 0.34, 0.9, 0.5, 0.25, 0.62, 0.34, 0.78, 0.4, 0.25, 0.58, 0.86, 0.36, 0.64, 0.24, 0.5, 0.32, 0.72];
-  return <div className={cx("os-view", `os-state-${voice.state}`)}>
+  return <div className={cx("os-view", `os-state-${voice.state}`, isExecuting && "os-executing", voice.response && "os-has-response")}>
+
     <div className="os-view-header"><div><span className="micro-label">DAVID AI / VOICE-FIRST OPERATING SYSTEM</span><h1>Command the system naturally.</h1><p>Speak a goal. David interprets it, assigns governed sub-agents, and returns an audible, reviewable result.</p></div><div className="os-header-status"><span className="status-dot" />{connected ? "NETWORK CONNECTED" : "CONNECTION UNAVAILABLE"}</div></div>
     <div className="os-stage os-reference-stage" aria-live="polite">
       <div className="os-reference-title"><span>ORBITAL</span><strong>CORE</strong></div>

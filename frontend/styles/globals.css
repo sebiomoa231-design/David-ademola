@@ -663,3 +663,56 @@ textarea, input, select { color: var(--white); }
 @media (prefers-reduced-motion: reduce) {
   .os-reference-ticks, .os-executing-card i { animation: none; }
 }
+
+
+/* Five-state motion language: each mode has a different rhythm while preserving the same Orbital Core identity. */
+.os-state-idle .os-reference-core::before { animation: os-standby-breathe 5.8s ease-in-out infinite; opacity: .56; }
+.os-state-idle .os-reference-ring.ring-one { animation: os-standby-ring-one 18s linear infinite; }
+.os-state-idle .os-reference-ring.ring-two { animation: os-standby-ring-two 26s linear infinite reverse; }
+.os-state-idle .os-reference-ring.ring-three { animation: os-standby-ring-three 38s linear infinite; }
+.os-state-idle .os-reference-sphere { animation: os-standby-sphere 5.4s ease-in-out infinite; }
+.os-state-idle .os-reference-axis { opacity: .62; }
+.os-state-listening .os-reference-core::before { animation: os-listening-breathe 1.05s ease-in-out infinite; opacity: .9; }
+.os-state-listening .os-reference-ring.ring-one { animation: os-listening-ring-one 3.8s linear infinite; }
+.os-state-listening .os-reference-ring.ring-two { animation: os-listening-ring-two 5.2s linear infinite reverse; }
+.os-state-listening .os-reference-ring.ring-three { animation: os-listening-ring-three 8s linear infinite; }
+.os-state-listening .os-reference-axis { opacity: .98; box-shadow: 0 0 24px rgba(57,230,230,.95); }
+.os-state-thinking .os-reference-core::before { animation: os-thinking-breathe .72s ease-in-out infinite alternate; opacity: .96; }
+.os-state-thinking .os-reference-ring.ring-one { animation: os-thinking-ring-one 1.65s linear infinite; }
+.os-state-thinking .os-reference-ring.ring-two { animation: os-thinking-ring-two 2.1s linear infinite reverse; }
+.os-state-thinking .os-reference-ring.ring-three { animation: os-thinking-ring-three 3.4s linear infinite; }
+.os-state-thinking .os-reference-axis { animation: os-axis-scan 1.4s ease-in-out infinite; }
+.os-executing .os-reference-core::after { border-right-color: rgba(141,255,240,.95); border-bottom-color: rgba(57,167,255,.85); animation: os-execution-spin 2.7s linear infinite; }
+.os-executing .os-reference-ring.ring-one { animation: os-execution-ring-one 1.2s linear infinite; }
+.os-executing .os-reference-ring.ring-two { animation: os-execution-ring-two 1.8s linear infinite reverse; }
+.os-executing .os-reference-ring.ring-three { animation: os-execution-ring-three 4.4s linear infinite; }
+.os-executing .os-reference-axis { animation: os-axis-pulse 1s ease-in-out infinite; }
+.os-has-response .os-reference-core::before { animation: os-response-bloom 2.4s ease-out both; opacity: 1; }
+.os-has-response .os-reference-sphere { animation: os-response-settle 2.6s ease-out both; }
+.os-has-response .os-reference-ring.ring-one { animation: os-response-ring-one 7s ease-out both; }
+.os-has-response .os-reference-axis { opacity: .9; box-shadow: 0 0 20px rgba(57,230,230,.8); }
+@keyframes os-standby-breathe { 0%, 100% { transform: scale(.92); } 50% { transform: scale(1.04); } }
+@keyframes os-standby-ring-one { to { transform: translate(-50%, -50%) rotate(360deg); } }
+@keyframes os-standby-ring-two { to { transform: translate(-50%, -50%) rotate(-360deg); } }
+@keyframes os-standby-ring-three { to { transform: translate(-50%, -50%) rotate(360deg); } }
+@keyframes os-standby-sphere { 0%, 100% { transform: translate(-50%, -50%) scale(.96); filter: saturate(.9); } 50% { transform: translate(-50%, -50%) scale(1.025); filter: saturate(1.1); } }
+@keyframes os-listening-breathe { 0%, 100% { transform: scale(.94); } 50% { transform: scale(1.12); } }
+@keyframes os-listening-ring-one { to { transform: translate(-50%, -50%) rotate(360deg) scale(1.08); } }
+@keyframes os-listening-ring-two { to { transform: translate(-50%, -50%) rotate(-360deg) scale(.94); } }
+@keyframes os-listening-ring-three { to { transform: translate(-50%, -50%) rotate(360deg) scale(1.04); } }
+@keyframes os-thinking-breathe { from { transform: scale(.98); } to { transform: scale(1.18); } }
+@keyframes os-thinking-ring-one { to { transform: translate(-50%, -50%) rotate(360deg); } }
+@keyframes os-thinking-ring-two { to { transform: translate(-50%, -50%) rotate(-360deg); } }
+@keyframes os-thinking-ring-three { to { transform: translate(-50%, -50%) rotate(360deg); } }
+@keyframes os-axis-scan { 0%, 100% { opacity: .42; } 50% { opacity: 1; } }
+@keyframes os-execution-spin { to { transform: rotate(360deg); } }
+@keyframes os-execution-ring-one { to { transform: translate(-50%, -50%) rotate(360deg) scale(1.12); } }
+@keyframes os-execution-ring-two { to { transform: translate(-50%, -50%) rotate(-360deg) scale(.9); } }
+@keyframes os-execution-ring-three { to { transform: translate(-50%, -50%) rotate(360deg) scale(1.08); } }
+@keyframes os-axis-pulse { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+@keyframes os-response-bloom { from { transform: scale(.8); opacity: .3; } to { transform: scale(1); opacity: .96; } }
+@keyframes os-response-settle { 0% { transform: translate(-50%, -50%) scale(1.22); filter: brightness(1.45); } 48% { transform: translate(-50%, -50%) scale(.98); filter: brightness(1.08); } 100% { transform: translate(-50%, -50%) scale(1); filter: brightness(1); } }
+@keyframes os-response-ring-one { from { transform: translate(-50%, -50%) rotate(-24deg) scale(1.18); opacity: .4; } to { transform: translate(-50%, -50%) rotate(0deg) scale(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .os-state-idle .os-reference-core::before, .os-state-idle .os-reference-ring, .os-state-idle .os-reference-sphere, .os-state-listening .os-reference-core::before, .os-state-listening .os-reference-ring, .os-state-thinking .os-reference-core::before, .os-state-thinking .os-reference-ring, .os-state-thinking .os-reference-axis, .os-executing .os-reference-core::after, .os-executing .os-reference-ring, .os-executing .os-reference-axis, .os-has-response .os-reference-core::before, .os-has-response .os-reference-sphere, .os-has-response .os-reference-ring { animation: none; }
+}
