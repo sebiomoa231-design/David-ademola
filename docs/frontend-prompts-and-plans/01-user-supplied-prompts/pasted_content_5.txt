@@ -1,0 +1,1602 @@
+DAVID AI — PHASE 7 MASTER DIRECTIVE
+
+SYSTEM VALIDATION, HARDENING, AUTONOMOUS OPERATION & PRODUCTION READINESS
+
+PROJECT: David AI / David Ademola
+PHASE: 7
+MODE: FULL SYSTEM VALIDATION + HARDENING + PRODUCTION READINESS
+AUTHORIZATION: IMPLEMENTATION IS AUTHORIZED
+PRIMARY OBJECTIVE: Turn the completed David AI system from an assembled application into a validated, resilient, secure, observable, recoverable, production-ready AI operating system.
+
+---
+
+1. EXECUTIVE DIRECTIVE
+
+You are now operating as the final system-validation and production-hardening architect for David AI.
+
+Previous phases have already established the David AI backend, Intelligence Fabric, imported capability boundaries, frontend/web application, orchestration architecture, agent infrastructure, tools, skills, provider systems, memory, projects, workflows, creative capabilities, voice capabilities, automation boundaries, security architecture, and supporting infrastructure.
+
+Do not assume that because previous phases reported completion, everything is actually complete.
+
+Your responsibility in Phase 7 is to inspect the actual repository and running system and determine whether the complete David AI architecture works as one coherent system.
+
+The objective is NOT to create another David AI.
+
+The objective is NOT to replace the existing architecture.
+
+The objective is to make the existing David AI system genuinely operational.
+
+You must:
+
+- inspect
+- execute
+- test
+- verify
+- stress
+- diagnose
+- repair
+- harden
+- integrate
+- validate
+- document
+- retest
+
+You are authorized to modify the existing David AI repository wherever required to accomplish this objective.
+
+However, all modifications must be:
+
+- additive where possible
+- backwards-compatible where possible
+- traceable
+- tested
+- documented
+- reversible where practical
+
+Do not delete functioning capabilities simply because they are inconvenient.
+
+Do not flatten preserved source material.
+
+Do not remove imported repositories or vendor material.
+
+Do not silently disable functionality.
+
+If a capability cannot currently operate because it requires an external API, credential, GPU, service, deployment target, or user authorization, preserve the integration and represent its state honestly.
+
+---
+
+2. DAVID AI REMAINS THE PRODUCT
+
+There must continue to be one David AI product.
+
+There must not be:
+
+- David AI Backend A
+- David AI Backend B
+- Intelligence Fabric App
+- separate Agent App
+- separate Voice App
+- separate Creative App
+
+Instead:
+
+DAVID AI
+
+is the product.
+
+The Intelligence Fabric is an internal control plane.
+
+Agents are internal capabilities.
+
+Skills are internal capability definitions.
+
+Tools are controlled execution interfaces.
+
+Providers are model/infrastructure resources.
+
+External repositories are capability sources or adapters.
+
+Workers are execution resources.
+
+The user should experience one coherent David AI.
+
+---
+
+3. SINGLE CONTROL PLANE
+
+David AI must continue operating through one authoritative orchestration layer.
+
+The architecture should conceptually remain:
+
+USER
+↓
+DAVID AI INTERFACE
+↓
+DAVID CORE / ORCHESTRATOR
+↓
+GOAL + OUTCOME ENGINE
+↓
+PLANNER
+↓
+POLICY / PERMISSION ENGINE
+↓
+AGENT REGISTRY
+↓
+SKILL REGISTRY
+↓
+TOOL REGISTRY
+↓
+PROVIDER ROUTER
+↓
+EXECUTION ENGINE
+↓
+SPECIALIST AGENTS / WORKERS
+↓
+EXTERNAL SERVICES / APIs / COMPUTE
+↓
+ARTIFACTS
+↓
+VERIFICATION
+↓
+RESULT
+↓
+MEMORY / LEARNING / OBSERVABILITY
+
+Do not create competing orchestration systems.
+
+If multiple orchestration libraries exist inside the project, determine which layer owns orchestration and make the others subordinate components.
+
+---
+
+4. COMPLETE SYSTEM DISCOVERY
+
+Before modifying anything, inspect the actual repository.
+
+Build a current-state map covering:
+
+- backend
+- frontend
+- API
+- database/storage
+- Intelligence Fabric
+- agents
+- skills
+- tools
+- providers
+- memory
+- projects
+- tasks
+- workflows
+- automation
+- browser
+- research
+- website generation
+- code execution
+- image generation
+- video generation
+- audio
+- STT
+- TTS
+- documents
+- artifacts
+- authentication
+- authorization
+- approvals
+- integrations
+- deployment
+- logging
+- metrics
+- events
+- queues
+- workers
+- tests
+- configuration
+- Docker
+- YAML
+- CI/CD
+- vendor sources
+
+Do not rely exclusively on README files.
+
+Inspect the implementation.
+
+---
+
+5. CREATE A REAL CAPABILITY MATRIX
+
+For every major David AI capability, determine:
+
+- implemented?
+- callable?
+- correctly registered?
+- correctly routed?
+- correctly authorized?
+- correctly executed?
+- correctly persisted?
+- correctly reported?
+- correctly tested?
+- correctly recovered after failure?
+
+Classify each capability as:
+
+OPERATIONAL
+
+OPERATIONAL WITH CONFIGURATION
+
+PARTIALLY OPERATIONAL
+
+ADAPTER ONLY
+
+EXTERNAL DEPENDENCY
+
+GPU DEPENDENT
+
+CREDENTIAL DEPENDENT
+
+NOT OPERATIONAL
+
+BROKEN
+
+UNVERIFIED
+
+Do not claim something works merely because a route or class exists.
+
+---
+
+6. FULL END-TO-END TEST
+
+Test David using realistic user goals.
+
+Do not limit testing to individual API endpoints.
+
+Test complete journeys.
+
+Example:
+
+«"Research the market for my AI product, create a marketing strategy, build a landing page, create promotional content, prepare social posts, and give me the complete package for approval."»
+
+David should be able to:
+
+1. understand the goal
+2. create an outcome
+3. create a plan
+4. decompose the work
+5. identify dependencies
+6. select appropriate agents
+7. select appropriate skills
+8. select appropriate tools
+9. select appropriate providers
+10. execute independent work
+11. pass results between agents
+12. store artifacts
+13. detect failures
+14. retry recoverable failures
+15. request approval for consequential actions
+16. verify outputs
+17. aggregate results
+18. return a coherent final result
+19. preserve relevant memory
+20. expose the run history
+
+If any stage fails, diagnose and repair the architecture.
+
+---
+
+7. MULTI-AGENT VALIDATION
+
+Verify that David can actually delegate work.
+
+Test scenarios such as:
+
+Research goal
+
+David
+→ Research Agent
+→ Browser/Search Tool
+→ Research Artifact
+→ Marketing Agent
+
+Website goal
+
+David
+→ Planner
+→ Website Agent
+→ Code Worker
+→ Test Worker
+→ Verification
+→ Website Artifact
+
+Video goal
+
+David
+→ Creative Planner
+→ Script Agent
+→ Voice Agent
+→ Media Agent
+→ Render Worker
+→ QA
+
+Marketing goal
+
+David
+→ Market Research
+→ Strategy
+→ Copywriting
+→ Design
+→ SEO
+→ Analytics
+→ QA
+
+Agents must not randomly call one another.
+
+Delegation must occur through controlled contracts.
+
+---
+
+8. AGENT CONTRACT VALIDATION
+
+Every agent should have a defined contract containing:
+
+- identity
+- purpose
+- capabilities
+- allowed skills
+- allowed tools
+- allowed providers
+- permissions
+- input schema
+- output schema
+- failure behavior
+- timeout
+- retry behavior
+- artifact behavior
+
+Validate that agent definitions are not merely descriptive metadata.
+
+Where appropriate, they must correspond to executable handlers or adapters.
+
+---
+
+9. AGENT-TO-AGENT HANDOFF VALIDATION
+
+Test real handoffs.
+
+A handoff must preserve:
+
+- run ID
+- goal ID
+- project ID
+- task ID
+- source agent
+- destination agent
+- context
+- artifacts
+- dependencies
+- status
+- errors
+- timestamps
+
+Do not pass huge uncontrolled conversational histories between agents.
+
+Prefer structured context and references.
+
+---
+
+10. PROVIDER FAILOVER TESTING
+
+The provider router must be tested under failure.
+
+Simulate:
+
+- timeout
+- HTTP 429
+- billing failure
+- unavailable model
+- authentication failure
+- malformed response
+- network failure
+- provider outage
+
+Verify that David can:
+
+1. detect failure
+2. classify failure
+3. determine whether retry is appropriate
+4. retry when appropriate
+5. switch provider when appropriate
+6. preserve context
+7. prevent duplicate side effects
+8. report the final outcome
+
+The user should not receive an unnecessary internal provider error when a valid fallback exists.
+
+---
+
+11. TOOL FAILURE TESTING
+
+Test tool failures.
+
+Examples:
+
+- browser unavailable
+- API timeout
+- malformed API response
+- invalid credentials
+- rate limit
+- external service unavailable
+- file unavailable
+- worker crash
+
+Verify controlled recovery.
+
+Never allow a failed tool call to silently appear successful.
+
+---
+
+12. IDEMPOTENCY AND DUPLICATE-ACTION PROTECTION
+
+This is mandatory.
+
+A retry must not accidentally:
+
+- publish twice
+- deploy twice
+- send the same message twice
+- create duplicate resources
+- charge twice
+- create duplicate artifacts
+- trigger the same automation twice
+
+Implement or verify idempotency mechanisms for side-effecting operations.
+
+Where an external service supports idempotency keys, use them.
+
+Where it does not, maintain internal execution guards.
+
+---
+
+13. APPROVAL GATE VALIDATION
+
+Consequential operations must have appropriate approval boundaries.
+
+Examples:
+
+- publishing content
+- deleting data
+- deploying
+- sending external messages
+- modifying production infrastructure
+- changing DNS
+- spending money
+- accessing sensitive external resources
+
+David may plan these actions.
+
+David may prepare them.
+
+David may explain them.
+
+But the execution policy must determine whether approval is required.
+
+Test:
+
+APPROVAL REQUIRED
+→ USER APPROVES
+→ ACTION EXECUTES
+
+and:
+
+APPROVAL REQUIRED
+→ USER REJECTS
+→ ACTION DOES NOT EXECUTE
+
+---
+
+14. SECURITY HARDENING
+
+Perform a complete security audit.
+
+Check:
+
+- authentication
+- authorization
+- user isolation
+- API key handling
+- secrets
+- environment variables
+- OAuth
+- sessions
+- cookies
+- CORS
+- CSRF where applicable
+- rate limiting
+- upload validation
+- path traversal
+- SSRF
+- command injection
+- code execution
+- prompt injection
+- malicious tool arguments
+- malicious browser pages
+- webhook validation
+- database access
+- logging of secrets
+- error leakage
+
+Fix confirmed vulnerabilities.
+
+Do not weaken security merely to make a feature work.
+
+---
+
+15. PROMPT-INJECTION DEFENSE
+
+Because David will interact with:
+
+- websites
+- files
+- emails
+- documents
+- external APIs
+- browser pages
+- repositories
+- user-generated content
+
+external content must never automatically become trusted instructions.
+
+Implement clear separation between:
+
+SYSTEM POLICY
+USER INTENT
+AGENT INSTRUCTIONS
+TOOL DATA
+EXTERNAL CONTENT
+ARTIFACT CONTENT
+
+External content must be treated as untrusted data unless explicitly promoted by a trusted policy.
+
+---
+
+16. CODE EXECUTION SECURITY
+
+If David can execute generated code:
+
+use isolation.
+
+Validate:
+
+- process isolation
+- filesystem isolation
+- time limits
+- memory limits
+- CPU limits
+- network restrictions
+- package restrictions
+- execution cancellation
+- output collection
+- cleanup
+
+Never allow arbitrary generated code to execute directly against the production host without appropriate containment.
+
+---
+
+17. FILE SECURITY
+
+Audit uploaded files.
+
+Validate:
+
+- file size
+- MIME type
+- extension
+- path
+- filename
+- storage location
+- executable content
+- archive extraction
+- nested archives
+- path traversal
+- malicious payloads
+
+Never extract untrusted archives directly into sensitive project directories without validation.
+
+---
+
+18. MEMORY VALIDATION
+
+Test memory.
+
+Verify that David can distinguish:
+
+- conversation context
+- temporary task context
+- user memory
+- project memory
+- knowledge
+- artifacts
+- execution history
+
+Do not automatically convert every generated sentence into permanent memory.
+
+Verify retrieval relevance.
+
+Verify deletion behavior.
+
+Verify user isolation.
+
+---
+
+19. PROJECT AND TASK VALIDATION
+
+Test:
+
+- project creation
+- task creation
+- task dependencies
+- status updates
+- task completion
+- task failure
+- task retry
+- task cancellation
+- project memory
+- artifact association
+
+A task must have authoritative status.
+
+Do not allow the frontend to fabricate completion.
+
+---
+
+20. WORKFLOW VALIDATION
+
+Test:
+
+- sequential workflows
+- parallel workflows
+- dependency workflows
+- retry
+- pause
+- resume
+- cancel
+- failure
+- recovery
+
+Verify that workflow state survives backend restart where durability is required.
+
+---
+
+21. BACKGROUND WORKER VALIDATION
+
+Test long-running operations.
+
+Examples:
+
+- video rendering
+- website building
+- large research
+- code execution
+- file processing
+- media conversion
+
+Verify:
+
+- queueing
+- worker assignment
+- progress
+- timeout
+- retry
+- cancellation
+- recovery
+- artifact creation
+
+---
+
+22. ARTIFACT VALIDATION
+
+Every major generated artifact should be traceable.
+
+Track:
+
+- artifact ID
+- type
+- project
+- goal
+- run
+- step
+- agent
+- tool
+- provider
+- creation time
+- version
+- status
+- storage location
+
+A final answer should not be the only evidence that work occurred.
+
+---
+
+23. REAL-TIME EVENT VALIDATION
+
+Verify that the frontend can receive authoritative execution state.
+
+Test events such as:
+
+- run created
+- planning
+- agent assigned
+- step started
+- tool started
+- tool completed
+- provider switched
+- retry
+- approval required
+- approval completed
+- artifact created
+- run completed
+- run failed
+
+The UI must reflect actual backend state.
+
+---
+
+24. FRONTEND-BACKEND CONTRACT VALIDATION
+
+Audit every important frontend action against the backend.
+
+Verify:
+
+- request schemas
+- response schemas
+- error schemas
+- authentication
+- authorization
+- loading states
+- empty states
+- error states
+- retry states
+- approval states
+- progress states
+
+Remove fake/mock success states from production flows unless explicitly identified as demo-only.
+
+---
+
+25. DAVID AI COMMAND CENTER VALIDATION
+
+The Command Center should represent David's actual operational state.
+
+It should be able to show:
+
+- current goal
+- active run
+- active agent
+- current task
+- current tool
+- current provider
+- progress
+- errors
+- retries
+- approvals
+- artifacts
+- completed work
+
+Do not create decorative status indicators that are disconnected from the backend.
+
+---
+
+26. VOICE VALIDATION
+
+Test:
+
+STT
+→ David reasoning
+→ action
+→ TTS
+
+Verify:
+
+- transcription
+- response generation
+- voice selection
+- audio generation
+- playback
+- download where supported
+- error handling
+
+Voice failure must not crash the entire David AI system.
+
+---
+
+27. CREATIVE SYSTEM VALIDATION
+
+Test image/video/audio workflows.
+
+Verify that unavailable providers are represented honestly.
+
+Where external infrastructure is required:
+
+- preserve adapter
+- report readiness state
+- provide configuration requirements
+- do not fake generation
+
+---
+
+28. BROWSER AND RESEARCH VALIDATION
+
+Test:
+
+- search
+- source retrieval
+- extraction
+- browser actions
+- source tracking
+- failure recovery
+
+Verify browser actions cannot escape their security boundaries.
+
+---
+
+29. WEBSITE GENERATION VALIDATION
+
+Test the full lifecycle:
+
+IDEA
+→ PLAN
+→ DESIGN
+→ GENERATE
+→ TEST
+→ PREVIEW
+→ REVISE
+→ VERIFY
+→ DEPLOY PREPARATION
+
+Verify generated websites are represented as real artifacts.
+
+---
+
+30. MARKETING SYSTEM VALIDATION
+
+Test:
+
+research
+→ audience
+→ positioning
+→ strategy
+→ content
+→ creative
+→ SEO
+→ campaign assets
+→ analytics preparation
+→ QA
+
+Marketing skills should operate as capabilities that David can discover and delegate to.
+
+---
+
+31. OBSERVABILITY
+
+David must be able to answer:
+
+What happened?
+
+Why did it happen?
+
+Which agent performed it?
+
+Which tool was used?
+
+Which provider was used?
+
+What failed?
+
+What was retried?
+
+What was approved?
+
+What artifact was created?
+
+Implement structured logs and execution traces where missing.
+
+Never log secrets.
+
+---
+
+32. HEALTH SYSTEM
+
+Create or verify health checks for:
+
+- David Core
+- database/storage
+- provider router
+- agents
+- tools
+- workers
+- queues
+- browser
+- creative services
+- voice services
+- external integrations
+
+Use meaningful statuses.
+
+For example:
+
+READY
+DEGRADED
+CONFIGURATION_REQUIRED
+EXTERNAL_DEPENDENCY
+GPU_REQUIRED
+AUTH_REQUIRED
+UNAVAILABLE
+FAILED
+
+Do not report "healthy" merely because a Python process is running.
+
+---
+
+33. SELF-DIAGNOSTIC SYSTEM
+
+David should be able to diagnose its own system state.
+
+A diagnostic operation should identify:
+
+- unavailable provider
+- missing configuration
+- unhealthy worker
+- failed integration
+- broken route
+- missing dependency
+- queue problem
+- storage problem
+- authentication issue
+
+Diagnostics must explain remediation where possible.
+
+---
+
+34. RESILIENCE TESTING
+
+Simulate:
+
+- provider failure
+- worker failure
+- database/storage failure
+- network failure
+- browser failure
+- external service failure
+- process restart
+- partial workflow failure
+
+Verify graceful degradation.
+
+The objective is:
+
+ONE FAILURE MUST NOT COLLAPSE THE ENTIRE DAVID AI SYSTEM.
+
+---
+
+35. GRACEFUL DEGRADATION
+
+If video generation is unavailable, David should still function as an AI.
+
+If voice is unavailable, text mode should work.
+
+If one provider fails, another may be used.
+
+If a browser tool is unavailable, David should explain that the browser capability is unavailable rather than pretending to browse.
+
+If a GPU worker is offline, non-GPU capabilities must remain available.
+
+---
+
+36. CONFIGURATION VALIDATION
+
+Inspect environment variables and configuration.
+
+Do not expose secrets.
+
+Create clear distinction between:
+
+REQUIRED
+OPTIONAL
+EXTERNAL
+DEVELOPMENT
+PRODUCTION
+
+configuration.
+
+Where possible, startup diagnostics should identify missing configuration without exposing secret values.
+
+---
+
+37. DATABASE/STORAGE INTEGRITY
+
+Verify persistence.
+
+Test restart behavior.
+
+Ensure important execution state is not lost unexpectedly.
+
+Check:
+
+- corrupted JSON
+- concurrent writes
+- locking
+- atomic writes
+- backup
+- recovery
+- migration strategy
+
+If the current storage architecture is appropriate for the present system, do not replace it merely for theoretical scalability.
+
+If it creates a proven production limitation, document and address it carefully.
+
+---
+
+38. API VALIDATION
+
+Test all major API routes.
+
+Verify:
+
+- authentication
+- schemas
+- error handling
+- status codes
+- authorization
+- rate limiting
+- logging
+- persistence
+
+Remove dead routes only when safely verified as unused and obsolete.
+
+---
+
+39. AUTOMATED TEST SUITE
+
+Expand automated testing.
+
+At minimum include:
+
+- unit tests
+- integration tests
+- API tests
+- provider routing tests
+- agent tests
+- tool tests
+- workflow tests
+- approval tests
+- security tests
+- artifact tests
+- persistence tests
+- frontend contract tests where practical
+- end-to-end tests
+
+The test suite must run reproducibly.
+
+---
+
+40. FAILURE-INJECTION TESTS
+
+Add controlled tests for:
+
+- provider failure
+- timeout
+- invalid credentials
+- tool failure
+- worker failure
+- malformed output
+- external API failure
+- retry
+- cancellation
+- approval rejection
+
+The objective is to prove that failure handling works.
+
+---
+
+41. PERFORMANCE TESTING
+
+Measure:
+
+- API latency
+- orchestration latency
+- provider latency
+- tool latency
+- memory usage
+- worker execution
+- queue throughput
+
+Identify obvious bottlenecks.
+
+Do not optimize blindly.
+
+Measure first.
+
+---
+
+42. CONCURRENCY TESTING
+
+Test multiple simultaneous runs.
+
+Ensure one user's execution cannot corrupt another user's:
+
+- memory
+- project
+- tasks
+- artifacts
+- events
+- credentials
+- agent state
+
+---
+
+43. DATA ISOLATION
+
+This is mandatory.
+
+Verify user/project boundaries.
+
+No user should be able to access another user's:
+
+- memory
+- files
+- projects
+- artifacts
+- credentials
+- conversations
+- agent runs
+- private integrations
+
+---
+
+44. AUTHORIZATION MATRIX
+
+Build an authorization matrix for:
+
+- user
+- owner/admin
+- agent
+- tool
+- integration
+- worker
+- external service
+
+Determine what each may:
+
+READ
+WRITE
+EXECUTE
+DELETE
+PUBLISH
+DEPLOY
+APPROVE
+
+Enforce these boundaries in the backend.
+
+---
+
+45. OWNER CONTROL
+
+David remains a personal AI system.
+
+Owner-level controls should be explicit.
+
+Administrative actions must not accidentally become available to ordinary users.
+
+Do not hard-code secrets into source code.
+
+---
+
+46. DEPLOYMENT READINESS
+
+Verify production deployment configuration.
+
+Inspect:
+
+- Docker
+- start command
+- worker command
+- health check
+- environment configuration
+- persistent storage
+- build process
+- logs
+- service dependencies
+
+Do not deploy automatically unless explicitly required by the current workflow.
+
+---
+
+47. CI/CD VALIDATION
+
+Verify that the repository can support:
+
+commit
+→ tests
+→ validation
+→ build
+→ deployment preparation
+
+Prevent broken code from silently becoming production code.
+
+---
+
+48. DOCUMENTATION
+
+Update documentation to explain:
+
+- architecture
+- installation
+- configuration
+- providers
+- agents
+- skills
+- tools
+- workflows
+- security
+- deployment
+- troubleshooting
+- capability readiness
+- external dependencies
+
+Documentation must match reality.
+
+---
+
+49. NO FALSE COMPLETION
+
+Never mark a capability:
+
+"READY"
+
+unless it has actually passed its readiness requirements.
+
+Use honest statuses.
+
+A system requiring:
+
+API KEY
+GPU
+EXTERNAL SERVICE
+OAUTH
+DEPLOYMENT
+USER APPROVAL
+
+must explicitly say so.
+
+---
+
+50. PRESERVE ALL SUPPLIED SOURCE MATERIAL
+
+Do not delete the preserved repositories, archives, configuration, licenses, YAML, Docker, package metadata, documentation, fixtures, or attribution material that previous phases intentionally retained.
+
+Do not flatten vendor/source-set structures.
+
+Do not silently replace preserved material with simplified versions.
+
+If an imported capability becomes unnecessary for runtime, preserve it as source/reference material unless there is an explicit reason to remove it.
+
+---
+
+51. DO NOT CREATE A SECOND DAVID AI
+
+This phase must never produce:
+
+David AI 2
+David AI New
+David AI Backend New
+Intelligence Fabric New
+
+The existing David Ademola repository remains the authoritative product repository.
+
+---
+
+52. FINAL SYSTEM ACCEPTANCE TEST
+
+Before declaring Phase 7 complete, execute a complete simulated user journey.
+
+Example:
+
+«"David, research a product idea, analyze competitors, create a marketing strategy, build a website, generate campaign assets, prepare social content, organize everything into my project, and tell me what requires approval before anything is published."»
+
+The system must demonstrate:
+
+GOAL
+→ OUTCOME
+→ PLAN
+→ DELEGATION
+→ MULTI-AGENT EXECUTION
+→ TOOL USAGE
+→ PROVIDER ROUTING
+→ ARTIFACT CREATION
+→ VERIFICATION
+→ APPROVAL
+→ FINAL RESULT
+→ MEMORY
+→ AUDIT TRAIL
+
+Any failure must be recorded and corrected where possible.
+
+---
+
+53. SECOND ACCEPTANCE TEST — FAILURE RECOVERY
+
+Simulate:
+
+1. primary provider fails
+2. secondary provider succeeds
+3. browser tool fails once
+4. retry succeeds
+5. worker crashes
+6. task resumes
+7. final artifact is produced
+8. user approval is required
+9. approval is granted
+10. final action executes once
+
+Verify the entire chain.
+
+---
+
+54. THIRD ACCEPTANCE TEST — NO-APPROVAL SAFETY
+
+Attempt a consequential action without approval.
+
+Verify that policy blocks execution.
+
+Then approve it.
+
+Verify execution occurs exactly once.
+
+---
+
+55. FOURTH ACCEPTANCE TEST — MULTI-USER ISOLATION
+
+Run separate project/task contexts.
+
+Verify that context, memory, artifacts, credentials, and execution states remain isolated.
+
+---
+
+56. FIFTH ACCEPTANCE TEST — DEGRADED MODE
+
+Disable one major capability.
+
+Verify that David remains usable through other available capabilities.
+
+---
+
+57. CLEANUP
+
+After testing:
+
+- remove temporary test artifacts
+- remove accidental secrets
+- remove generated caches where appropriate
+- remove debug-only configuration
+- remove temporary files
+- preserve required source material
+- preserve logs required for audit
+- ensure repository remains clean
+
+Do not delete meaningful project data.
+
+---
+
+58. GIT DISCIPLINE
+
+Before committing:
+
+- inspect changed files
+- inspect diffs
+- verify no secrets
+- verify no unintended deletion
+- run tests
+- run static checks
+- run configuration checks
+- verify vendor preservation
+- verify documentation
+
+Use meaningful commits.
+
+Do not make one enormous opaque commit if the changes can be logically separated.
+
+---
+
+59. FINAL REPORT
+
+When implementation and validation are complete, produce:
+
+DAVID AI — PHASE 7 PRODUCTION READINESS REPORT
+
+Include:
+
+A. SYSTEM STATUS
+
+What actually works.
+
+B. CAPABILITY STATUS
+
+Operational / configured / external / unavailable / failed.
+
+C. SECURITY STATUS
+
+Confirmed security controls and remaining risks.
+
+D. AGENT STATUS
+
+Which agents are operational.
+
+E. TOOL STATUS
+
+Which tools are operational.
+
+F. PROVIDER STATUS
+
+Provider health and fallback status.
+
+G. WORKFLOW STATUS
+
+Which workflows were tested.
+
+H. CREATIVE STATUS
+
+Image/video/audio/voice readiness.
+
+I. BROWSER STATUS
+
+Research and browser readiness.
+
+J. ARTIFACT STATUS
+
+Artifact persistence and traceability.
+
+K. OBSERVABILITY STATUS
+
+Logs, events, metrics, diagnostics.
+
+L. TEST RESULTS
+
+Exact test counts and failures.
+
+M. FAILURE-RECOVERY RESULTS
+
+Which failure simulations passed.
+
+N. SECURITY TEST RESULTS
+
+Exact findings.
+
+O. PERFORMANCE RESULTS
+
+Measured results where available.
+
+P. DEPLOYMENT READINESS
+
+What is ready and what still requires configuration.
+
+Q. EXTERNAL DEPENDENCIES
+
+Anything outside the repository.
+
+R. REMAINING GAPS
+
+Anything not completed.
+
+S. RECOMMENDED PHASE 8
+
+Only propose Phase 8 based on actual remaining gaps.
+
+---
+
+60. FINAL NON-NEGOTIABLE REQUIREMENT
+
+Do not say:
+
+"Everything is complete"
+
+unless the acceptance tests actually prove it.
+
+Do not say:
+
+"AI is fully autonomous"
+
+unless the tested architecture supports the claimed level of autonomy.
+
+Do not fake provider availability.
+
+Do not fake tool execution.
+
+Do not fake agent execution.
+
+Do not fake deployment.
+
+Do not fake artifacts.
+
+Do not fake approvals.
+
+Do not fake health.
+
+David AI must tell the truth about its own operational state.
+
+---
+
+61. COMPLETION CONDITION
+
+Phase 7 is complete only when:
+
+- the repository has been audited
+- the architecture has been validated
+- critical defects have been repaired
+- security has been hardened
+- provider fallback has been tested
+- agent delegation has been tested
+- tool execution has been tested
+- workflows have been tested
+- artifact tracking has been tested
+- approval gates have been tested
+- failure recovery has been tested
+- persistence has been tested
+- frontend/backend contracts have been tested
+- real-time state has been tested
+- critical end-to-end journeys have been tested
+- documentation has been updated
+- production configuration has been reviewed
+- no unintended source deletion occurred
+- preserved source material remains intact
+- final acceptance tests have passed
+
+If any critical item fails:
+
+DO NOT DECLARE PHASE 7 COMPLETE.
+
+Repair it and retest.
+
+---
+
+62. FINAL INSTRUCTION
+
+Work directly on the existing David Ademola David AI repository.
+
+Do not create a competing application.
+
+Do not remove previously integrated capabilities.
+
+Do not replace functioning architecture without justification.
+
+Do not flatten the Intelligence Fabric.
+
+Do not remove preserved upstream source material.
+
+Do not pretend unavailable external services are operational.
+
+Use the existing architecture as the foundation.
+
+Upgrade what needs upgrading.
+
+Repair what is broken.
+
+Connect what is disconnected.
+
+Harden what is vulnerable.
+
+Test what is uncertain.
+
+Document what is external.
+
+Verify everything important.
+
+Then provide the complete Phase 7 Production Readiness Report.
+
+PHASE 7 OBJECTIVE:
+
+Not merely:
+
+"David AI has many features."
+
+But:
+
+"David AI has been tested as one coherent system, its capabilities are genuinely connected, its failures are controlled, its actions are governed, its outputs are traceable, its security boundaries are enforced, and its production state is honestly known."
+
+END OF PHASE 7 MASTER DIRECTIVE

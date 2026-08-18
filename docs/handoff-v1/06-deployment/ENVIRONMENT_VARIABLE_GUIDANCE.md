@@ -1,0 +1,43 @@
+# ENVIRONMENT VARIABLE GUIDANCE
+
+Variable names must ultimately match the backend's actual code. This is a suggested inventory, not a command to create every variable blindly.
+
+GEMINI_API_KEY
+GROQ_API_KEY
+OPENROUTER_API_KEY
+OPENAI_API_KEY
+ANTHROPIC_API_KEY
+VOYAGE_API_KEY
+HUGGINGFACE_API_KEY
+CLOUDFLARE_API_KEY
+CEREBRAS_API_KEY
+SAMBANOVA_API_KEY
+XAI_API_KEY
+ELEVENLABS_API_KEY
+RUNWAY_API_KEY
+LUMA_API_KEY
+V0_API_KEY
+GOOGLE_MAPS_API_KEY
+OPENWEATHER_API_KEY
+PAYSTACK_PUBLIC_KEY
+PAYSTACK_SECRET_KEY
+GITHUB_TOKEN
+SUPABASE_URL
+SUPABASE_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY
+RENDER_API_KEY
+MANUS_API_KEY
+
+OAuth/application values may include patterns such as:
+GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET
+GOOGLE_REDIRECT_URI
+YOUTUBE_CLIENT_ID
+YOUTUBE_CLIENT_SECRET
+YOUTUBE_REDIRECT_URI
+TIKTOK_CLIENT_KEY
+TIKTOK_CLIENT_SECRET
+TIKTOK_REDIRECT_URI
+
+Do NOT configure variables for providers the user does not actually have credentials/access for.
+Do NOT expose actual secret values in GitHub, frontend code, prompts, logs, or this package.

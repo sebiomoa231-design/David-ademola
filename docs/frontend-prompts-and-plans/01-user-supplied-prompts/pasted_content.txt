@@ -1,0 +1,870 @@
+DAVID AI — CLEAN EXTRACTION & REBUILD HANDOFF DIRECTIVE
+
+IMPORTANT — THIS IS AN EXTRACTION TASK, NOT A REBUILD TASK
+
+You are working on an existing David AI project.
+
+DO NOT rebuild David AI.
+
+DO NOT redesign David AI.
+
+DO NOT create a new frontend.
+
+DO NOT replace the backend architecture simply because you would prefer another architecture.
+
+Your task is to perform a complete technical and specification extraction of the existing David AI project and prepare a clean, portable package that I can download and give to another AI coding agent.
+
+The next AI agent will use your extraction as the source material to rebuild David AI properly.
+
+The purpose of this task is to preserve everything useful from the project while removing the parts that I do NOT want carried into the rebuild.
+
+---
+
+1. WHAT YOU MUST EXTRACT
+
+Inspect the ENTIRE David AI project.
+
+Do not extract only the visible frontend.
+
+Inspect all available:
+
+- source code
+- backend code
+- API routes
+- services
+- engines
+- models
+- schemas
+- database-related code
+- storage-related code
+- configuration structure
+- provider integrations
+- AI routing logic
+- memory logic
+- conversation logic
+- project logic
+- task logic
+- planning logic
+- content generation logic
+- website generation logic
+- image generation logic
+- video-related logic
+- voice/TTS/STT logic
+- authentication logic
+- authorization logic
+- security logic
+- permissions
+- automation logic
+- connector logic
+- webhook logic
+- background jobs
+- workflows
+- utilities
+- error handling
+- logging
+- tests
+- deployment configuration
+- Docker configuration
+- dependency definitions
+- environment-variable definitions
+- database schemas/migrations
+- storage structure
+- API contracts
+- frontend-to-backend contracts
+- documentation
+- specification files
+- implementation notes
+- prompt files
+- system instructions
+- capability definitions
+- feature definitions
+- planning documents
+- architecture documents
+- files created from my previous instructions
+- files containing requirements I previously gave you
+- any other project material that is technically useful to the future rebuild
+
+Search the entire project rather than assuming that important information is only in obvious folders.
+
+---
+
+2. EXTRACT THE PROMPTS AND REQUIREMENTS I GAVE YOU
+
+This is extremely important.
+
+Locate and preserve all useful prompts, directives, specifications, instructions, requirements, capability descriptions, architectural decisions, feature requirements, and implementation requirements that were supplied to you during development and are available inside the project/workspace/history/files.
+
+Where possible, organize them into:
+
+- Original project requirements
+- Architecture requirements
+- Backend requirements
+- AI/provider requirements
+- Memory requirements
+- Authentication requirements
+- Security requirements
+- Database requirements
+- Storage requirements
+- Creative Suite requirements
+- Voice requirements
+- Automation requirements
+- Connector requirements
+- Frontend functional requirements
+- Deployment requirements
+- Testing requirements
+- Future capability requirements
+
+Do NOT include secrets merely because they appear inside configuration files.
+
+Preserve the meaning and requirements of the prompts, not confidential credentials.
+
+---
+
+3. REMOVE THE CURRENT FRONTEND IMPLEMENTATION
+
+The current Manus-built frontend/interface is NOT part of the rebuild.
+
+Do NOT include the current visual interface as the frontend that the next AI must reproduce.
+
+Remove/exclude:
+
+- current UI implementation
+- current page designs
+- current component styling
+- current colors
+- current gradients
+- current typography
+- current animations
+- current visual effects
+- current dashboard appearance
+- current sidebar design
+- current cards
+- current buttons
+- current layouts
+- current visual branding implementation
+- current CSS styling
+- Tailwind styling that exists solely to reproduce the current interface
+- screenshots used only to reproduce the current interface
+- visual mockups of the current Manus interface
+- decorative UI assets
+- fake/demo UI elements
+- frontend code that exists only to create the current appearance
+
+I will design/create the new frontend separately.
+
+---
+
+4. BUT PRESERVE THE FUNCTIONAL FRONTEND CONTRACT
+
+Do NOT throw away information about what the frontend is supposed to communicate with.
+
+Preserve the functional requirements that a future frontend will need.
+
+For example, document:
+
+- required pages/capabilities
+- required actions
+- required API calls
+- required request formats
+- required response formats
+- authentication flows
+- available backend endpoints
+- feature-to-endpoint relationships
+- data displayed by each capability
+- actions users can perform
+- streaming requirements
+- upload requirements
+- file requirements
+- error states
+- loading states
+- permission requirements
+- authentication requirements
+- provider status information
+- memory operations
+- project operations
+- task operations
+- creative operations
+- automation operations
+- connector operations
+
+However:
+
+Do not preserve the current visual design.
+
+The next AI should know WHAT the frontend needs to do, but NOT be instructed to copy Manus's current appearance.
+
+---
+
+5. REMOVE ALL API KEYS AND SECRETS
+
+This is a hard security requirement.
+
+The extracted package MUST NOT contain:
+
+- API keys
+- secret keys
+- private keys
+- OAuth client secrets
+- access tokens
+- refresh tokens
+- session tokens
+- passwords
+- database passwords
+- Supabase service-role keys
+- provider secrets
+- Render credentials
+- GitHub credentials
+- webhook secrets
+- encryption keys
+- JWT signing secrets
+- private certificates
+- cookies
+- authentication credentials
+- personal access tokens
+- any other sensitive credential
+
+Search the ENTIRE extracted package for secrets.
+
+Check:
+
+- ".env"
+- ".env.local"
+- ".env.production"
+- configuration files
+- JSON
+- YAML
+- TOML
+- Python files
+- JavaScript/TypeScript files
+- shell scripts
+- Docker files
+- deployment configuration
+- documentation
+- example files
+- generated files
+- logs
+- test fixtures
+
+If a secret is found, REMOVE THE VALUE.
+
+Do not simply rename the variable.
+
+For example, preserve:
+
+"OPENROUTER_API_KEY=<REQUIRED_SECRET>"
+
+but NEVER preserve the actual key.
+
+Do the same for every provider.
+
+The extracted package must contain zero usable credentials.
+
+---
+
+6. PRESERVE ENVIRONMENT VARIABLE REQUIREMENTS
+
+Although actual secrets must be removed, preserve the names and purpose of required environment variables.
+
+Create a clean file such as:
+
+"ENVIRONMENT_VARIABLES_REQUIRED.md"
+
+For every variable, document:
+
+- variable name
+- what it is used for
+- which service uses it
+- whether it is required or optional
+- whether it belongs on the backend or frontend
+- whether it is public or secret
+- where the future deployment should configure it
+
+Example:
+
+"GEMINI_API_KEY=<SECRET_REQUIRED>"
+
+Do NOT provide the actual value.
+
+---
+
+7. PRESERVE THE BACKEND
+
+The backend is one of the most important parts of this extraction.
+
+Do NOT remove working backend functionality merely because the frontend is being discarded.
+
+Extract and preserve useful backend implementation including:
+
+- FastAPI application
+- routes
+- services
+- models
+- schemas
+- engines
+- provider integrations
+- AI routing
+- fallback logic
+- memory system
+- project system
+- task system
+- conversation system
+- planning system
+- content system
+- website generation system
+- creative systems
+- security system
+- permissions
+- authentication
+- storage integration
+- database integration
+- voice integration
+- automation
+- connectors
+- utilities
+- tests
+- deployment files
+
+Where code is broken, DO NOT silently pretend that it works.
+
+Document its condition.
+
+---
+
+8. CREATE A COMPLETE SYSTEM INVENTORY
+
+Create:
+
+"DAVID_AI_SYSTEM_INVENTORY.md"
+
+Document every significant component.
+
+For each component include:
+
+- component name
+- location
+- purpose
+- inputs
+- outputs
+- dependencies
+- API endpoints
+- database dependencies
+- storage dependencies
+- external services
+- environment variables required
+- current implementation status
+- known bugs
+- known limitations
+- whether it appears functional
+- whether it requires rebuilding
+- whether it should be preserved
+
+Clearly distinguish:
+
+"WORKING"
+
+"PARTIALLY WORKING"
+
+"BROKEN"
+
+"MOCK/DEMO"
+
+"UNIMPLEMENTED"
+
+"UNKNOWN"
+
+Do not label something "working" simply because the frontend displays it.
+
+---
+
+9. CREATE THE COMPLETE API INVENTORY
+
+Create:
+
+"DAVID_AI_API_INVENTORY.md"
+
+Document every backend API endpoint.
+
+For each endpoint include:
+
+- HTTP method
+- route
+- purpose
+- authentication requirement
+- request body
+- query parameters
+- path parameters
+- response structure
+- error responses
+- database interaction
+- storage interaction
+- provider interaction
+- frontend usage
+- current implementation status
+
+This will allow another AI agent to understand the backend without depending on the current frontend.
+
+---
+
+10. CREATE THE DATABASE AND STORAGE INVENTORY
+
+Document:
+
+- database tables
+- columns
+- relationships
+- indexes
+- constraints
+- migrations
+- database functions
+- storage buckets
+- storage paths
+- upload logic
+- download logic
+- access-control logic
+- persistence behavior
+- memory persistence
+- project persistence
+- task persistence
+- conversation persistence
+- generated-file persistence
+
+Create:
+
+"DAVID_AI_DATABASE_AND_STORAGE.md"
+
+Do not include credentials.
+
+---
+
+11. CREATE THE AI PROVIDER INVENTORY
+
+Document every AI provider currently present or planned.
+
+For each provider record:
+
+- provider name
+- purpose
+- models
+- API integration location
+- environment variable required
+- request method
+- response format
+- error handling
+- fallback behavior
+- health checking
+- rate-limit handling
+- billing/credit failure handling
+- model-unavailable handling
+- timeout handling
+- retry behavior
+- current status
+- known problems
+
+Do not include actual API keys.
+
+---
+
+12. DOCUMENT THE AI ROUTER
+
+If David AI has a provider router, extract and document it completely.
+
+Explain:
+
+- provider priority
+- provider selection
+- fallback order
+- health checks
+- retries
+- timeouts
+- rate limits
+- billing failures
+- unavailable models
+- network errors
+- provider scoring
+- usage tracking
+- logging
+- failure recovery
+
+If the existing implementation does NOT actually perform these functions, explicitly say so.
+
+Do not describe planned functionality as completed functionality.
+
+---
+
+13. DOCUMENT MEMORY
+
+Extract the complete memory architecture.
+
+Document:
+
+- memory types
+- memory creation
+- memory retrieval
+- memory updates
+- memory deletion
+- importance
+- confidence
+- conflict handling
+- persistence
+- retrieval logic
+- conversation-to-memory behavior
+- project/task memory
+- user preferences
+- long-term memory
+- short-term memory
+- database/storage location
+- API endpoints
+
+The future AI must understand how David AI is supposed to remember information.
+
+---
+
+14. DOCUMENT ALL MAJOR DAVID AI ENGINES
+
+Create a clear architecture map for components such as:
+
+- DavidMind
+- Memory Engine
+- Conversation Engine
+- Project Engine
+- Task Engine
+- Learning Engine
+- Decision Engine
+- Permission Engine
+- Planning Engine
+- Content Engine
+- Website Engine
+- Security Engine
+- Voice Engine
+- AI Provider Router
+- Storage Layer
+- Database Layer
+- Authentication Layer
+- Connector Layer
+- Automation Layer
+- Creative Suite
+
+Only include components that actually exist or are explicitly specified.
+
+Do not invent functionality.
+
+---
+
+15. EXTRACT THE FUNCTIONAL REQUIREMENTS FOR THE NEW FRONTEND
+
+The next AI will build a completely new frontend.
+
+Therefore create:
+
+"DAVID_AI_FRONTEND_FUNCTIONAL_SPEC.md"
+
+This document must describe:
+
+- what the frontend needs to expose
+- what actions users need
+- what APIs it needs
+- what data it receives
+- what data it sends
+- authentication requirements
+- file-upload requirements
+- chat requirements
+- voice requirements
+- memory requirements
+- project requirements
+- task requirements
+- creative requirements
+- automation requirements
+- connector requirements
+- settings requirements
+- provider status requirements
+
+DO NOT specify:
+
+- colors
+- gradients
+- fonts
+- visual theme
+- current Manus layout
+- current sidebar
+- current dashboard
+- current cards
+- current animations
+- current styling
+
+The next AI will design the interface independently.
+
+---
+
+16. IDENTIFY MOCKS AND FAKE FUNCTIONALITY
+
+This is extremely important.
+
+Search for:
+
+- mock data
+- hard-coded responses
+- fake status indicators
+- demo responses
+- placeholder APIs
+- simulated agent runs
+- fake provider status
+- fake memory counts
+- fake connector counts
+- fake execution logs
+- frontend-only state
+- buttons that don't call real APIs
+- functions that return placeholder data
+- "coming soon" implementations
+- TODO implementations
+- generated dummy data
+
+Create:
+
+"DAVID_AI_MOCK_AND_GAP_REPORT.md"
+
+For each one explain:
+
+- what it claims to do
+- what it actually does
+- where it is implemented
+- whether it should be removed
+- what a real implementation would require
+
+---
+
+17. DO NOT HIDE PROBLEMS
+
+The extraction must be honest.
+
+If something is broken:
+
+say it is broken.
+
+If something is incomplete:
+
+say it is incomplete.
+
+If something is only frontend simulation:
+
+say so.
+
+If something is only planned:
+
+say so.
+
+If you cannot determine whether something works:
+
+mark it "UNKNOWN".
+
+Do not make the project look more complete than it actually is.
+
+---
+
+18. CREATE A REBUILD HANDOFF DOCUMENT
+
+Create:
+
+"DAVID_AI_REBUILD_HANDOFF.md"
+
+This must be the main document another AI coding agent reads first.
+
+It should explain:
+
+1. What David AI is.
+2. What the existing system contains.
+3. What should be preserved.
+4. What should be rebuilt.
+5. What should be discarded.
+6. What is functional.
+7. What is broken.
+8. What is missing.
+9. What APIs exist.
+10. What infrastructure exists.
+11. What environment variables are required.
+12. What database/storage exists.
+13. What providers exist.
+14. What integrations exist.
+15. What the new frontend must communicate with.
+16. What must NOT be copied from Manus.
+17. What the next AI should build first.
+18. Recommended implementation order.
+19. Testing requirements.
+20. Deployment requirements.
+
+---
+
+19. CREATE A CLEAN DIRECTORY
+
+Prepare a separate clean extraction directory.
+
+Suggested structure:
+
+DAVID-AI-CLEAN-EXTRACTION/
+│
+├── README.md
+├── DAVID_AI_REBUILD_HANDOFF.md
+├── DAVID_AI_SYSTEM_INVENTORY.md
+├── DAVID_AI_API_INVENTORY.md
+├── DAVID_AI_DATABASE_AND_STORAGE.md
+├── DAVID_AI_FRONTEND_FUNCTIONAL_SPEC.md
+├── DAVID_AI_MOCK_AND_GAP_REPORT.md
+├── ENVIRONMENT_VARIABLES_REQUIRED.md
+│
+├── architecture/
+├── backend/
+├── api/
+├── models/
+├── services/
+├── engines/
+├── providers/
+├── database/
+├── storage/
+├── authentication/
+├── security/
+├── integrations/
+├── automation/
+├── voice/
+├── creative/
+├── tests/
+├── documentation/
+├── prompts/
+└── deployment/
+
+Adjust the structure according to the actual project.
+
+Do not create empty folders merely to satisfy this example.
+
+---
+
+20. FRONTEND RULE
+
+The extracted package must NOT contain Manus's current frontend as the frontend to be reused.
+
+If frontend source files contain important API contracts or functional logic, extract the useful functional information into the documentation.
+
+Do not carry forward the visual implementation.
+
+The future frontend will be built separately.
+
+---
+
+21. SECURITY FINAL CHECK
+
+Before creating the final package, perform a full secret scan.
+
+Search recursively for patterns such as:
+
+- "sk-"
+- "AIza"
+- "ghp_"
+- "github_pat_"
+- "Bearer "
+- "password="
+- "secret="
+- "token="
+- "api_key="
+- "apikey="
+- "client_secret"
+- "service_role"
+- private key blocks
+- OAuth secrets
+- database credentials
+- webhook secrets
+
+Remove all actual secret values.
+
+Do NOT expose them in:
+
+- source code
+- documentation
+- logs
+- examples
+- JSON
+- YAML
+- screenshots
+- test fixtures
+- ".env" files
+- generated reports
+
+The final extraction must be safe to upload to another AI agent.
+
+---
+
+22. DO NOT DELETE THE ORIGINAL PROJECT
+
+Do not destroy the original project.
+
+Do not overwrite the current project with the extraction.
+
+Do not remove files from the live deployment.
+
+Create the clean extraction as a separate package.
+
+The original project must remain available as a reference until I have downloaded and verified the extraction.
+
+---
+
+23. FINAL QUALITY CHECK
+
+Before delivering the extraction, verify:
+
+- [ ] All useful backend code has been inspected.
+- [ ] All important project files have been inspected.
+- [ ] All available prompts/specifications have been extracted.
+- [ ] Architecture has been documented.
+- [ ] API endpoints have been documented.
+- [ ] Database has been documented.
+- [ ] Storage has been documented.
+- [ ] AI providers have been documented.
+- [ ] Memory architecture has been documented.
+- [ ] Functional frontend requirements have been documented.
+- [ ] Current visual frontend has been excluded.
+- [ ] Current colors/styles have been excluded.
+- [ ] API keys have been removed.
+- [ ] Secrets have been removed.
+- [ ] Tokens have been removed.
+- [ ] Credentials have been removed.
+- [ ] Mock functionality has been identified.
+- [ ] Broken functionality has been identified.
+- [ ] Missing functionality has been identified.
+- [ ] Nothing important has been silently invented.
+- [ ] Original project has not been destroyed.
+- [ ] Extraction is self-contained.
+- [ ] Another AI agent can understand the project from the extraction.
+- [ ] The package is ready to download.
+
+---
+
+24. FINAL DELIVERABLE
+
+Create a single downloadable archive:
+
+"DAVID-AI-CLEAN-EXTRACTION.zip"
+
+The ZIP must contain the clean extraction package.
+
+It must contain:
+
+THE KNOWLEDGE AND TECHNICAL FOUNDATION OF DAVID AI
+
+but NOT:
+
+MANUS'S CURRENT VISUAL FRONTEND/DESIGN
+
+and NOT:
+
+ANY API KEYS, SECRETS, TOKENS, PASSWORDS, OR CREDENTIALS.
+
+Do not rebuild David AI during this task.
+
+Do not redesign David AI during this task.
+
+Do not add a new interface.
+
+Do not add new API keys.
+
+Do not fabricate missing functionality.
+
+Your job is to extract, organize, document, sanitize, verify, and package the useful David AI foundation for the next AI coding agent.
+
+When finished, provide the downloadable ZIP and a concise report describing exactly what was extracted, what was excluded, what was found to be working, what was broken, and what the next AI agent will need to rebuild.
