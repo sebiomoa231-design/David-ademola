@@ -1,9 +1,17 @@
 from fastapi.testclient import TestClient
 
 from app.main import app
+from main import app as render_entrypoint_app
 
 
 client = TestClient(app)
+render_entrypoint_client = TestClient(render_entrypoint_app)
+
+
+def test_render_compatible_entrypoint_exposes_health_route():
+    response = render_entrypoint_client.get("/health")
+    assert response.status_code == 200
+    assert response.json()["service"] == "david-ai-backend"
 
 
 def test_health():
