@@ -99,17 +99,26 @@ export const api = {
     cancel: (runId: string) => request<AgentRun>(`/api/agents/runs/${encodeURIComponent(runId)}/cancel`, { method: "POST" }),
   },
   voiceStatus: () => request<VoiceStatus>("/api/voice/status"),
-  synthesize: (text: string, languageMode = "AUTO") =>
+  synthesize: (text: string, languageMode = "AUTO", options: { persist?: boolean; projectId?: string } = {}) =>
     request<{
       audio_base64?: string | null;
       audio_format?: string;
+      audio_url?: string | null;
+      asset?: AssetItem | null;
+      persisted?: boolean;
       voice_id?: string;
       model_id?: string;
       audio_available?: boolean;
       provider?: string;
       text_fallback?: string;
       reason?: string | null;
-    }>("/api/voice/synthesize", json({ text, language_mode: languageMode })),
+    }>("/api/voice/synthesize", json({
+      text,
+      language_mode: languageMode,
+      ...(options.persist || options.projectId
+        ? { persist: options.persist ?? false, project_id: options.projectId || null }
+        : {}),
+    })),
   transcribe: (audioBase64: string, language?: string, audioFormat = "webm") =>
     request<{ text: string; language?: string; confidence?: number | null; provider?: string }>(
       "/api/voice/transcribe",

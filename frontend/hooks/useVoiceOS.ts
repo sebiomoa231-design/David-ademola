@@ -150,14 +150,15 @@ export function useVoiceOS(options: VoiceOSOptions = {}) {
       setActiveAction("GENERATING AUDIO · ELEVENLABS");
 
       try {
-        const payload = await api.synthesize(text);
+        const payload = await api.synthesize(text, "AUTO", { persist: true });
         if (payload.audio_base64) {
-          const audio = new Audio(toAudioUrl(payload.audio_base64, payload.audio_format || "mp3"));
+          const audioSource = payload.audio_url || toAudioUrl(payload.audio_base64, payload.audio_format || "mp3");
+          const audio = new Audio(audioSource);
           audio.preload = "auto";
           audioRef.current = audio;
           startOutputMeter(audio);
           setState("speaking");
-          setActiveAction("SPEAKING · ELEVENLABS");
+          setActiveAction(payload.persisted ? "SPEAKING · ELEVENLABS · STORED" : "SPEAKING · ELEVENLABS");
           await new Promise<void>((resolve, reject) => {
             let settled = false;
             const finish = () => {

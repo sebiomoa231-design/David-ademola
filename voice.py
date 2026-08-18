@@ -1,10 +1,12 @@
 import base64
+from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.core.config import get_settings
 from app.providers.elevenlabs_tts import ElevenLabsSTTClient, ElevenLabsTTSClient
+from app.services.supabase_service import SupabaseApiError, SupabasePersistence
 from app.services.voice_engine import LanguageMode, VoiceEngine
 
 router = APIRouter(prefix="/voice", tags=["voice"])
@@ -28,8 +30,10 @@ engine = VoiceEngine(
 
 
 class SynthesizeRequest(BaseModel):
-    text: str
+    text: str = Field(min_length=1, max_length=20_000)
     language_mode: LanguageMode = LanguageMode.AUTO
+    persist: bool = False
+    project_id: str | None = Field(default=None, max_length=120)
 
 
 class SynthesizeResponse(BaseModel):
@@ -39,6 +43,9 @@ class SynthesizeResponse(BaseModel):
     reason: str | None = None
     audio_base64: str | None = None
     audio_format: str = "wav"
+    audio_url: str | None = None
+    asset: dict[str, object] | None = None
+    persisted: bool = False
 
 
 class TranscribeRequest(BaseModel):
@@ -67,7 +74,33 @@ def voice_status() -> dict:
 @router.post("/synthesize", response_model=SynthesizeResponse)
 async def synthesize(payload: SynthesizeRequest) -> SynthesizeResponse:
     result = await engine.synthesize(payload.text, payload.language_mode)
-    return SynthesizeResponse(**result.__dict__)
+    response = SynthesizeResponse(**result.__dict__)
+    if not payload.persist or not response.audio_available or not response.audio_base64:
+        return response
+
+    try:
+        audio_bytes = base64.b64decode(response.audio_base64, validate=True)
+        if not audio_bytes:
+            raise ValueError("generated audio is empty")
+        stored = SupabasePersistence(get_settings()).upload_asset(
+            filename=f"david-voice-{uuid4().hex}.mp3",
+            content=audio_bytes,
+            content_type="audio/mpeg",
+            project_id=payload.project_id,
+            kind="audio",
+            metadata={
+                "generation_type": "voice_synthesis",
+                "provider": response.provider,
+                "language_mode": payload.language_mode.value,
+                "text_length": len(payload.text),
+            },
+        )
+        response.audio_url = str(stored.get("signed_url")) if stored.get("signed_url") else None
+        response.asset = stored
+        response.persisted = bool(response.audio_url)
+    except (SupabaseApiError, ValueError, KeyError) as exc:
+        response.reason = f"Audio generated, but persistence failed: {exc}"
+    return response
 
 
 @router.post("/transcribe")
