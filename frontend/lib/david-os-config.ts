@@ -5,8 +5,7 @@ export type DavidPreferenceKey =
   | "voiceActivation"
   | "quietMode"
   | "reducedMotion"
-  | "highContrast"
-  | "demoMode";
+  | "highContrast";
 
 export type DavidSettings = Record<DavidPreferenceKey, boolean>;
 
@@ -18,7 +17,6 @@ export const defaultDavidSettings: DavidSettings = {
   quietMode: false,
   reducedMotion: false,
   highContrast: false,
-  demoMode: false,
 };
 
 export const DAVID_SETTINGS_STORAGE_KEY = "david-ai.settings.v1";
