@@ -1,7 +1,7 @@
 """ElevenLabs TTS Provider for David Ademola AI.
 
 This module provides text-to-speech synthesis using ElevenLabs API
-with the British JARVIS-style voice (Voice ID: 5hZv9mAOcmcMt1TxA5Iz).
+with the configured David voice identity.
 
 Replaces the previous Piper TTS (Ryan voice) implementation.
 """
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 # Configuration defaults
 ELEVENLABS_API_BASE = os.getenv("ELEVENLABS_API_BASE_URL", "https://api.elevenlabs.io/v1")
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY", "")
-ELEVENLABS_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "5hZv9mAOcmcMt1TxA5Iz")
+ELEVENLABS_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "pywu1SUjrxSM1ddFHhM7")
 ELEVENLABS_MODEL = os.getenv("ELEVENLABS_MODEL", "eleven_multilingual_v2")
 
 

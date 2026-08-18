@@ -104,7 +104,7 @@ class Settings(BaseSettings):
     elevenlabs_api_base_url: str = "https://api.elevenlabs.io/v1"
     elevenlabs_model: str = "eleven_multilingual_v2"
     elevenlabs_stt_model: str = "scribe_v1"
-    elevenlabs_voice_id: str = "5hZv9mAOcmcMt1TxA5Iz"
+    elevenlabs_voice_id: str = "pywu1SUjrxSM1ddFHhM7"
     elevenlabs_voice_style: str = "British, deep male, JARVIS-style"
 
     runway_api_key: str = ""

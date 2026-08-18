@@ -1,7 +1,7 @@
 """David AI — Voice API Routes.
 
 Provides TTS and STT endpoints for the frontend voice interface.
-Uses ElevenLabs with Voice ID 5hZv9mAOcmcMt1TxA5Iz (British JARVIS-style).
+Uses ElevenLabs with the configured David voice identity (British JARVIS-style).
 """
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/voice", tags=["voice"])
 
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY", "")
-ELEVENLABS_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "5hZv9mAOcmcMt1TxA5Iz")
+ELEVENLABS_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "pywu1SUjrxSM1ddFHhM7")
 ELEVENLABS_MODEL = os.getenv("ELEVENLABS_MODEL", "eleven_multilingual_v2")
 
 
