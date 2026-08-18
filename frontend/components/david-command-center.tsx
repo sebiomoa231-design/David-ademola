@@ -53,6 +53,13 @@ import type { LucideIcon } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api";
+import {
+  baseExecutionSteps,
+  phaseFromRunStatus,
+  stepsForPhase,
+  type ExecutionPhase,
+  type ExecutionSnapshot,
+} from "@/lib/execution-state";
 
 type RouteKey =
   | "dashboard"
@@ -145,6 +152,24 @@ const activityItems = [
 
 const formatTime = () => new Intl.DateTimeFormat("en", { hour: "2-digit", minute: "2-digit" }).format(new Date());
 
+const initialExecution: ExecutionSnapshot = {
+  phase: "idle",
+  objective: "",
+  message: "Ready for a governed objective.",
+  steps: baseExecutionSteps,
+};
+
+function executionMessage(phase: ExecutionPhase): string {
+  if (phase === "planning") return "David is translating the objective into a structured plan.";
+  if (phase === "awaiting_approval") return "The plan is ready. Sensitive actions are paused until you approve them.";
+  if (phase === "executing") return "Approved work is running through the selected capability path.";
+  if (phase === "verifying") return "David is checking the result and recording execution evidence.";
+  if (phase === "completed") return "The run completed and its result is ready for review.";
+  if (phase === "degraded") return "The backend could not complete this run. Nothing was falsely marked as finished.";
+  if (phase === "cancelled") return "The run was cancelled and no further external action will be taken.";
+  return "Ready for a governed objective.";
+}
+
 function routeFromPath(pathname: string): RouteKey {
   const clean = pathname.replace(/^\//, "").split("/")[0] as RouteKey;
   return clean && clean in routeMeta ? clean : "dashboard";
@@ -166,6 +191,7 @@ export default function DavidCommandCenter({ initialRoute = "dashboard" }: { ini
   const [messages, setMessages] = useState<Message[]>([
     { id: "welcome", role: "assistant", text: "I’m David. Give me an objective, a question, or a creative direction. I’ll plan the work, show you what will happen, and ask before sensitive actions.", time: "09:41" },
   ]);
+  const [execution, setExecution] = useState<ExecutionSnapshot>(initialExecution);
 
   useEffect(() => {
     let mounted = true;
@@ -204,6 +230,56 @@ export default function DavidCommandCenter({ initialRoute = "dashboard" }: { ini
     }
   };
 
+  const runObjective = async (objective: string) => {
+    const text = objective.trim();
+    if (!text || execution.phase === "planning" || execution.phase === "executing" || execution.phase === "verifying") return;
+
+    setExecution({ phase: "planning", objective: text, message: executionMessage("planning"), steps: stepsForPhase("planning") });
+    setToast({ kind: "info", text: "David is building a governed execution plan." });
+
+    try {
+      const goal = await api.intelligence.createGoal(text);
+      setExecution((current) => ({ ...current, goalId: goal.id, message: "Goal captured. David is sequencing the required capabilities.", steps: stepsForPhase("planning") }));
+
+      const plan = await api.intelligence.planGoal(goal.id);
+      const firstCapability = plan.steps?.[0]?.capability || plan.steps?.[0]?.skill || plan.steps?.[0]?.tool;
+      let selectedCapability = firstCapability ? String(firstCapability) : undefined;
+      try {
+        const route = await api.intelligence.route(text, selectedCapability);
+        selectedCapability = String(route.selected?.capability_id || route.selected?.id || selectedCapability || "") || undefined;
+      } catch {
+        // Routing is advisory; the governed run endpoint remains the execution authority.
+      }
+
+      setExecution((current) => ({
+        ...current,
+        phase: "planning",
+        selectedCapability,
+        message: "Plan assembled. David is checking execution permissions and provider readiness.",
+        steps: stepsForPhase("planning", plan),
+      }));
+
+      const run = await api.intelligence.createRun(goal.id, text, selectedCapability);
+      const details = await api.intelligence.runDetails(run.id).catch(() => undefined);
+      const phase = phaseFromRunStatus(details?.run?.status || run.status, details?.run?.approved ?? run.approved);
+      setExecution({
+        phase,
+        objective: text,
+        goalId: goal.id,
+        runId: run.id,
+        selectedCapability,
+        message: executionMessage(phase),
+        steps: stepsForPhase(phase, plan, details),
+        events: details?.events?.slice(-4).map((event) => ({ label: String(event.type || event.event_type || "Execution event"), detail: event.message ? String(event.message) : undefined, state: "complete" as const })),
+      });
+      setToast({ kind: phase === "completed" ? "success" : phase === "degraded" ? "error" : "info", text: phase === "awaiting_approval" ? "Approval is required before David can continue." : executionMessage(phase) });
+    } catch {
+      const phase: ExecutionPhase = "degraded";
+      setExecution({ phase, objective: text, message: executionMessage(phase), steps: stepsForPhase(phase) });
+      setToast({ kind: "error", text: "The execution service is unavailable. David kept the request in a truthful degraded state." });
+    }
+  };
+
   return (
     <div className="david-shell">
       <div className="shell-grid" />
@@ -226,7 +302,7 @@ export default function DavidCommandCenter({ initialRoute = "dashboard" }: { ini
         </header>
 
         <div className="page-frame">
-          {activeRoute === "dashboard" && <Dashboard onNavigate={navigate} onPrompt={(prompt) => { navigate("chat"); setDraft(prompt); }} />}
+          {activeRoute === "dashboard" && <Dashboard onNavigate={navigate} onRunObjective={(prompt) => void runObjective(prompt)} execution={execution} />}
           {activeRoute === "chat" && <ChatView messages={messages} draft={draft} setDraft={setDraft} working={working} onSubmit={() => void submitMessage()} onPrompt={(prompt) => void submitMessage(prompt)} onNavigate={navigate} />}
           {activeRoute === "projects" && <ProjectsView onNavigate={navigate} notify={setToast} />}
           {activeRoute === "tasks" && <TasksView notify={setToast} />}
@@ -265,14 +341,21 @@ function PageHeader({ route, action }: { route: RouteKey; action?: React.ReactNo
   return <div className="page-header"><div><div className="micro-label">{meta.eyebrow}</div><h1>{meta.title}</h1><p>{meta.description}</p></div>{action}</div>;
 }
 
-function Dashboard({ onNavigate, onPrompt }: { onNavigate: (route: RouteKey) => void; onPrompt: (prompt: string) => void }) {
+function Dashboard({ onNavigate, onRunObjective, execution }: { onNavigate: (route: RouteKey) => void; onRunObjective: (prompt: string) => void; execution: ExecutionSnapshot }) {
   return <div className="dashboard-page">
     <div className="hero-panel"><div className="hero-copy"><div className="eyebrow-pill"><span className="status-dot" /> COMMAND CENTER / LIVE</div><h1>Good morning, <span>David</span> is ready.</h1><p>One objective in. A coordinated plan, finished work, and a clear next decision out.</p><div className="hero-actions"><button className="button button-primary" onClick={() => onNavigate("chat")}><Command size={16} /> Start a command</button><button className="button button-secondary" onClick={() => onNavigate("creative")}><WandSparkles size={16} /> Open creative studio</button></div><div className="hero-trust"><ShieldCheck size={14} /> Approval gates protect sensitive actions <span>·</span> <Database size={14} /> 128 memories indexed</div></div><div className="hero-core-wrap"><div className="core-orbit core-orbit-one" /><div className="core-orbit core-orbit-two" /><div className="ai-core-large"><div className="core-glint" /><div className="core-center"><Sparkles size={25} /></div></div><div className="core-caption"><span>DAVID CORE</span><strong>Ready to orchestrate</strong></div></div></div>
     <div className="stat-grid"><StatCard label="Active projects" value="06" trend="+2 this week" icon={FolderKanban} tone="red" /><StatCard label="Tasks in motion" value="14" trend="4 need approval" icon={Target} tone="amber" /><StatCard label="Knowledge indexed" value="128" trend="+12 this month" icon={BrainCircuit} tone="blue" /><StatCard label="System readiness" value="98.4%" trend="All core services nominal" icon={Gauge} tone="green" /></div>
-    <div className="dashboard-grid"><section className="panel-card command-panel"><SectionHeader eyebrow="EXECUTION LAYER" title="Give David an objective" detail="David will route the work, build a plan, and show you the approval points." icon={Target} /><PromptBox onPrompt={onPrompt} /></section><section className="panel-card radar-panel"><SectionHeader eyebrow="TODAY'S RADAR" title="What needs your attention" icon={Activity} action={<button className="text-button" onClick={() => onNavigate("activity")}>View log <ArrowUpRight size={14} /></button>} /><div className="radar-list"><RadarItem icon={ShieldCheck} title="Approve website deployment" detail="Project: Atlas launch" tag="Approval" tone="amber" onClick={() => onNavigate("projects")} /><RadarItem icon={Video} title="Product teaser is ready" detail="3 cuts generated from your brief" tag="Ready" tone="green" onClick={() => onNavigate("video-studio")} /><RadarItem icon={BrainCircuit} title="New knowledge connected" detail="Brand handbook / 14 pages" tag="Indexed" tone="blue" onClick={() => onNavigate("memory")} /></div></section></div>
+    <div className="dashboard-grid"><section className="panel-card command-panel"><SectionHeader eyebrow="EXECUTION LAYER" title="Give David an objective" detail="David will route the work, build a plan, and show you the approval points." icon={Target} /><PromptBox onPrompt={onRunObjective} /></section><section className="panel-card radar-panel"><SectionHeader eyebrow="TODAY'S RADAR" title="What needs your attention" icon={Activity} action={<button className="text-button" onClick={() => onNavigate("activity")}>View log <ArrowUpRight size={14} /></button>} /><div className="radar-list"><RadarItem icon={ShieldCheck} title="Approve website deployment" detail="Project: Atlas launch" tag="Approval" tone="amber" onClick={() => onNavigate("projects")} /><RadarItem icon={Video} title="Product teaser is ready" detail="3 cuts generated from your brief" tag="Ready" tone="green" onClick={() => onNavigate("video-studio")} /><RadarItem icon={BrainCircuit} title="New knowledge connected" detail="Brand handbook / 14 pages" tag="Indexed" tone="blue" onClick={() => onNavigate("memory")} /></div></section></div>
+    <ExecutionTimeline execution={execution} />
     <section className="section-block"><SectionHeader eyebrow="CAPABILITY MAP" title="One agent, many coordinated systems" detail="Start with a surface or let David choose the right workflow for your goal." icon={Sparkles} action={<button className="text-button" onClick={() => onNavigate("creative")}>Explore all capabilities <ArrowUpRight size={14} /></button>} /><div className="capability-grid"><CapabilityCard icon={Bot} title="Delegate work" detail="Route research, strategy, operations, and quality control to focused agents." color="red" onClick={() => onNavigate("agents")} /><CapabilityCard icon={Palette} title="Create anything" detail="Produce connected websites, videos, images, voice, and documents." color="purple" onClick={() => onNavigate("creative")} /><CapabilityCard icon={Database} title="Build context" detail="Connect files and business knowledge so every answer gets smarter." color="blue" onClick={() => onNavigate("memory")} /><CapabilityCard icon={Zap} title="Automate repeat work" detail="Schedule recurring workflows and keep your business moving in the background." color="amber" onClick={() => onNavigate("tasks")} /></div></section>
     <section className="section-block"><SectionHeader eyebrow="RECENT SIGNAL" title="Your latest work" icon={Activity} action={<button className="text-button" onClick={() => onNavigate("activity")}>Open activity <ArrowUpRight size={14} /></button>} /><div className="activity-grid">{activityItems.slice(0, 3).map((item) => <ActivityRow key={item.title} {...item} />)}</div></section>
   </div>;
+}
+
+function ExecutionTimeline({ execution }: { execution: ExecutionSnapshot }) {
+  const phaseTone = execution.phase === "completed" ? "green" : execution.phase === "degraded" || execution.phase === "cancelled" ? "red" : execution.phase === "awaiting_approval" ? "amber" : "blue";
+  const phaseLabel = execution.phase === "idle" ? "READY" : execution.phase.replace(/_/g, " ").toUpperCase();
+  return <section className={cx("execution-timeline panel-card", `execution-${execution.phase}`)}><div className="execution-heading"><div><div className="micro-label">STATE-DRIVEN EXECUTION</div><h2>David shows the work, not just the answer.</h2><p>{execution.objective || "Every objective moves through intent, plan, policy, execution, verification, and traceable result."}</p></div><span className={cx("status-tag", `tag-${phaseTone}`)}><span className="status-dot" /> {phaseLabel}</span></div><div className="execution-status"><span className={cx("execution-core", `tone-${phaseTone}`)}><Sparkles size={18} /></span><div><strong>{execution.message}</strong><small>{execution.runId ? `Run ${execution.runId.slice(0, 10)} · ` : "No run created yet · "}{execution.selectedCapability ? `Capability: ${execution.selectedCapability}` : "Governed by workspace policy"}</small></div>{execution.phase === "awaiting_approval" && <span className="approval-chip"><ShieldCheck size={14} /> Approval gate</span>}</div><div className="execution-steps">{execution.steps.map((step, index) => <div className={cx("execution-step", `step-${step.state}`)} key={step.id}><span className="execution-step-marker">{step.state === "complete" ? <Check size={13} /> : step.state === "active" ? <Play size={12} /> : step.state === "blocked" ? <ShieldCheck size={13} /> : step.state === "failed" ? <X size={13} /> : <span>{index + 1}</span>}</span><span className="execution-step-copy"><strong>{step.title}</strong><small>{step.detail}</small></span>{step.state === "active" && <span className="execution-live">Live</span>}</div>)}</div></section>;
 }
 
 function ChatView({ messages, draft, setDraft, working, onSubmit, onPrompt, onNavigate }: { messages: Message[]; draft: string; setDraft: (value: string) => void; working: boolean; onSubmit: () => void; onPrompt: (prompt: string) => void; onNavigate: (route: RouteKey) => void }) {
