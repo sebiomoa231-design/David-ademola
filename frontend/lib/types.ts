@@ -12,11 +12,11 @@ export interface BackendHealth {
 }
 
 export interface PersistentSettings {
-  name?: string;
-  theme?: string;
-  memory_enabled?: boolean;
-  provider_priority?: string[];
-  max_upload_mb?: number;
+  name: string;
+  theme: string;
+  memory_enabled: boolean;
+  provider_priority: string[];
+  max_upload_mb: number;
   preferences?: Record<string, boolean>;
   workspace_name?: string;
   brand_voice?: string;
@@ -274,7 +274,6 @@ export interface CapabilityExecutionResponse {
 export interface SettingsResponse {
   [key: string]: unknown;
 }
-
 
 export type AssetKind = "image" | "video" | "audio" | "document" | "website" | "other";
 

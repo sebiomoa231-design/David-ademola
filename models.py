@@ -77,6 +77,15 @@ class ProjectItem(ProjectCreate):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 
+class ProjectUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    goals: Optional[list[str]] = None
+    decisions: Optional[list[str]] = None
+    milestones: Optional[list[str]] = None
+    blockers: Optional[list[str]] = None
+
+
 class TaskCreate(BaseModel):
     project_id: str = ""
     title: str
@@ -95,6 +104,13 @@ class TaskItem(TaskCreate):
     id: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class TaskUpdate(BaseModel):
+    project_id: Optional[str] = None
+    title: Optional[str] = None
+    notes: Optional[str] = None
+    status: Optional[Literal["todo", "doing", "done"]] = None
 
 
 class ConversationMessage(BaseModel):
