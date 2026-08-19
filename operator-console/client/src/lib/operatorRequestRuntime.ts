@@ -1,4 +1,4 @@
-export type OperatorCoreState = "idle" | "listening" | "thinking" | "planning" | "executing" | "verifying" | "speaking" | "complete" | "degraded";
+export type OperatorCoreState = "idle" | "listening" | "thinking" | "processing" | "planning" | "executing" | "generating" | "verifying" | "speaking" | "waiting" | "complete" | "degraded";
 
 type RequestRuntimeDependencies = {
   beginReasoning: () => void;

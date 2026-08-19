@@ -109,3 +109,42 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 @media (max-width: 800px) { .demo-mode-boundary { grid-template-columns: 1fr; } }
 @media (max-width: 520px) { .topbar-right .signal { font-size: 9px; }.top-date { font-size: 10px; }.quick-grid, .resource-grid { grid-template-columns: 1fr; }.status-rail { grid-template-columns: 1fr; }.hero-bottom { align-items: flex-start; flex-direction: column; }.core-coordinate { display: none; }.core-readout.top { top: 8%; }.core-readout.bottom { bottom: 8%; }.core-ring-b { width: 80%; }.main-content { padding-inline: 14px; }.workspace-toolbar h2, .conversation-head h2 { font-size: 20px; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; } }
+
+/* David AI Core motion layer: state-driven, audio-reactive, and intentionally restrained. */
+.core-stage { --core-activity: .16; --core-speed: 1; --core-accent: var(--operator-accent); }
+.core-aura { position: absolute; z-index: 1; width: min(48%, 330px); aspect-ratio: 1; border: 1px solid color-mix(in srgb, var(--core-accent) 26%, transparent); border-radius: 50%; opacity: .6; background: radial-gradient(circle, color-mix(in srgb, var(--core-accent) 13%, transparent), transparent 68%); filter: blur(1px); transform: scale(calc(.92 + var(--voice-amplitude, 0) * .18)); transition: transform .18s ease-out, opacity .22s ease-out, filter .22s ease-out; animation: core-aura-breathe 4.8s ease-in-out infinite; }
+.core-particle-field { position: absolute; z-index: 2; inset: 8% 12%; pointer-events: none; }
+.core-particle-field i { position: absolute; left: 50%; top: 50%; width: 3px; height: 3px; border-radius: 50%; background: color-mix(in srgb, var(--core-accent) 82%, white); box-shadow: 0 0 8px color-mix(in srgb, var(--core-accent) 72%, transparent); opacity: calc(.18 + var(--core-activity) * .9); transform: rotate(var(--particle-angle)) translateX(var(--particle-radius)); animation: core-particle-orbit calc((12s - (var(--particle-index) * .2s)) / var(--core-speed)) linear infinite; animation-delay: calc(var(--particle-index) * -0.52s); transition: opacity .3s ease-out, box-shadow .25s ease-out; }
+.core-energy-arc { position: absolute; z-index: 3; left: 50%; top: 50%; width: min(60%, 420px); aspect-ratio: 1; border: 1px solid color-mix(in srgb, var(--core-accent) 44%, transparent); border-left-color: transparent; border-bottom-color: transparent; border-radius: 50%; opacity: calc(.14 + var(--core-activity) * .8); filter: drop-shadow(0 0 8px color-mix(in srgb, var(--core-accent) 35%, transparent)); transform: translate(-50%, -50%) rotate(-18deg) scale(calc(1 + var(--voice-amplitude, 0) * .18)); transition: transform .16s ease-out, opacity .2s ease-out; }
+.core-energy-arc-a { animation: core-arc-spin calc(9s / var(--core-speed)) linear infinite; }
+.core-energy-arc-b { width: min(50%, 348px); border-top-color: transparent; border-right-color: transparent; transform: translate(-50%, -50%) rotate(66deg); animation: core-arc-spin-reverse calc(7s / var(--core-speed)) linear infinite; }
+.core-orb, .core-ring, .core-energy-arc, .core-aura, .core-particle-field { will-change: transform, opacity; }
+.core-listening { --core-activity: .36; --core-speed: 1.25; }
+.core-listening .core-aura { opacity: calc(.56 + var(--voice-amplitude, 0) * .35); transform: scale(calc(1 + var(--voice-amplitude, 0) * .24)); }
+.core-listening .core-particle-field i { animation-duration: calc(8s / var(--core-speed)); }
+.core-thinking { --core-activity: .54; --core-speed: 1.8; }
+.core-thinking .core-aura, .core-processing .core-aura { opacity: .78; transform: scale(1.04); }
+.core-thinking .core-energy-arc, .core-processing .core-energy-arc { border-width: 2px; }
+.core-processing { --core-activity: .72; --core-speed: 2.2; }
+.core-processing .core-orb, .core-executing .core-orb, .core-generating .core-orb { animation-duration: 1.45s; }
+.core-executing, .core-generating { --core-activity: .86; --core-speed: 2.8; }
+.core-executing .core-particle-field i, .core-generating .core-particle-field i { animation-duration: 4.5s; }
+.core-speaking { --core-activity: calc(.28 + var(--voice-amplitude, 0) * .7); --core-speed: calc(1.35 + var(--voice-amplitude, 0) * 1.9); }
+.core-speaking .core-aura { opacity: calc(.44 + var(--voice-amplitude, 0) * .5); transform: scale(calc(.96 + var(--voice-amplitude, 0) * .34)); filter: blur(calc(1px + var(--voice-amplitude, 0) * 3px)); }
+.core-speaking .core-energy-arc { opacity: calc(.28 + var(--voice-amplitude, 0) * .72); }
+.core-speaking .core-particle-field i { animation-duration: calc(10s / var(--core-speed)); }
+.core-waiting { --core-activity: .12; --core-speed: .72; }
+.core-waiting .core-orb { animation-duration: 5.8s; }
+.core-waiting .core-particle-field i { opacity: .14; animation-duration: 18s; }
+.core-complete { --core-activity: .9; --core-speed: 2.4; }
+.core-complete .core-energy-arc { opacity: 1; animation-duration: 1.3s; }
+.core-degraded { --core-activity: .22; --core-speed: .85; --core-accent: #ffc466; }
+.core-degraded .core-aura { background: radial-gradient(circle, rgba(255,196,102,.16), transparent 68%); }
+.core-degraded .core-particle-field i { background: #ffd991; box-shadow: 0 0 8px rgba(255,196,102,.6); }
+.core-waveform { transform: scaleY(calc(1 + var(--voice-amplitude, 0) * .45)); transform-origin: center; transition: transform .1s ease-out, opacity .16s ease-out; }
+.core-speaking .core-waveform { filter: drop-shadow(0 0 8px rgba(107,201,255,.45)); }
+@keyframes core-aura-breathe { 0%, 100% { transform: scale(.93); } 50% { transform: scale(1.03); } }
+@keyframes core-particle-orbit { from { transform: rotate(var(--particle-angle)) translateX(var(--particle-radius)) rotate(0deg); } to { transform: rotate(calc(var(--particle-angle) + 360deg)) translateX(var(--particle-radius)) rotate(-360deg); } }
+@keyframes core-arc-spin { from { transform: translate(-50%, -50%) rotate(-18deg); } to { transform: translate(-50%, -50%) rotate(342deg); } }
+@keyframes core-arc-spin-reverse { from { transform: translate(-50%, -50%) rotate(66deg); } to { transform: translate(-50%, -50%) rotate(-294deg); } }
+@media (prefers-reduced-motion: reduce) { .core-particle-field i, .core-energy-arc, .core-aura { animation-play-state: paused; } }
