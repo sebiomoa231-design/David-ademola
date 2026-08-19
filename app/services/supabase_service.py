@@ -256,6 +256,38 @@ class SupabasePersistence:
         client._request("GET", "/rest/v1/")
         return {"configured": True, "database_enabled": self.database_enabled, "storage_bucket": self.settings.supabase_storage_bucket}
 
+    def get_settings(self) -> dict[str, Any] | None:
+        rows = self.require_database().select(
+            "david_operating_records",
+            {
+                "select": "payload",
+                "id": f"eq.settings:{self.owner_id}",
+                "entity_type": "eq.settings",
+                "limit": "1",
+            },
+        )
+        if not rows:
+            return None
+        payload = rows[0].get("payload")
+        return dict(payload) if isinstance(payload, dict) else None
+
+    def update_settings(self, payload: dict[str, Any]) -> dict[str, Any]:
+        now = _now()
+        row = {
+            "id": f"settings:{self.owner_id}",
+            "owner_id": self.owner_id,
+            "entity_type": "settings",
+            "status": "active",
+            "name": "David settings",
+            "payload": payload,
+            "updated_at": now,
+        }
+        rows = self.require_database().upsert("david_operating_records", row, "id")
+        if not rows:
+            return payload
+        stored = rows[0].get("payload")
+        return dict(stored) if isinstance(stored, dict) else payload
+
     def _list(self, table: str, *, limit: int = 100, order: str = "updated_at.desc", filters: dict[str, str] | None = None) -> list[dict[str, Any]]:
         params = {"select": "*", "limit": str(max(1, min(limit, 500)))}
         if order:

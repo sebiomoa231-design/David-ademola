@@ -183,6 +183,31 @@ class FavoriteRequest(BaseModel):
     favorite: bool = True
 
 
+class SettingsUpdate(BaseModel):
+    name: str | None = None
+    theme: str | None = None
+    memory_enabled: bool | None = None
+    provider_priority: list[str] | None = None
+    max_upload_mb: int | None = Field(default=None, ge=1, le=1024)
+    preferences: dict[str, bool] | None = None
+    workspace_name: str | None = None
+    brand_voice: str | None = None
+    timezone: str | None = None
+
+
+class PersistentSettings(BaseModel):
+    name: str = "David"
+    theme: str = "dark"
+    memory_enabled: bool = True
+    provider_priority: list[str] = Field(default_factory=list)
+    max_upload_mb: int = 25
+    preferences: dict[str, bool] = Field(default_factory=dict)
+    workspace_name: str = "David AI"
+    brand_voice: str = "calm, intelligent, authoritative"
+    timezone: str = "UTC"
+    persistence_status: str = "local-only"
+
+
 class SupabaseStatus(BaseModel):
     configured: bool
     database_enabled: bool
