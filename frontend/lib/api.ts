@@ -3,6 +3,7 @@ import type {
   AgentRun,
   AssetItem,
   BackendHealth,
+  PersistentSettings,
   Capability,
   ChatResponse,
   ConversationItem,
@@ -85,6 +86,9 @@ export const api = {
   // `/api/health` is the repository's canonical contract. `/health` preserves
   // compatibility with the currently deployed Render service while it catches up.
   health: () => requestAnyPath<BackendHealth>(["/api/health", "/health"]),
+  settings: () => request<PersistentSettings>("/api/settings"),
+  updateSettings: (payload: { preferences?: Record<string, boolean>; workspace_name?: string; brand_voice?: string; timezone?: string }) =>
+    request<PersistentSettings>("/api/settings", { method: "PATCH", body: JSON.stringify(payload) }),
   chat: (message: string, conversationId?: string) =>
     request<ChatResponse>("/api/chat", json({ message, conversation_id: conversationId })),
   agents: {
