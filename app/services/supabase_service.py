@@ -294,8 +294,30 @@ class SupabasePersistence:
         data.setdefault("updated_at", data["created_at"])
         return _first(self.require_database().insert("david_projects", data))
 
+    def get_project(self, project_id: str) -> dict[str, Any] | None:
+        rows = self.require_database().select("david_projects", {"select": "*", "id": f"eq.{project_id}", "limit": "1"})
+        return dict(rows[0]) if rows else None
+
+    def update_project(self, project_id: str, payload: dict[str, Any]) -> dict[str, Any] | None:
+        rows = self.require_database().update("david_projects", {**payload, "updated_at": _now()}, {"id": f"eq.{project_id}"})
+        return dict(rows[0]) if rows else None
+
+    def delete_project(self, project_id: str) -> bool:
+        return bool(self.require_database().delete("david_projects", {"id": f"eq.{project_id}"}))
+
     def list_tasks(self) -> list[dict[str, Any]]:
         return self._list("david_tasks")
+
+    def get_task(self, task_id: str) -> dict[str, Any] | None:
+        rows = self.require_database().select("david_tasks", {"select": "*", "id": f"eq.{task_id}", "limit": "1"})
+        return dict(rows[0]) if rows else None
+
+    def update_task(self, task_id: str, payload: dict[str, Any]) -> dict[str, Any] | None:
+        rows = self.require_database().update("david_tasks", {**payload, "updated_at": _now()}, {"id": f"eq.{task_id}"})
+        return dict(rows[0]) if rows else None
+
+    def delete_task(self, task_id: str) -> bool:
+        return bool(self.require_database().delete("david_tasks", {"id": f"eq.{task_id}"}))
 
     def create_task(self, payload: dict[str, Any]) -> dict[str, Any]:
         data = dict(payload)

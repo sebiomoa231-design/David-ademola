@@ -62,6 +62,15 @@ class ProjectCreate(BaseModel):
     blockers: list[str] = Field(default_factory=list)
 
 
+class ProjectUpdate(BaseModel):
+    name: str | None = None
+    description: str | None = None
+    goals: list[str] | None = None
+    decisions: list[str] | None = None
+    milestones: list[str] | None = None
+    blockers: list[str] | None = None
+
+
 class ProjectItem(ProjectCreate):
     id: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
@@ -73,6 +82,13 @@ class TaskCreate(BaseModel):
     title: str
     notes: str = ""
     status: Literal["todo", "doing", "done"] = "todo"
+
+
+class TaskUpdate(BaseModel):
+    project_id: str | None = None
+    title: str | None = None
+    notes: str | None = None
+    status: Literal["todo", "doing", "done"] | None = None
 
 
 class TaskItem(TaskCreate):

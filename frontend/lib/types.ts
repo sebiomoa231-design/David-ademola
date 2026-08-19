@@ -11,6 +11,19 @@ export interface BackendHealth {
   [key: string]: unknown;
 }
 
+export interface PersistentSettings {
+  name?: string;
+  theme?: string;
+  memory_enabled?: boolean;
+  provider_priority?: string[];
+  max_upload_mb?: number;
+  preferences?: Record<string, boolean>;
+  workspace_name?: string;
+  brand_voice?: string;
+  timezone?: string;
+  persistence_status?: "persisted" | "local-only" | string;
+}
+
 export interface VoiceStatus {
   stt_configured?: boolean;
   tts_configured?: boolean;
