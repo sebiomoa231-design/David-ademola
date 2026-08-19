@@ -550,6 +550,10 @@ function ChatWorkspace({ voice, tone, conversations, notify }: { voice: VoiceSta
       setVoicePhase("processing");
       return;
     }
+    if (!window.isSecureContext) {
+      setVoicePhase("error");
+      return notify("error", "Microphone access requires the HTTPS preview URL.");
+    }
     if (!navigator.mediaDevices?.getUserMedia) {
       setVoicePhase("error");
       return notify("error", "This browser does not expose microphone access.");
@@ -561,9 +565,15 @@ function ChatWorkspace({ voice, tone, conversations, notify }: { voice: VoiceSta
       recorder.onstop = () => { stream.getTracks().forEach((track) => track.stop()); setVoicePhase("idle"); notify("info", voice?.stt_configured ? "Voice capture completed." : "Voice capture completed locally; the backend STT route is not exposed yet."); };
       recorder.start();
       setVoicePhase("listening");
-    } catch {
+    } catch (error) {
       setVoicePhase("error");
-      notify("error", "Microphone permission was not granted.");
+      const errorName = error instanceof DOMException ? error.name : "";
+      const message = errorName === "NotAllowedError"
+        ? "Microphone access is blocked. Use the browser lock icon to allow the microphone, then retry."
+        : errorName === "NotFoundError"
+          ? "No microphone was found. Connect a microphone and retry, or use Text fallback."
+          : "Microphone access failed. Check the browser permission and selected input device, then retry.";
+      notify("error", message);
     }
   };
 
