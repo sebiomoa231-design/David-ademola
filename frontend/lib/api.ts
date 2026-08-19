@@ -180,6 +180,7 @@ export const api = {
   createTask: (payload: Partial<TaskItem> & { title?: string; description?: string }) => request<TaskItem>("/api/projects/tasks", json(payload)),
   conversations: () => request<ConversationItem[]>("/api/conversations"),
   websiteGenerate: (prompt: string, projectId?: string) => request<Record<string, unknown>>("/api/website/generate", json({ prompt, project_id: projectId || null })),
+  websitePreviewUrl: (path: string) => path.startsWith("http") ? path : `${primaryBase}${path.startsWith("/") ? path : `/${path}`}`,
   planCreate: (goal: string) => request<Record<string, unknown>>("/api/plan", json({ goal })),
   login: (email: string, password: string) => request<Record<string, unknown>>("/api/auth/login", json({ email, password })),
   register: (name: string, email: string, password: string) => request<Record<string, unknown>>("/api/auth/register", json({ name, email, password })),
@@ -188,8 +189,9 @@ export const api = {
     form.append("file", file);
     if (projectId) form.append("project_id", projectId);
     form.append("kind", kind);
-    return request<AssetItem & { status?: string; stored_as?: string; backend?: string }>("/api/files/upload", { method: "POST", body: form });
+    return request<AssetItem & { status?: string; stored_as?: string; backend?: string; download_url?: string }>("/api/files/upload", { method: "POST", body: form });
   },
+  localAssets: () => request<Array<Record<string, unknown>>>("/api/files/local-assets"),
 
   library: {
     status: () => request<SupabaseStatus>("/api/library/status"),
@@ -203,8 +205,10 @@ export const api = {
     list: () => request<ProviderStatusResponse>("/api/providers"),
     capabilities: () => request<Record<string, unknown>>("/api/providers/capabilities"),
     reasoning: (prompt: string, preferredProviders: string[] = []) => request<CapabilityExecutionResponse>("/api/providers/reasoning", json({ prompt, preferred_providers: preferredProviders })),
-    image: (prompt: string, preferredProviders: string[] = []) => request<CapabilityExecutionResponse>("/api/providers/images", json({ prompt, preferred_providers: preferredProviders })),
+    image: (prompt: string, preferredProviders: string[] = [], options: { imageBase64?: string; imageMimeType?: string } = {}) => request<CapabilityExecutionResponse>("/api/providers/images", json({ prompt, preferred_providers: preferredProviders, ...(options.imageBase64 ? { image_base64: options.imageBase64, image_mime_type: options.imageMimeType || "image/png" } : {}) })),
     execute: (capability: string, payload: Record<string, unknown> = {}, preferredProviders: string[] = []) => request<CapabilityExecutionResponse>("/api/providers/execute", json({ capability, payload, preferred_providers: preferredProviders })),
+    videoOperation: (operationName: string) => request<CapabilityExecutionResponse>(`/api/providers/video/operations?name=${encodeURIComponent(operationName)}`),
+    videoDownloadUrl: (videoUri: string) => `${primaryBase}/api/providers/video/download?uri=${encodeURIComponent(videoUri)}`,
   },
 
   deployments: {
@@ -260,8 +264,8 @@ export const api = {
     policies: () => request<Record<string, unknown>>("/api/intelligence/policies"),
     route: (objective: string, requestedCapability?: string) =>
       request<RouteResult>("/api/intelligence/route", json({ objective, requested_capability: requestedCapability || null })),
-    createGoal: (objective: string, context?: Record<string, unknown>) =>
-      request<Goal>("/api/intelligence/goals", json({ objective, context: context || {} })),
+    createGoal: (objective: string, context?: Record<string, unknown>, title?: string) =>
+      request<Goal>("/api/intelligence/goals", json({ title: title || objective.trim().slice(0, 96) || "David AI objective", objective, context: context || {} })),
     planGoal: (goalId: string) => request<GoalPlan>(`/api/intelligence/goals/${goalId}/plan`, { method: "POST" }),
     createRun: (goalId: string, objective?: string, requestedCapability?: string) =>
       request<Run>("/api/intelligence/runs", json({ goal_id: goalId, objective, requested_capability: requestedCapability || null })),

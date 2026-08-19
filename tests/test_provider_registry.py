@@ -95,6 +95,62 @@ def test_openai_image_generation_returns_b64_payload(monkeypatch):
     assert result["images"][0]["b64_json"] == "abc"
 
 
+def test_gemini_video_returns_trackable_operation_and_polls(monkeypatch):
+    class FakeClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return False
+
+        async def request(self, method, url, **kwargs):
+            if method == "POST":
+                assert url.endswith("/models/veo-3.1-generate-preview:predictLongRunning")
+                assert kwargs["json"]["parameters"]["aspectRatio"] == "16:9"
+                return FakeResponse({"name": "models/veo-3.1-generate-preview/operations/test-1"})
+            assert method == "GET"
+            return FakeResponse({"done": True, "response": {"generateVideoResponse": {"generatedSamples": [{"video": {"uri": "https://generativelanguage.googleapis.com/v1beta/files/video-1"}}]}}})
+
+    import app.services.provider_registry as module
+    monkeypatch.setattr(module.httpx, "AsyncClient", FakeClient)
+    settings = Settings(_env_file=None, gemini_api_key="GEMINI_SECRET", provider_priority="gemini")
+    router = CapabilityRouter(settings)
+    started = asyncio.run(router.execute("video", {"prompt": "a calm orbital interface", "aspect_ratio": "16:9"}))
+    assert started["status"] == "processing"
+    completed = asyncio.run(router.video_operation(started["operation_name"]))
+    assert completed["status"] == "completed"
+    assert completed["video_uri"].startswith("https://generativelanguage.googleapis.com/")
+    assert "GEMINI_SECRET" not in json.dumps(completed)
+
+
+def test_gemini_image_accepts_reference_image(monkeypatch):
+    seen = {}
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return False
+
+        async def request(self, method, url, **kwargs):
+            seen.update(kwargs)
+            return FakeResponse({"candidates": [{"content": {"parts": [{"inlineData": {"mimeType": "image/png", "data": "abc"}}]}}]})
+
+    import app.services.provider_registry as module
+    monkeypatch.setattr(module.httpx, "AsyncClient", FakeClient)
+    settings = Settings(_env_file=None, gemini_api_key="secret", provider_priority="gemini")
+    result = asyncio.run(CapabilityRouter(settings).execute("image", {"prompt": "enhance", "image_base64": "ref", "image_mime_type": "image/png"}))
+    assert result["images"][0]["data"] == "abc"
+    assert seen["json"]["contents"][0]["parts"][1]["inlineData"]["data"] == "ref"
+
+
 def test_registry_reports_configured_status_without_credentials():
     registry = ProviderRegistry(Settings(_env_file=None, openai_api_key="", anthropic_api_key="", gemini_api_key="", groq_api_key="", openrouter_api_key="", voyage_api_key="", elevenlabs_api_key="", runway_api_key="", luma_api_key="", v0_api_key="", render_api_key=""))
     statuses = {item["id"]: item for item in registry.list()}

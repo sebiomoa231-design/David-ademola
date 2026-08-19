@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from typing import Any
+from urllib.parse import urlparse
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
@@ -41,6 +42,8 @@ class ImageRequest(BaseModel):
     size: str | None = None
     quality: str | None = None
     n: int = Field(default=1, ge=1, le=4)
+    image_base64: str | None = Field(default=None, max_length=12_000_000)
+    image_mime_type: str | None = Field(default=None, max_length=100)
     preferred_providers: list[str] = Field(default_factory=list, max_length=8)
 
 
@@ -73,6 +76,26 @@ async def execute_capability(request: CapabilityRequest, router_service: Capabil
         return await router_service.execute(request.capability, request.payload, request.preferred_providers)
     except ProviderIntegrationError as exc:
         raise _provider_error(exc) from exc
+
+
+@router.get("/video/operations", summary="Poll a verified Gemini video operation")
+async def video_operation(name: str = Query(min_length=1, max_length=500), router_service: CapabilityRouter = Depends(_router)) -> dict[str, Any]:
+    try:
+        return await router_service.video_operation(name)
+    except ProviderIntegrationError as exc:
+        raise _provider_error(exc) from exc
+
+
+@router.get("/video/download", summary="Download a completed verified video artifact")
+async def video_download(uri: str = Query(min_length=1, max_length=2000), router_service: CapabilityRouter = Depends(_router)) -> Response:
+    parsed = urlparse(uri)
+    if parsed.hostname not in {"generativelanguage.googleapis.com", "generativelanguage.googleapis.com."}:
+        raise HTTPException(status_code=400, detail="Video artifact URI is not a trusted Gemini download URL.")
+    try:
+        content, content_type = await router_service.download_video(uri)
+    except ProviderIntegrationError as exc:
+        raise _provider_error(exc) from exc
+    return Response(content=content, media_type=content_type, headers={"Content-Disposition": "inline; filename=generated-video.mp4"})
 
 
 @router.post("/reasoning", summary="Generate text through the configured reasoning fallback chain")

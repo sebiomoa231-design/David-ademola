@@ -70,7 +70,7 @@ describe("Command Center API contracts", () => {
     await api.intelligence.authorizeRun(run.id, "research");
     await api.intelligence.executeRun(run.id, { approved: true, objective: goal.objective, requested_capability: "research", input: { authorization: "explicit-user-action" } });
 
-    expect(fetchMock).toHaveBeenNthCalledWith(1, `${canonicalBase}/api/intelligence/goals`, expect.objectContaining({ method: "POST", body: JSON.stringify({ objective: "Prepare a governed research brief", context: { interface: "command-center" } }) }));
+    expect(fetchMock).toHaveBeenNthCalledWith(1, `${canonicalBase}/api/intelligence/goals`, expect.objectContaining({ method: "POST", body: JSON.stringify({ title: "Prepare a governed research brief", objective: "Prepare a governed research brief", context: { interface: "command-center" } }) }));
     expect(fetchMock).toHaveBeenNthCalledWith(2, `${canonicalBase}/api/intelligence/goals/goal-1/plan`, expect.objectContaining({ method: "POST" }));
     expect(fetchMock).toHaveBeenNthCalledWith(3, `${canonicalBase}/api/intelligence/runs`, expect.objectContaining({ method: "POST", body: JSON.stringify({ goal_id: "goal-1", objective: "Prepare a governed research brief", requested_capability: "research" }) }));
     expect(fetchMock).toHaveBeenNthCalledWith(4, `${canonicalBase}/api/intelligence/runs/run-1/authorize?capability=research`, expect.objectContaining({ method: "POST" }));

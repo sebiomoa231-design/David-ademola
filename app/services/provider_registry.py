@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any, Iterable
+from urllib.parse import quote
 
 import httpx
 
@@ -148,13 +149,76 @@ class CapabilityRouter:
         if capability == "image":
             return await self._image(provider, payload)
         if capability == "video":
-            raise CapabilityNotSupported(capability, provider.id)
+            return await self._video(provider, payload)
         if capability in {"website", "maps", "deployment"}:
             raise CapabilityNotSupported(capability, provider.id)
         raise ProviderIntegrationError(f"Unknown capability: {capability}", code="capability_unknown", status_code=400)
 
     def _key(self, provider: ProviderSpec) -> str:
         return str(getattr(self.settings, provider.credential_attr or "", "") or "")
+
+    async def _video(self, provider: ProviderSpec, payload: dict[str, Any]) -> dict[str, Any]:
+        prompt = str(payload.get("prompt") or payload.get("text") or "").strip()
+        if not prompt:
+            raise ProviderIntegrationError("prompt is required", code="invalid_request", status_code=422)
+        if provider.id != "gemini":
+            raise CapabilityNotSupported("video", provider.id)
+        model = str(payload.get("model") or self.settings.gemini_video_model)
+        parameters: dict[str, Any] = {}
+        aspect_ratio = str(payload.get("aspect_ratio") or "16:9")
+        if aspect_ratio in {"16:9", "9:16"}:
+            parameters["aspectRatio"] = aspect_ratio
+        response = await self._request(
+            "POST",
+            f"{provider.base_url(self.settings)}/models/{quote(model, safe='')}:predictLongRunning",
+            headers={"x-goog-api-key": self._key(provider), "Content-Type": "application/json"},
+            json={"instances": [{"prompt": prompt}], "parameters": parameters},
+        )
+        data = response.json()
+        operation_name = data.get("name")
+        if not isinstance(operation_name, str) or not operation_name:
+            raise ProviderIntegrationError("Gemini did not return a video operation", code="provider_invalid_response", status_code=502)
+        return {
+            "provider": provider.id,
+            "model": model,
+            "status": "processing",
+            "operation_name": operation_name,
+            "poll_url": f"/api/providers/video/operations?name={quote(operation_name, safe='')}",
+            "message": "David has started a verified video generation operation.",
+        }
+
+    async def video_operation(self, operation_name: str) -> dict[str, Any]:
+        name = operation_name.strip()
+        if not name:
+            raise ProviderIntegrationError("operation name is required", code="invalid_request", status_code=422)
+        provider = self.registry.get("gemini")
+        if provider is None or not provider.configured(self.settings):
+            raise ProviderNotConfigured("gemini")
+        response = await self._request(
+            "GET",
+            f"{provider.base_url(self.settings)}/{name.lstrip('/')}",
+            headers={"x-goog-api-key": self._key(provider)},
+        )
+        data = response.json()
+        if not data.get("done"):
+            return {"provider": "gemini", "status": "processing", "operation_name": name}
+        if data.get("error"):
+            error = data["error"] if isinstance(data["error"], dict) else {}
+            raise ProviderIntegrationError(str(error.get("message") or "Gemini video generation failed"), code="video_generation_failed", status_code=502)
+        samples = (((data.get("response") or {}).get("generateVideoResponse") or {}).get("generatedSamples") or [])
+        sample = samples[0] if samples else {}
+        video = sample.get("video") if isinstance(sample, dict) else {}
+        uri = video.get("uri") if isinstance(video, dict) else None
+        if not isinstance(uri, str) or not uri:
+            raise ProviderIntegrationError("Gemini completed without a video artifact", code="provider_invalid_response", status_code=502)
+        return {"provider": "gemini", "status": "completed", "operation_name": name, "video_uri": uri}
+
+    async def download_video(self, uri: str) -> tuple[bytes, str]:
+        provider = self.registry.get("gemini")
+        if provider is None or not provider.configured(self.settings):
+            raise ProviderNotConfigured("gemini")
+        response = await self._request("GET", uri, headers={"x-goog-api-key": self._key(provider)})
+        return response.content, response.headers.get("content-type", "video/mp4")
 
     async def _request(self, method: str, url: str, *, headers: dict[str, str], **kwargs: Any) -> httpx.Response:
         timeout = httpx.Timeout(self.settings.request_timeout_seconds)
@@ -273,7 +337,11 @@ class CapabilityRouter:
             return {"provider": provider.id, "model": body["model"], "images": [{"b64_json": item.get("b64_json"), "revised_prompt": item.get("revised_prompt")} for item in data.get("data", [])]}
         if provider.id == "gemini":
             headers = {"x-goog-api-key": self._key(provider), "Content-Type": "application/json"}
-            body = {"contents": [{"role": "user", "parts": [{"text": prompt}]}], "generationConfig": {"responseModalities": ["TEXT", "IMAGE"]}}
+            parts: list[dict[str, Any]] = [{"text": prompt}]
+            reference = payload.get("image_base64")
+            if isinstance(reference, str) and reference.strip():
+                parts.append({"inlineData": {"mimeType": str(payload.get("image_mime_type") or "image/png"), "data": reference.strip()}})
+            body = {"contents": [{"role": "user", "parts": parts}], "generationConfig": {"responseModalities": ["TEXT", "IMAGE"]}}
             data = (await self._request("POST", f"{provider.base_url(self.settings)}/models/{str(payload.get('model') or self.settings.gemini_image_model)}:generateContent", headers=headers, json=body)).json()
             images: list[dict[str, Any]] = []
             texts: list[str] = []
